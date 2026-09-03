@@ -1,0 +1,19 @@
+{
+	"nodes":[
+		{
+			"id":"a76ae951309da47e",
+			"type":"text",
+			"text":"##### Stack:\n\n- FishNet                             → couche réseau (le \"chef d'orchestre\")\n- FishyFacepunch                → le pont entre FishNet et Steam\n- Facepunch.Steamworks    → l'API Steam (P2P, lobbies, identités)",
+			"styleAttributes":{},
+			"x":-1080,
+			"y":-560,
+			"width":506,
+			"height":144
+		}
+	],
+	"edges":[],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
+}

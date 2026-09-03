@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────────────────────
+# Unity — caches, artefacts de build et réglages par machine
+# Ne JAMAIS ignorer les fichiers .meta : Unity en dépend.
+# ─────────────────────────────────────────────────────────────
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Fichiers de projet générés par l'IDE (régénérés par Unity)
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Artefacts de build
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+sysinfo.txt
+ExportedObj/
+.consulo/
+
+# ─────────────────────────────────────────────────────────────
+# Obsidian — plugins tiers
+# Le plugin MCP stocke un bearerToken EN CLAIR dans data.json.
+# Ne jamais versionner ce dossier. Décision déjà prise pour le
+# dépôt du vault (cf. SESSIONS - Journal de travail, 2026-09-02).
+# ─────────────────────────────────────────────────────────────
+**/.obsidian/plugins/
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+
+# ─────────────────────────────────────────────────────────────
+# IDE / éditeurs
+# ─────────────────────────────────────────────────────────────
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# ─────────────────────────────────────────────────────────────
+# Système
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─────────────────────────────────────────────────────────────
+# Secrets — filet de sécurité générique
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+**/credentials.json
+
+# ─────────────────────────────────────────────────────────────
+# État de session éphémère (gitignoré par conception du template)
+# ─────────────────────────────────────────────────────────────
+production/session-logs/

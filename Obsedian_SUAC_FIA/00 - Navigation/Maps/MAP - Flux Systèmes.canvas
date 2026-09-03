@@ -1,0 +1,43 @@
+{
+	"nodes":[
+		{"id":"e43a0a198707e3f4","type":"text","text":"[[SYS - Réseau]]\n\n[[MAP - Réseau.canvas]]","x":-540,"y":-1315,"width":296,"height":75},
+		{"id":"3f0bcb1fa8f41820","type":"text","text":"[[SYS - Audio & Voix]]\n\n[[MAP - Audio & Voix.canvas]]","x":-540,"y":-1060,"width":296,"height":75},
+		{"id":"af40172aa24a9b1b","type":"text","text":"[[SYS - Gameplay Physique]]\n\n[[MAP - Gameplay Physique.canvas]]","x":-540,"y":-780,"width":296,"height":75},
+		{
+			"id":"8fc079e274f11613",
+			"type":"text",
+			"text":"BOOTSTRAP",
+			"styleAttributes":{},
+			"x":-1020,
+			"y":-1060,
+			"width":260,
+			"height":60
+		},
+		{"id":"c690f407f579c695","type":"text","text":"🟢 SYS - AUDIO (local/client)        🔵 SYS - RÉSEAU (transport)      🟠 SYS - GAMEPLAY (serveur)\n─────────────────────────────       ──────────────────────────       ──────────────────────────\nDissonance CAPTURE la voix\n        │\n        ├──► AudioAnalyzer\n        │    (FFT, volume, pitch)``\n        │         │\n        │         └──► résultats ────► RPC (P4) ──────────────────►  Serveur CALCULE les effets\n        │                                                                     │\n        └──► la voix ───────────────► canal voix propre (P5)                  │\n                                       → les autres entendent                 │\n                                                                              ▼\n                                                                       Objets physiques\n                                                                       RÉAGISSENT à la voix\n                                                                              │\n                                       P3 (sync état) ◄───────────────────────┘\n                                              │\n                                              ▼\n                                       tous les clients\n                                       reçoivent les effets\n\n─────────────────────────────────────────────────────────────────────────────────────────────\nPipelines réseau : P1 Connexion • P2 Entités/Ownership • P3 Sync • P4 RPC • P5 Voix • P6 Résilience\nRègle d'or : le réseau TRANSPORTE, il ne traite pas.","x":-1380,"y":-580,"width":840,"height":665},
+		{
+			"id":"6f6191a98204f4ac",
+			"type":"text",
+			"text":"BOOT ──prépare──→ [tous les systèmes] ──une seule fois au départ\n\nPendant la partie (boucle continue) :\n\n  AUDIO.P2 ──(volume/pitch)──→ NET.P3 ──(RPC)──→ PHYS.P1\n                                            │\n                                            ▼\n  Clients ←──(SyncVar)── NET.P2 ←──(état objets)── PHYS.P2\n\n  AUDIO.P1 ──(voix brute)──→ NET.P4 ──(Dissonance)──→ tous les clients",
+			"styleAttributes":{},
+			"x":-2140,
+			"y":-1340,
+			"width":580,
+			"height":280
+		},
+		{
+			"id":"f52608f3499ca693",
+			"type":"text",
+			"text":"╔════════════════════════════════════════════════════════════════════╗\n║   ⚙️  SYSTÈME BOOTSTRAP  [BOOT]           ─── se lance en 1er ───                 ║\n║   « Initialise tout, ne connecte rien »                                                                  ║\n╠════════════════════════════════════════════════════════════════════╣\n║   BOOT.P1 — Init plateforme    → Steam (SteamID, vérif)                                  ║\n║   BOOT.P2 — Init sous-systèmes → FMOD, FishNet (transport prêt)                 ║\n║   BOOT.P3 — Config joueur      → settings, micro, options                                ║\n║   BOOT.P4 — Managers persistants → DontDestroyOnLoad, scene mgr          ║\n╚════════════════════════════════════════════════════════════════════╝\n                    │ (tout est prêt)\n                    ▼\n             ┌──────────────┐\n             │ MENU PRINCIPAL│\n             └──────────────┘\n                    │ Host / Join\n                    ▼\n╔════════════════════════════════════════════════════════════════════╗\n║   🌐  SYSTÈME RÉSEAU  [NET]              ─── se lance en 2e ───                         ║\n║   « Transporte, ne traite pas »                                                                            ║\n╠════════════════════════════════════════════════════════════════════╣\n║   NET.P1 — Connexion & Sessions                                                                    ║\n║      F1 Créer session (Host)   F4 Suivi joueurs                                                    ║\n║      F2 Rejoindre session      F5 État & métadonnées lobby                               ║\n║      F3 Quitter session        F6 Browsing lobbies publics                                    ║\n║   NET.P2 — Sync état (SyncVar/SyncList)   → serveur→clients auto                  ║\n║   NET.P3 — RPC (commandes)                → client↔serveur                               ║\n║   NET.P4 — Transport voix (Dissonance)    → client→tous                                 ║\n╚════════════════════════════════════════════════════════════════════╝\n              │                                    ▲\n              │ voix brute                         │ données analysées\n              ▼                                    │ (volume/pitch)\n╔════════════════════════════════════════════════════════════════════╗\n║   🎤  SYSTÈME AUDIO & VOIX  [AUDIO]      ─── pendant la partie ───             ║\n║   « Capte & analyse la voix »                                                                              ║\n╠════════════════════════════════════════════════════════════════════╣\n║   AUDIO.P1 — Capture voix (Dissonance)                                                          ║\n║   AUDIO.P2 — Analyse FFT (volume, pitch, bandes)                                          ║\n║      └─→ produit les données envoyées via NET.P3 (RPC)                                  ║\n╚════════════════════════════════════════════════════════════════════╝\n                    │ données analysées → serveur\n                    ▼\n╔════════════════════════════════════════════════════════════════════╗\n║   🧊  SYSTÈME GAMEPLAY PHYSIQUE  [PHYS]  ─── autorité serveur ───          ║\n║   « Calcule les effets, fait autorité »                                                                    ║\n╠════════════════════════════════════════════════════════════════════╣\n║   PHYS.P1 — Calcul des effets (voix → force physique)                                     ║\n║   PHYS.P2 — État des objets/monstres                                                              ║\n║      └─→ résultat sync vers clients via NET.P2 (SyncVar)                                      ║\n╚════════════════════════════════════════════════════════════════════╝",
+			"styleAttributes":{},
+			"x":-2920,
+			"y":-1340,
+			"width":700,
+			"height":1210
+		}
+	],
+	"edges":[],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
+}

@@ -1,0 +1,16 @@
+{
+    "name": "SUAC.Voice.Capture",
+    "rootNamespace": "SUAC.Voice.Capture",
+    "references": [
+        "SUAC.Voice.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

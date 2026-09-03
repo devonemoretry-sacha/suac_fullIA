@@ -1,0 +1,17 @@
+{
+    "name": "SUAC.Gameplay",
+    "rootNamespace": "SUAC.Gameplay",
+    "references": [
+        "SUAC.Voice.Core",
+        "SUAC.Voice.Capture"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
