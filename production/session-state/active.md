@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Analyse vocale — 4 sections écrites, Edge Cases à suivre
+Task: GDD Analyse vocale — 5 sections écrites, Dependencies à suivre
 <!-- /STATUS -->
 
 ---

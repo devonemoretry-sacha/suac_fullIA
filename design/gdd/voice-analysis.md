@@ -393,7 +393,104 @@ Criteria*.
 
 ## Edge Cases
 
-[To be designed]
+Chaque entrée nomme la **condition exacte**, la **résolution exacte**, et sa sévérité :
+**bloquant** (le système produit une valeur fausse sans le signaler), **dégradant** (valeur
+médiocre mais honnête) ou **cosmétique**.
+
+### Profil de calibration dégénéré
+
+> Le profil **persiste sur disque**. Un profil dégénéré empoisonnerait toutes les sessions
+> futures — la validation au commit n'est donc pas une précaution, c'est une nécessité.
+
+- **Si l'écart `Scream_dB − Floor_dB` est inférieur à un minimum** *(PROVISOIRE ~20 dB, à
+  fixer au Protocole A)* : le profil est **refusé au commit** ; la calibration redemande
+  l'étape du cri. **Bloquant** — sans marge dynamique, `x` diverge et `Loudness` devient `NaN`.
+- **Si `Floor_dB > Scream_dB`** — recalibration dans un environnement plus bruyant que le
+  cri de référence : profil **refusé au commit**. **Bloquant, et c'est le cas le plus
+  dangereux de ce document** : le dénominateur devient négatif, `x` s'inverse
+  **silencieusement**, et parler plus fort fait *baisser* `Loudness`. Aucun `NaN`
+  détectable — juste une valeur plausible et fausse.
+- **Si `F0_habituel = 0`** — aucune période voisée captée pendant la calibration : profil
+  **refusé au commit**. **Bloquant** — `Pitch` divergerait vers l'infini.
+- **Si un profil invalide arrive malgré tout** — chargé du disque, reçu du réseau,
+  corrompu : l'analyse **reste `Uncalibrated`** et renvoie `VoiceFrame.Silence`. Elle
+  **n'invente jamais** de valeur de remplacement : un plancher artificiel masquerait un
+  vrai problème derrière un nombre inventé.
+
+### Extrêmes du profil vocal
+
+- **Si `médiane / 2 < 70 Hz`** — voix très grave : la plage de recherche est recadrée à
+  `[70 Hz, médiane × 2]`. **Dégradant si non traité** — chercher sous 70 Hz augmente le
+  risque que YIN accroche une sous-harmonique.
+- **Si `médiane × 2 > 600 Hz`** — voix aiguë : **la cadence de décimation passe à 12 kHz
+  pour ce joueur**, ce qui repousse la limite de résolution vers ~900 Hz.
+  **Bloquant si non traité** : le cri de ces joueurs tomberait hors de la plage de
+  recherche calibrée, et `IsVoiced` serait faux en permanence **pendant les cris**. C'est
+  un défaut d'équité qui touche disproportionnellement les voix aiguës et les enfants,
+  dans un jeu dont la mécanique centrale est de crier.
+  *(La réponse était déjà nommée par ADR-0004 : « la bonne réponse est de monter la
+  cadence décimée à 12 kHz, pas d'élargir la plage de décalages ».)*
+- **Si `médiane × 2 > 900 Hz` même à 12 kHz** : la plage est clampée et la perte
+  documentée. **Dégradant.** Cas extrême, à surveiller en playtest.
+
+> **Conséquence d'implémentation.** La cadence de décimation dépendant du profil, le
+> `Decimator` et le `PitchDetector` doivent être **reconstruits à la réception du profil**,
+> pas à la construction de l'analyseur.
+
+### Transitions d'état
+
+- **Si une recalibration est lancée pendant que le joueur porte un meuble** : le nouveau
+  profil est construit **dans un tampon** et ne remplace l'ancien qu'à validation complète.
+  La bascule est **atomique**. **Bloquant si non traité** — le poids perçu du meuble
+  changerait en pleine manipulation.
+- **Si un profil est reçu ou mis à jour pendant `Degraded`** : le profil est mis à jour,
+  mais **l'état reste `Degraded`**. **Dégradant si non distingué** — recevoir un profil
+  valide ne signifie pas que la capture est revenue.
+- **Si le micro coupe pendant une étape de calibration** : l'étape en cours est
+  **annulée**, aucun profil partiel n'est committé. **Bloquant si non traité** — on
+  retomberait exactement dans les cas dégénérés ci-dessus, par exemple `Scream_dB` resté à
+  zéro parce que l'étape du cri n'a jamais eu lieu.
+
+### Saturation du signal
+
+- **Si `Peak` atteint le seuil d'écrêtage sur plusieurs échantillons consécutifs** :
+  `Continuity` **conserve sa valeur précédente** au lieu d'être recalculée.
+  **Bloquant si non traité** : `CrestDb` s'effondre sur un signal écrêté et `Continuity`
+  monterait vers 1 — le système rapporterait « voix parfaitement tenue » sur un signal
+  distordu, sans aucune alerte. On ne connaît plus la forme du signal, donc **on ne
+  modifie pas ce qu'on en affirme**.
+- **`Loudness` n'est pas affectée** par l'écrêtage : il implique un signal fort, et la
+  valeur est déjà bornée à 1.
+
+### Amorçage et silence prolongé
+
+- **Si l'anneau médian contient moins de 5 valeurs** : la médiane porte sur les valeurs
+  disponibles. L'anneau est de **taille impaire (5), délibérément** — la médiane est
+  toujours un élément, jamais une moyenne de deux, ce qui la rend testable sans ambiguïté.
+- **Si une trame est non voisée** : le `F0` rejeté **n'entre pas** dans l'anneau, qui gèle.
+- **Si l'anneau reste figé au-delà d'un délai sans voisement** : il est **vidé**.
+  **Dégradant si non traité** — une reprise de parole après trente secondes de silence se
+  lisserait contre une hauteur périmée.
+- **Si l'enveloppe descend sous un plancher de dénormalisation** : elle est **forcée à
+  zéro**. **Dégradant (performance)** — sa décroissance est asymptotique et n'atteint
+  jamais zéro exactement, ce qui expose à un blocage CPU par arithmétique dénormalisée.
+
+### Contrat d'usage — hors de `Voice.Core`
+
+- **Si un consommateur compare deux `Tick`** : il doit employer une **différence
+  modulaire**, jamais `>`. **Cosmétique en session, bloquant à long terme** — un `uint`
+  incrémenté ~50 fois par seconde déborde après **~994 jours**. Sans objet sur une partie,
+  mais un process de longue durée l'atteindrait et la comparaison directe casserait en
+  silence.
+
+### Décision documentée — pas de `JitterMax`
+
+Le test de jitter n'a qu'un **plancher**. Un jitter anormalement élevé — voix rauque,
+éraillée — franchit donc la porte.
+
+**C'est délibéré.** La rugosité vocale varie d'une personne à l'autre, et la plafonner
+reproduirait exactement le défaut d'équité identifié sur les voix aiguës. Absence de
+plafond **par décision, pas par oubli**.
 
 ## Dependencies
 
