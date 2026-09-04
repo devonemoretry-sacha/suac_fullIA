@@ -139,7 +139,161 @@ le rendant caduc. Il a été remplacé par « matière avant forme ».
 
 ## 2. Mood & Atmosphere
 
-[To be designed]
+Cibles émotionnelles par état de jeu, assez précises pour qu'un éclairagiste puisse
+travailler à partir de là.
+
+### Deux règles transverses
+
+**1. L'ampoule nue est le signe qu'on est vivant dans la maison.** Elle est présente dans
+les trois états intérieurs actifs — Vidage, Menace proche, Chaos — et **délibérément
+absente** de l'Espace des morts et de la Calibration. Son absence marque la sortie de la
+fiction.
+
+**2. La tension se joue en saturation et en contraste, jamais en luminance.** Aucun état
+ne descend sous le seuil de lecture des parades. C'est la contrainte dure du projet —
+trois archétypes du bestiaire ont une parade qui exige de voir, et le noir total durable
+est interdit. Elle est respectée ici par construction, pas par vigilance.
+
+---
+
+### 1. Arrivée sur le contrat
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Appréhension professionnelle banalisée — « encore un contrat », teintée d'un malaise au seuil |
+| **Éclairage** | Extérieur, fin d'après-midi haute, ~3400 K chaud rasant, contraste moyen, ombres longues et basses, ciel commençant à ambrer |
+| **Atmosphère** | seuil · rasant · banal · chargé · imminent |
+| **Énergie** | 2/5 |
+
+**Élément porteur** : la porte entrouverte laisse voir un rectangle intérieur **plus
+froid** que l'extérieur. C'est le premier contraste chaud/froid du contrat, posé comme
+motif — il sera payé à l'Extraction.
+
+---
+
+### 2. Vidage sous contrainte
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Concentration coopérative sous tension légère — « on gère, ensemble, prudemment » |
+| **Éclairage** | Intérieur, praticables ~2700 K (ampoule nue) + fenêtres ambrées en fond, contraste doux, sources ponctuelles multiples plutôt qu'un fill uniforme |
+| **Atmosphère** | encombré · méthodique · domestique · retenu · chaud-piégé |
+| **Énergie** | 3/5 |
+
+**Élément porteur** : l'ampoule nue oscille légèrement au passage des porteurs, l'ombre
+balaie le mur. Rappel constant qu'on dérange un espace qui n'est pas le nôtre.
+
+---
+
+### 3. Menace proche
+
+> **Comment on fait ressentir la menace sans la signaler.** Cet état n'est **jamais
+> déclenché par la proximité réelle d'un habitant** — ce serait un indicateur de
+> détection déguisé, exactement ce que la décision du 2026-07-27 interdit.
+>
+> L'ambiance de tension est **pré-auteurée par zone de level design** : « ceci est la
+> chambre de l'occupant, elle est toujours sur le qui-vive ». La pièce a rigoureusement
+> la même tête que la créature s'y trouve ou non. Le joueur sent que l'endroit est
+> mauvais ; il ne sait toujours pas si quelque chose s'y trouve. L'incertitude reste
+> entière.
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Tension anticipatoire **statique** — pas de peur immédiate |
+| **Éclairage** | **Même température que Vidage**, aucun reréglage chromatique. Saturation ambiante −20 à −30 %, contraste resserré : les noirs remontent légèrement plutôt que la lumière ne baisse |
+| **Atmosphère** | terne · feutré · statique · oppressant · retenu |
+| **Énergie** | 2,5/5 — tension sans mouvement |
+
+**Élément porteur** : le principe « le vide raconte » poussé plus loin — objets à moitié
+emballés, abandonnés en plein geste, comme interrompus. Lecture **spatiale**, jamais
+temporelle : rien ne dit *quand* c'est arrivé.
+
+> ⚠️ **Point fragile identifié, à tester en priorité.** Vidage et Menace proche forment
+> la paire la plus proche du document : même température de couleur, delta porté
+> entièrement par la saturation, le cadrage et la densité du dressing interrompu. Si les
+> deux états se confondent en jeu, l'anticipation disparaît. **À valider en premier lors
+> du vertical slice.**
+
+---
+
+### 4. Chaos
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Euphorie-panique, comédie du dérapage |
+| **Éclairage** | Contraste violent, sources qui s'activent en rafale. **La luminance globale ne baisse jamais.** |
+| **Atmosphère** | heurté · sur-exposé · clignotant · cacophonique · vertigineux |
+| **Énergie** | 5/5 |
+
+**Élément porteur** : les ombres portées multiples qui se croisent quand plusieurs
+sources s'activent simultanément. Le contraste monte, la lisibilité tient.
+
+**Ce qui produit l'intensité** : les objets Voice-Physics qui réagissent au bruit
+réellement émis — un canapé qui s'écrase, une lampe qui s'affole. **C'est le système 11
+rendu visible, la mécanique centrale du jeu, pas un indicateur d'état.**
+
+> **Ce qui a été retiré.** Une corruption ambiante du décor pilotée par le volume avait
+> été proposée pour cet état. Écartée, en cohérence avec l'exclusion de *Bruthaus
+> Corporate* en section 1. La distinction qui compte : **un objet qui réagit à la voix
+> est du gameplay ; un décor qui se corrompt selon le volume est un indicateur.**
+
+---
+
+### 5. Extraction
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Urgence de course contre la montre, soulagement fragile |
+| **Éclairage** | Retour au seuil extérieur, mais l'arc temporel du contrat a avancé — ciel rouge/violet, soleil bas, fort contre-jour sur la porte de sortie |
+| **Atmosphère** | pressant · embrasé · silhouetté · fragile · tranchant |
+| **Énergie** | 4,5/5 |
+
+**Élément porteur** : le **même cadrage de porte qu'à l'arrivée, inversé**. Le rectangle
+froid du départ est devenu un halo chaud saturé en contre-jour. C'est le payoff direct de
+la progression temporelle « avant la tombée de la nuit », et il ne coûte rien à produire.
+
+**Note technique** : un rayon de lumière dans ce contre-jour serait un vrai gain lisible,
+mais **URP 6.3 n'a pas de brouillard volumétrique natif**. À simuler par un plan de brume
+dithérée en sprite plutôt que par une vraie passe volumétrique. Non requis au MVP, à
+provisionner si retenu.
+
+---
+
+### 6. Espace des morts
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Détachement, frustration muette, voyeurisme |
+| **Éclairage** | Désaturation quasi totale — gris-bleu plat, faible contraste. **Aucune source chaude** : l'ampoule nue est absente, marquant la coupure du monde vivant |
+| **Atmosphère** | sourd · vitré · spectral · immobile · extérieur |
+| **Énergie** | 1/5, avec frustration latente |
+
+**Élément porteur** : vignette d'écran légère — bord assombri, léger grain — évoquant une
+vitre. Le mort regarde à travers une fenêtre visuellement distincte de la vue normale.
+
+---
+
+### 7. Calibration
+
+| | |
+|---|---|
+| **Cible émotionnelle** | Clarté pédagogique, curiosité sans peur |
+| **Éclairage** | Neutre, homogène, quasi sans ombres, ~4000 K, haute lisibilité, aucun praticable capricieux |
+| **Atmosphère** | net · neutre · didactique · calme · propre |
+| **Énergie** | 2/5 |
+
+**Élément porteur** : espace clos générique — camion ou local d'essai — **sans dressing
+« le vide raconte »**. Volontairement neutre, pour ne pas mélanger la pédagogie et la
+fiction du bestiaire.
+
+---
+
+### Distinctivité
+
+Tous les états sont séparables par au moins deux axes parmi : température de couleur,
+saturation, contraste, cadrage, présence ou absence de l'ampoule nue.
+
+La seule paire fragile est **Vidage / Menace proche** — voir l'avertissement en état 3.
 
 ---
 

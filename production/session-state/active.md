@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: /art-bible section 1 écrite — section 2 (ambiance) en cours
+Task: /art-bible sections 1-2 écrites — section 3 (langage des formes) à suivre
 <!-- /STATUS -->
 
 ---
