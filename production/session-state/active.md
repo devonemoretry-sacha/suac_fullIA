@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: /art-bible — GDD Analyse vocale en pause (Overview écrite, 12 sections à faire)
+Task: /art-bible section 1 écrite — section 2 (ambiance) en cours
 <!-- /STATUS -->
 
 ---
