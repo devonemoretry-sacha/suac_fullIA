@@ -494,7 +494,80 @@ plafond **par décision, pas par oubli**.
 
 ## Dependencies
 
-[To be designed]
+### Deux notions à ne pas confondre
+
+L'index des systèmes déclare que ce système **ne dépend de rien**. C'est vrai — et
+pourtant l'analyse ne produit **rien du tout** sans le profil de calibration. Les deux
+affirmations sont compatibles parce qu'il s'agit de deux dépendances différentes :
+
+- **Dépendance de conception** — on ne peut pas *spécifier* ce système tant que l'autre
+  n'est pas spécifié.
+- **Dépendance d'exécution** — le système ne *produit rien* sans l'autre, une fois en marche.
+
+Les confondre fabrique des cycles fantômes. Ce document a été écrit de bout en bout sans
+qu'aucun système voisin n'ait de GDD : la dépendance de conception est donc bien nulle,
+comme l'index l'affirme.
+
+### Le tableau
+
+| Système | Nature | Sens | Interface |
+|---|---|---|---|
+| **6. Calibration vocale** | **DURE — exécution** | mutuelle | Fournit `VoiceProfile`. **Sans profil valide, la sortie est `Silence`** : le système ne fait littéralement rien |
+| **2. Audio d'entrée** | **DURE — exécution** | il appelle | Pousse les échantillons bruts post-AEC à cadence fixe ; reçoit la `VoiceFrame` |
+| 3. Propagation du son | consommateur | il lit | `VoiceFrame` par joueur, à la cadence réseau |
+| 12. Couche de retour local | consommateur | il lit | `VoiceFrame` **locale, avant réseau** |
+| 5. Réseau | consommateur | il lit | `VoiceFrame` ; décide l'échantillonnage 50 Hz → 20–30 Hz |
+| 19. UI diégétique | consommateur | il lit | `Loudness` pour le sonomètre — **ce qu'on émet, jamais ce que ça provoque** |
+
+**Une seule dépendance dure, et c'est la calibration.** Tout le reste consomme.
+
+### Les deux cycles apparents, et pourquoi ce n'en sont pas
+
+**Analyse ↔ Audio d'entrée.** L'index dit que 2 dépend de 1 ; à l'exécution, 1 ne peut
+rien faire sans que 2 le nourrisse. *Résolution* : `SUAC.Voice.Capture` référence
+`SUAC.Voice.Core` à la compilation, mais l'analyse se **spécifie** sans que la capture le
+soit — il suffit d'exiger « des échantillons à cadence fixe ». C'est un flux de données,
+pas une dépendance de conception.
+
+**Analyse ↔ Calibration.** L'index dit que 6 dépend de 1 et 2 ; l'analyse ne produit rien
+sans le profil de 6. *Résolution* : les deux vivent **dans la même assembly** (ADR-0006)
+et consomment les mêmes primitives internes. Ce n'est pas un cycle entre modules, c'est
+une collaboration interne.
+
+### Ce que les GDD voisins devront porter
+
+Aucun système voisin n'a de GDD à ce jour. Les règles du projet exigent une **cohérence
+bidirectionnelle** — voici donc les contrats à reporter le jour où ils s'écriront.
+
+**Système 2 — Audio d'entrée**
+- Pousser les échantillons à **cadence fixe et connue** (~50 Hz). Une cadence variable
+  casse le lissage **en silence**.
+- Livrer le signal **brut** : post-AEC uniquement, jamais de VAD, d'AGC ni de suppression
+  de bruit.
+- **Posséder le périphérique** et le fourcher — jamais un second lecteur.
+- Signaler les événements de périphérique (coupure, changement) pour que l'analyse bascule
+  en `Degraded`.
+
+**Système 6 — Calibration vocale**
+- Produire `VoiceProfile` : `Floor_dB`, repos, `F0_habituel`, `Scream_dB`.
+- **Valider avant de committer** — refuser les trois profils dégénérés listés en *Edge Cases*.
+- **Persister le profil entre les sessions.** *(Ce besoin de persistance était signalé
+  comme sans propriétaire dans l'index des systèmes — il revient ici.)*
+- Être **relançable à tout moment**, depuis le lobby comme en jeu.
+- Basculer **atomiquement** : nouveau profil en tampon jusqu'à validation complète.
+- Annuler proprement une étape si le micro coupe en cours de calibration.
+- **Décider la cadence de décimation** à partir du profil — 12 kHz pour les voix aiguës.
+
+**Système 5 — Réseau**
+- Décider l'échantillonnage 50 Hz → 20–30 Hz. Ce n'est pas à Core de le faire.
+- Comparer les `Tick` par **différence modulaire**, jamais par `>`.
+
+**Système 12 — Couche de retour local**
+- Consommer la `VoiceFrame` **locale, avant réseau** — même instance et même trame que le
+  réseau. Pas de calcul dupliqué.
+
+**Système 19 — UI diégétique**
+- Le sonomètre lit `Loudness` — **ce que le joueur émet, jamais ce que ça provoque**.
 
 ## Tuning Knobs
 

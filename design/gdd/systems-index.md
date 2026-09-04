@@ -37,7 +37,7 @@ autre (voir *Revision History*).
 
 | # | System Name | Category | Priority | Status | Design Doc | Depends On |
 |---|-------------|----------|----------|--------|------------|------------|
-| 1 | Analyse vocale (`Voice.Core`) | Audio | MVP | **Implemented** *(GDD manquant)* | — | — |
+| 1 | Analyse vocale (`Voice.Core`) | Audio | MVP | **Designed** | `voice-analysis.md` | — ⚠️ |
 | 2 | Audio d'entrée *(inféré)* | Audio | MVP | Not Started | — | 1 |
 | 3 | Propagation du son *(inféré)* | Gameplay | MVP | Not Started | — | 1 |
 | 4 | Restitution spatialisée *(inféré)* | Audio | MVP | Not Started | — | — |
@@ -58,6 +58,13 @@ autre (voir *Revision History*).
 | 19 | UI diégétique minimale *(inféré)* | UI | MVP | Not Started | — | 1, 6, 18 |
 
 *(inféré)* = système non nommé dans `mvp-scope.md`, révélé par la décomposition.
+
+> ⚠️ **Système 1 — « Depends On : — » vaut au sens de la *conception*, pas de l'exécution.**
+> L'analyse vocale se spécifie sans qu'aucun voisin ne soit conçu, ce qui justifie sa place
+> en Foundation. Mais **à l'exécution elle ne produit rien sans le profil de calibration du
+> système 6** : hors calibration, sa sortie est `VoiceFrame.Silence`. Voir la section
+> *Dependencies* de `design/gdd/voice-analysis.md`, qui distingue les deux notions et
+> explique pourquoi les cycles apparents 1↔2 et 1↔6 n'en sont pas.
 
 **Correspondance avec `mvp-scope.md`** : les entrées 1 à 14 du périmètre se
 retrouvent ici sous les numéros 1, 11, 9, 13, 15, 14, 16, 17, 5, 7, 10, 18, 6 et 8.
