@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: /art-bible sections 1-3 écrites — section 4 (système de couleurs) à suivre
+Task: Art bible close (cadre provisoire) — retour au code
 <!-- /STATUS -->
 
 ---
@@ -33,7 +33,7 @@ par les skills du template.
 - [x] `/gate-check` Technical Setup → Pre-Production, passée en **inventaire** — FAIL attendu, rapport dans `production/gate-checks/`
 - [~] `/create-architecture` — **BLOQUÉ volontairement** : la skill exige une baseline TR extraite des GDD, or il n'y en a aucun. Reprise quand les premiers GDD existeront.
 - [~] GDD Analyse vocale — **en pause**, Overview écrite, 12 sections restantes. Reprise avec `/design-system voice-analysis`
-- [ ] `/art-bible` — étape sautée, à rattraper **← en cours**
+- [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
 - [ ] `/prototype` — étape sautée, toujours non rattrapée : la Voice-Physics n'a jamais été validée comme amusante
 - [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features
 - [ ] `/design-system` ×18

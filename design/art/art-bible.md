@@ -1,6 +1,6 @@
 # Art Bible — Shut Up & Carry !
 
-> **Status**: In Progress — sections 1–4 en cours d'authoring
+> **Status**: **Cadre de travail provisoire** — sections 1 à 3 écrites, section 4 différée
 > **Created**: 2026-09-03
 > **Last Updated**: 2026-09-03
 > **Review Mode**: `full` — art-director consulté à chaque section
@@ -8,10 +8,36 @@
 > **Source**: `design/gdd/game-concept.md`
 
 > Titres de sections en anglais (lus par les skills), corps en français.
+
+> ## ⚠️ Statut de ce document — à lire avant de s'y fier
 >
-> **Portée de cette passe** : sections 1 à 4 — le socle d'identité visuelle. Les
-> sections 5 à 9 (guides de production) seront écrites après le prototype, quand
-> les décisions de gameplay seront stabilisées.
+> **Ce n'est pas une spécification figée. C'est un cadre de travail provisoire.**
+>
+> La direction visuelle est **explicitement susceptible d'évoluer** le jour où un
+> graphiste rejoint le projet. Les principes écrits ici ont été arbitrés entre un
+> développeur solo et un directeur artistique consultatif — ils sont cohérents et
+> opposables, mais ils n'ont pas été confrontés à la pratique d'un artiste, ni à un
+> seul asset produit.
+>
+> **Pourquoi le document s'arrête à la section 3.** L'identité visuelle ne lève aucun
+> risque de gameplay et n'est pas prioritaire : il reste une quantité importante de
+> code à écrire avant que la production d'assets ne commence. Poursuivre l'art bible
+> maintenant produirait des guides de production détaillés pour des assets que personne
+> n'est en mesure de fabriquer.
+>
+> **Ce qui reste valable malgré tout** : les trois sections écrites contiennent des
+> décisions qui touchent le code et le level design, pas seulement l'art —
+> l'opposition courbe/angulaire conditionne la modélisation, les points d'ancrage
+> conditionnent le portage collectif, et le rationnement des objets courbes par pièce
+> contraint la boucle de contrat. Ces contraintes-là valent dès maintenant.
+>
+> **Section 4 (Color System) — différée.** Elle est déjà partiellement contrainte par
+> ce qui précède : palette désaturée, un seul accent saturé par pièce, et interdiction
+> pour la couleur de signaler une détection ou une alerte. À écrire quand la production
+> d'assets deviendra réelle, avec le graphiste s'il y en a un.
+>
+> **Sections 5 à 9** — guides de production, hors périmètre tant qu'aucun asset n'est
+> produit.
 
 ---
 
