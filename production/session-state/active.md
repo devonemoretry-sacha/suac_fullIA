@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Analyse vocale — 6 sections écrites, Tuning Knobs à suivre
+Task: GDD Analyse vocale — 7 sections, Acceptance Criteria pour boucler les 8 obligatoires
 <!-- /STATUS -->
 
 ---

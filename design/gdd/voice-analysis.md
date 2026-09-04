@@ -571,7 +571,69 @@ bidirectionnelle** — voici donc les contrats à reporter le jour où ils s'éc
 
 ## Tuning Knobs
 
-[To be designed]
+### L'arbitrage à exposer avant tous les autres
+
+La section *Player Fantasy* a nommé une tension qui gouverne tout ce réglage :
+
+> **L'attribution veut de la stabilité, le contrôle veut de la réactivité.**
+
+Lisser davantage supprime l'injustice — et supprime la vivacité avec elle. Ces curseurs ne
+doivent pas figer un compromis implicite : **ils doivent rendre l'arbitrage visible et
+réglable.**
+
+### Les curseurs
+
+| Curseur | Provisoire | Plage sûre | Trop haut | Trop bas |
+|---|---|---|---|---|
+| `γ` exposant perceptif | **0,65** | 0,5 – 1,0 | vers 1,0 : le chuchotement s'écrase, tout le registre bas devient indistinct | < 0,5 : le moindre souffle sature vers 1, plus de nuance dans les forts |
+| `CrestMinDb` | **8** | 6 – 12 | une voyelle tenue cesse d'être lue comme régulière | tout devient « tenu », les percussifs disparaissent |
+| `CrestMaxDb` | **20** | 15 – 26 | un claquement de langue ne descend jamais à 0 | tout son un peu dynamique est lu comme percussif |
+| `Margin_dB` — porte de volume | **7** | 6 – 8 | le chuchotement chanté est coupé : un registre central du jeu disparaît | le bruit de fond franchit la porte |
+| `JitterMin` | **0,5 %** | 0,3 – 1,0 | une voix très stable, tenue et posée, est rejetée comme un bourdonnement | un ronflement de frigo passe pour une voix |
+| `N` — fenêtre de jitter | **4** | 3 – 5 | réaction plus lente à un changement de source | variance trop bruitée pour discriminer |
+| Attaque de l'enveloppe | *à mesurer* | — | le cri met du temps à se voir : le joueur ne sent plus sa voix comme un geste | le poids du meuble vibre sur chaque syllabe |
+| Relâchement de l'enveloppe | *à mesurer* | — | le meuble reste lourd longtemps après le cri | clignotement lourd/léger entre deux mots |
+| Taille de l'anneau médian | **5** | 3, 5, 7 — **impair obligatoire** | latence de réaction à un vrai changement de hauteur | erreurs d'octave non filtrées |
+| TTL de l'anneau | *à définir* | — | reprise de parole lissée contre une hauteur périmée | anneau vidé trop souvent, filtre médian inopérant |
+| Écart dynamique minimal du profil | **~20 dB** | — | des joueurs légitimes voient leur calibration refusée | des profils dégénérés passent la validation |
+| Cadence de décimation | **8 kHz** ; 12 kHz si voix aiguë | — | coût CPU inutile sur YIN | le cri des voix aiguës sort de la plage de recherche |
+
+### Les interactions — tourner un curseur peut en annuler un autre
+
+**`Margin_dB` contre `JitterMin`.** Ce sont deux filtres du même problème par des chemins
+différents. Monter la marge en dB assez haut rend le test de jitter inutile : le
+bourdonnement est coupé avant d'être analysé. Mais on coupe le chuchotement chanté avec.
+**Le jitter existe précisément pour permettre de garder la marge basse.** Régler l'un sans
+regarder l'autre revient à en désactiver un des deux.
+
+**Attaque de l'enveloppe contre `N`.** Les deux ajoutent de la latence, sur des axes
+différents — l'une sur le volume, l'autre sur le voisement. Additionnées sans qu'on le
+voie, elles produisent un système qui répond mollement **sans qu'aucun curseur ne paraisse
+fautif**.
+
+**`γ` contre `Margin_dB`.** `γ` étire le registre bas ; la marge de la porte le coupe par
+le bas. Étirer une zone qu'on vient de tronquer ne sert à rien. **Ces deux-là se règlent
+ensemble ou pas du tout.**
+
+**`CrestMinDb` contre l'écrêtage.** L'écrêtage gèle `Continuity` ; plus la borne basse est
+haute, plus la zone gelée devient fréquente **sur les cris**, là où le signal sature le plus.
+
+### Ce qui n'est pas un curseur
+
+Trois valeurs ressemblent à des réglages et n'en sont pas :
+
+- **La cadence de la chaîne (~50 Hz)** — c'est un **contrat**, pas un curseur. La modifier
+  casse le lissage de l'`EnvelopeFollower` en silence.
+- **La parité de l'anneau médian** — impaire obligatoire, pour que la médiane soit toujours
+  un élément et jamais une moyenne de deux. Sans ça, la définition devient ambiguë et le
+  test avec.
+- **Le seuil d'apériodicité de YIN (0,15)** — fixé par la littérature et arbitré en
+  ADR-0004. Le toucher, c'est rouvrir un ADR.
+
+> **Sur les constantes de temps de l'enveloppe.** Elles sont laissées *à mesurer* plutôt
+> qu'inventées : elles gouvernent directement le ressenti « ma voix est un geste » et se
+> règlent à l'oreille, pas au raisonnement. Le POC audio ou le prototype les donnera en une
+> session.
 
 ## Visual/Audio Requirements
 
