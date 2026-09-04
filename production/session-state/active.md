@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Index des systèmes écrit — prochaine étape : POC audio + premiers GDD
+Task: Premiers GDD — architecture en attente de la baseline TR
 <!-- /STATUS -->
 
 ---
@@ -28,9 +28,15 @@ par les skills du template.
 - [x] 6 ADR formalisées depuis `LOG - Décisions techniques.md` (ADR-0001 à ADR-0006, toutes Accepted)
 - [x] **Relecture collaborative de `game-concept.md`** — arbitrages MDA/PENS/Bartle actés, 14 points différés avec déclencheur
 - [x] `/map-systems` — index écrit : 14 entrées de périmètre → 19 systèmes, 4 couches
+- [x] Revue directeurs de la décomposition (TD/PR/CD) — corrections appliquées
+- [x] ADR-0003 amendé — l'AEC remonte en amont de la fourche
+- [x] `/gate-check` Technical Setup → Pre-Production, passée en **inventaire** — FAIL attendu, rapport dans `production/gate-checks/`
+- [~] `/create-architecture` — **BLOQUÉ volontairement** : la skill exige une baseline TR extraite des GDD, or il n'y en a aucun. Reprise quand les premiers GDD existeront.
 - [ ] Rétro-documenter l'analyse vocale (code fait, GDD manquant) **← prochaine étape**
-- [ ] POC audio — lever la contention de périphérique
+- [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features
 - [ ] `/design-system` ×18
+- [ ] Reprendre `/create-architecture` une fois des GDD écrits
+- [ ] `/test-setup` et `/ux-design` — parallélisables, ne dépendent d'aucun GDD
 - [ ] `/create-control-manifest`, `/architecture-review` (bootstrap tr-registry)
 
 ## Décisions clés

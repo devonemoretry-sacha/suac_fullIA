@@ -245,6 +245,28 @@ dans la section *Detailed Rules* du GDD concerné.
 | **5. Réseau** | Contrat de réplication, pas manager : classes de canaux, autorité, cadences ; chaque feature possède son schéma. **Il manque un budget de bande passante** — 8 dépendants, aucun chiffre, alors que CPU, mémoire et draw calls en ont un. |
 | **19. UI diégétique** | Le sonomètre est le seul élément qui frôle un anti-pilier : c'est un HUD informatif, et il *aide à optimiser le silence*. À contraindre — imprécis, retardé, **jamais de seuil affiché**. Ne doit jamais afficher un verdict prédit (recoupe le système 12). |
 
+### Contraintes moteur à porter dans les GDD
+
+*Relevées le 2026-09-03 pendant le chargement de contexte de `/create-architecture`.
+Aucun domaine Unity n'est en HIGH RISK, mais trois changements de la 6.3 ont un impact
+nommé sur des systèmes précis.*
+
+| Système | Contrainte moteur | Source |
+|---|---|---|
+| **2. Audio d'entrée** | `[SerializeField]` est **réservé aux champs** en 6.3 — l'appliquer à une propriété est une **erreur de compilation**, plus un no-op silencieux. Mordra dès que `Voice.Capture` recevra son ScriptableObject de réglages (ADR-0006 : « les valeurs de réglage passent par constructeur, et le ScriptableObject qui les alimente vit dans Capture »). Utiliser `[field: SerializeField]`. | `deprecated-apis.md` |
+| **19. UI diégétique** | Le parseur USS d'UI Toolkit est **strict** en 6.3 : sélecteurs invalides et CSS non supporté autrefois ignorés lèvent désormais une erreur. S'applique **si** UI Toolkit est retenu — le choix UI Toolkit vs UGUI n'est pas tranché. | `breaking-changes.md` |
+| **Tout futur render pass** | Le code URP *Compatibility Mode* est **supprimé par défaut**. `URP_COMPATIBILITY_MODE` est une aide à la conversion, non supportée en 6.4+. Cibler RenderGraph. | `breaking-changes.md` |
+
+> **Le risque réel n'est pas dans le moteur, il est dans les dépendances tierces.**
+> Unity 6.3 est sortie en décembre 2025, donc dans les données d'entraînement du modèle.
+> FishNet, FMOD et Dissonance évoluent indépendamment — et **FishyFacepunch reste non
+> vérifié** avec 6.3. Le patch `.18f1` du projet date de mi-2026, au-delà du cutoff.
+
+**Convention retenue pour le futur `architecture.md`** : les avertissements de risque
+moteur seront **marqués en ligne, système par système**, avec l'extrait de référence
+correspondant — plutôt que regroupés en tête de document. L'avertissement doit être
+là où le développeur travaille.
+
 ### Points ouverts non tranchés par cette revue
 
 - **Persistance du profil de calibration** (système 6) — aucun propriétaire assigné, et la catégorie *Persistence* est déclarée inutilisée.
