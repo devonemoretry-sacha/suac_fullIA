@@ -23,9 +23,13 @@ la question des priorités se réduit donc à l'**ordre de conception**.
 
 **Principe de découpage en couches retenu** : une couche traduit *ce qui doit être
 spécifié avant quoi*, pas les flèches de compilation ni le flux de données à
-l'exécution. **Foundation = aucune dépendance de conception envers un autre système
-de jeu.** Cette distinction n'est pas cosmétique — l'appliquer a fait remonter deux
-systèmes d'une couche et en a fait descendre un autre (voir *Revision History*).
+l'exécution. **Foundation = aucune dépendance envers un système *non encore conçu*.**
+
+La formulation compte : les systèmes 2 et 3 dépendent du système 1, qui est déjà
+construit, testé et figé. Dépendre d'un acquis n'empêche pas de commencer ; dépendre
+d'un système qui reste à concevoir, si. Cette distinction n'est pas cosmétique —
+l'appliquer a fait remonter deux systèmes d'une couche et en a fait descendre un
+autre (voir *Revision History*).
 
 ---
 
@@ -44,7 +48,7 @@ systèmes d'une couche et en a fait descendre un autre (voir *Revision History*)
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
 | 11 | Effet voix → objets | Gameplay | MVP | Not Started | — | 3, 9 |
-| 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 7, 11 |
+| 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
 | 15 | Habitant | Gameplay | MVP | Not Started | — | 3, 5, 10 |
@@ -119,7 +123,7 @@ Vertical Slice / Alpha / Full Vision existent comme vision dans le GDD source ma
 9. **Portage d'objets** — dépend de 5, 7. **Définit l'enveloppe de portage** (dimensions max, nombre de porteurs, rayon de braquage) — contrat consommé par 10.
 10. **Appartement** — dépend de 7, 9. Ne peut pas être dessiné sans l'enveloppe de portage.
 11. **Effet voix → objets** — dépend de 3, 9.
-12. **Couche de retour local** — dépend de 7, 11. Règles d'ADR-0002 : décalage additif amorti, borné, « prédire l'avertissement, jamais le verdict ».
+12. **Couche de retour local** — dépend de 1, 2 (voix locale, avant réseau), 5 (état autoritaire), 9, 11. Règles d'ADR-0002 : décalage additif amorti, borné, « prédire l'avertissement, jamais le verdict ». **Doit être spécifié comme solveur pur** (voix locale + temps → delta borné amorti) ; la *composition* avec la transformée autoritaire appartient au consommateur, avec **un ordre de composition unique et un seul écrivain** — sinon 9, 11, 12 et 13 écrivent tous la même transformée de rendu.
 13. **Mobilier réactif** — dépend de 3, 11. Sensibilité par bande de fréquences.
 14. **Chat vocal de proximité** — dépend de 2, 4, 5. Porte le **routage de canaux** (vivants / morts), codé maison.
 15. **Habitant** — dépend de 3, 5, 10.
@@ -142,6 +146,7 @@ Vide au MVP.
 | Order | System | Priority | Layer | Agent(s) | Est. Effort |
 |-------|--------|----------|-------|----------|-------------|
 | 1 | Analyse vocale *(rétro-documentation)* | MVP | Foundation | systems-designer, unity-specialist | S |
+| — | 🔬 **SPIKE : POC audio** — deux consommateurs sur un micro. Timeboxé 2 sessions. Échec = pivot de design, pas correctif | — | — | prototyper | S |
 | 2 | **Audio d'entrée** | MVP | Foundation | audio-director, unity-specialist | M |
 | 3 | **Réseau** | MVP | Foundation | technical-director, network-programmer | L |
 | 4 | **Propagation du son** ⟂ | MVP | Foundation | systems-designer | M |
@@ -149,6 +154,7 @@ Vide au MVP.
 | 6 | Calibration vocale | MVP | Core | systems-designer, ux-designer | S |
 | 7 | 3C | MVP | Core | game-designer, gameplay-programmer | M |
 | 8 | Session / lobby | MVP | Core | network-programmer | S |
+| — | 🔬 **SPIKE : latence physique** — un meuble, deux joueurs, connexion dégradée. Timeboxé 5 sessions. Invalide 9, 10, 11, 12, 13 s'il échoue | — | — | prototyper | M |
 | 9 | **Portage d'objets** | MVP | Feature | systems-designer, gameplay-programmer | L |
 | 10 | Appartement | MVP | Feature | level-designer | M |
 | 11 | **Effet voix → objets** | MVP | Feature | systems-designer, game-designer | L |
@@ -187,6 +193,13 @@ identifiées et résolues par contrat, plutôt que laissées implicites :
   l'espace, l'un pour le gameplay, l'autre pour le joueur. *Résolution* : un modèle
   d'occlusion partagé, conception en binôme.
 
+- **Propagation (3) / Restitution (4) ↔ Appartement (10)** — *identifiée par le
+  directeur technique le 2026-09-03.* L'occlusion a besoin de la **topologie acoustique**
+  de l'appartement (pièces, ouvertures, matériaux) : deux systèmes Foundation
+  dépendraient d'un système Feature. *Résolution symétrique à la précédente* : **le
+  système 3 possède le contrat de topologie acoustique**, l'appartement s'y conforme.
+  Ce contrat doit rester compatible avec la génération procédurale reportée.
+
 **Conflit de ressource, pas de dépendance** : l'analyse et le chat vocal consomment le
 même micro. Résolu par conception en faisant du système 2 le **propriétaire unique du
 périphérique**, qui fourche vers les deux consommateurs.
@@ -204,6 +217,38 @@ périphérique**, qui fourche vers les deux consommateurs.
 | **Propagation du son** (3) | Design | Goulot silencieux : 3 systèmes en dépendent, modèle entièrement à concevoir, avec la contrainte dure du cumul invariant au nombre de joueurs (GDD §2.4) | Spécifier en formules et tester unitairement hors Unity — la méthode qui a réussi sur `Voice.Core` |
 | **Chat vocal** (14) | Scope | Le routage de canaux (vivants / morts) est **codé maison** : l'implémentation gratuite (Steam natif) n'a pas de rooms | Filtrage à deux groupes dans l'interface maison. Bascule Dissonance si insuffisant (ADR-0005) |
 | **Propagation (3) ↔ Restitution (4)** | Design | Divergence des deux modèles d'occlusion = le jeu ment au joueur | Modèle partagé, conception en binôme |
+
+---
+
+## Director Panel Review — 2026-09-03
+
+Trois directeurs ont relu cette décomposition avant l'écriture des GDD.
+
+| Directeur | Verdict |
+|---|---|
+| Technique (TD-SYSTEM-BOUNDARY) | **CONCERNS** — frontières saines, six points à fermer *dans les GDD*, pas par un redécoupage |
+| Producteur (PR-SCOPE) | **OPTIMISTIC** — ~48 sessions pour les seuls GDD, 150-200 au total, soit 12-18 mois solo |
+| Créatif (CD-SYSTEMS) | **CONCERNS** — aucun gonflement de périmètre, mais deux manques bloquants |
+
+### Contraintes à porter dans les GDD
+
+Ces points ne se règlent pas dans l'index : ils doivent être tranchés explicitement
+dans la section *Detailed Rules* du GDD concerné.
+
+| Système | Contrainte issue de la revue |
+|---|---|
+| **11. Effet voix → objets** | **La question la plus structurante de l'index** : la voix d'un joueur **non-porteur** affecte-t-elle un objet porté par autrui ? Si l'effet se limite au porteur, la maîtrise redevient individuelle, le Pilier 2 s'effondre et « la comédie survit à la maîtrise » avec lui. À trancher, pas à découvrir à l'implémentation. |
+| **13. Mobilier réactif** | **Au moins un des 2-3 types doit être un objet à demande sonore** — qui ne se stabilise ou n'avance que sous émission active. Sans lui, aucun système ne porte le Pilier 1 et le MVP validerait une boucle où le silence est optimal. |
+| **16. Boucle de contrat** | Porte l'invariant **« ≥ 1 élément d'obligation sonore par contrat »** comme critère d'acceptation. Doit aussi nommer deux propriétaires manquants : l'échéance de la tombée de la nuit, et le caractère **collectif** de la décision « on pousse ou on sort ? ». |
+| **2. Audio d'entrée** | Doit écrire la liste de ce qu'il **ne fait pas** : ni normalisation (fermée dans Core, ADR-0004), ni calibration (6), ni routage de canaux (14), ni encodage/transport (14). C'est ce qui l'empêche de devenir un God Object. Doit aussi **posséder l'émission des `VoiceFrame` vers l'hôte** (ADR-0003 étape 4, ~20-30 Hz) — cette responsabilité n'appartenait à aucun des 19 systèmes. |
+| **3. Propagation du son** | **Décision structurante** : la propagation transporte-t-elle un scalaire ou des **énergies par bande** ? Si scalaire, la sensibilité par bande de fréquences du système 13 ne survit pas à la distance. Doit être une **requête pure** (bruit perçu au point P), jamais un `SoundManager` à inscription d'auditeurs. |
+| **5. Réseau** | Contrat de réplication, pas manager : classes de canaux, autorité, cadences ; chaque feature possède son schéma. **Il manque un budget de bande passante** — 8 dépendants, aucun chiffre, alors que CPU, mémoire et draw calls en ont un. |
+| **19. UI diégétique** | Le sonomètre est le seul élément qui frôle un anti-pilier : c'est un HUD informatif, et il *aide à optimiser le silence*. À contraindre — imprécis, retardé, **jamais de seuil affiché**. Ne doit jamais afficher un verdict prédit (recoupe le système 12). |
+
+### Points ouverts non tranchés par cette revue
+
+- **Persistance du profil de calibration** (système 6) — aucun propriétaire assigné, et la catégorie *Persistence* est déclarée inutilisée.
+- **Place de l'AEC dans ADR-0003** — l'analyse lit le signal brut, donc *avant* l'AEC. Un joueur sans casque injecte alors la voix de ses coéquipiers dans sa propre analyse gameplay. L'AEC n'étant pas destructrice (elle soustrait un signal connu), sa place logique est **avant la fourche**, pas sur la seule voie communication. ADR-0003 est à amender.
 
 ---
 

@@ -55,6 +55,48 @@ Confirmé par l'utilisateur le 2026-09-03 :
 
 ---
 
+## Milestone intermédiaire — « Bac à sable Voice-Physics »
+
+**Ajouté le 2026-09-03**, sur recommandation du producteur (gate PR-SCOPE).
+
+### Le problème que ce palier résout
+
+Les 19 systèmes de la décomposition sont **tous** en tier MVP. Aucun point d'arrêt
+montrable n'existe entre « rien » et « la boucle de contrat tient ». Formulé
+crûment par le producteur :
+
+> « À 70 % du travail, vous n'avez pas 70 % d'un produit — vous avez zéro produit
+> et un dépôt. »
+
+Un tier ne sert pas seulement à délimiter le périmètre : il crée des **points
+d'arrêt livrables**. Sans lui, les deux coupes les plus probables sous pression de
+temps — le chat vocal et l'habitant — sont toutes deux **cassantes** : sans chat
+vocal, l'atténuation par la distance disparaît du test ; sans habitant, il ne reste
+pas d'horreur.
+
+### Définition du palier
+
+**Objectif** : répondre à « est-ce que moduler sa voix sous la panique est amusant ? »
+— la question que la *Note de séquencement* de ce document identifie depuis le début
+sans en avoir tiré la conséquence structurelle.
+
+**Cible** : 2 joueurs, un meuble, un appartement. **Pas d'habitant, pas de boucle de
+contrat, pas de mort, pas d'extraction.**
+
+**Systèmes inclus** — 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13 *(numérotation de
+`design/gdd/systems-index.md`)*, plus une version dégradée du 14 : **voix native
+Steam**, sans occlusion. C'est suffisant — l'occlusion ne devient critique qu'avec
+l'habitant et des pièces où se cacher, donc aux systèmes 15 et 16.
+
+**Systèmes exclus du palier** : 8 (session/lobby — connexion directe suffit à deux),
+15, 16, 17, 18, 19.
+
+**Critère de réussite** : deux joueurs portent un meuble ensemble, leurs voix
+l'affectent visiblement, et une tierce personne qui regarde la session **rit**.
+C'est montrable, c'est filmable, et ça ne retire rien du périmètre final.
+
+---
+
 ## Out of Scope
 
 Ces éléments **restent dans le GDD comme vision**. Ils ne sont ni décomposés en
@@ -104,3 +146,5 @@ suffisent à un test de plaisir, avant même l'habitant et l'extraction.
 | 2026-09-03 | #11 (appartement unique fait main) et #12 (résolution de fin minimale) confirmés — plus d'hypothèses ouvertes | Utilisateur |
 | 2026-09-03 | **Ajout du système 13 — calibration vocale par joueur.** Découvert en relisant `game-concept.md` : obligatoire techniquement (ADR-0004) et porteuse de l'onboarding. Le périmètre passe de 12 à 13 systèmes. | Utilisateur |
 | 2026-09-03 | **Ajout du système 14 — session / lobby.** Révélé par `/map-systems` : sans flux « créer / rejoindre une partie », aucun test à 4 joueurs n'est possible. Le périmètre passe de 13 à 14 entrées. | Utilisateur |
+| 2026-09-03 | **Ajout du palier intermédiaire « Bac à sable Voice-Physics »** (gate PR-SCOPE). Le MVP monolithique n'offrait aucun point d'arrêt montrable ; les deux coupes probables sous pression étaient cassantes. Aucun retrait de périmètre. | Utilisateur |
+| 2026-09-03 | **Décision Dissonance reportée au POC audio** (et non plus « jusqu'au système 14 »). Le palier bac à sable n'a pas besoin d'occlusion : voix native Steam suffit. La vraie décision se prend quand l'habitant et les pièces à contourner arrivent. | Utilisateur |
