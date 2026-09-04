@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Art bible close (cadre provisoire) — retour au code
+Task: GDD Analyse vocale — Overview + Player Fantasy écrites, Detailed Design à suivre
 <!-- /STATUS -->
 
 ---
