@@ -337,7 +337,7 @@ un choix de conception à ce stade.)*
 vocale → menace d'un habitant → extraction ou échec) tient et produit la
 tension recherchée, à 4 joueurs.
 
-**Required for MVP**: voir la liste des 13 systèmes « In Scope » dans
+**Required for MVP**: voir la liste des 14 systèmes « In Scope » dans
 `design/mvp-scope.md` (Voice-Physics complète, portage, 2-3 meubles réactifs,
 un habitant, chat de proximité, boucle de contrat, mort, réseau 4 joueurs, 3C,
 un appartement fait main, résolution de fin minimale).
@@ -368,7 +368,7 @@ procédurale, support 6-8 joueurs).
 - [x] `/setup-engine` — Unity 6.3 LTS déjà configuré
 - [ ] **Prototype core idea** (`/prototype`) — la Voice-Physics n'a jamais été testée en jeu ; recommandé avant `/map-systems` malgré l'avance déjà prise par `Voice.Core`
 - [ ] Formaliser les ADR issues du `LOG - Décisions techniques.md` (voir `docs/adoption-plan-2026-09-03.md`)
-- [ ] Décomposer en systèmes (`/map-systems`), limité aux 13 systèmes de `design/mvp-scope.md`
+- [ ] Décomposer en systèmes (`/map-systems`), limité au périmètre de `design/mvp-scope.md` (14 entrées → 19 systèmes décomposés dans `design/gdd/systems-index.md`)
 - [ ] Concevoir chaque système (`/design-system [nom-système]`)
 - [ ] Construire la vertical slice (`/vertical-slice`)
 - [ ] Valider la boucle avec playtest (`/playtest-report`)

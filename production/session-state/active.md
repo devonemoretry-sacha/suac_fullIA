@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: game-concept.md relu et validé — prochaine étape /map-systems
+Task: Index des systèmes écrit — prochaine étape : POC audio + premiers GDD
 <!-- /STATUS -->
 
 ---
@@ -27,8 +27,10 @@ par les skills du template.
 - [x] `design/gdd/game-concept.md` — extrait de PARTIE 1 du GDD canonique
 - [x] 6 ADR formalisées depuis `LOG - Décisions techniques.md` (ADR-0001 à ADR-0006, toutes Accepted)
 - [x] **Relecture collaborative de `game-concept.md`** — arbitrages MDA/PENS/Bartle actés, 14 points différés avec déclencheur
-- [ ] `/map-systems` sur les 13 systèmes du périmètre MVP **← prochaine étape**
-- [ ] `/design-system` ×13
+- [x] `/map-systems` — index écrit : 14 entrées de périmètre → 19 systèmes, 4 couches
+- [ ] Rétro-documenter l'analyse vocale (code fait, GDD manquant) **← prochaine étape**
+- [ ] POC audio — lever la contention de périphérique
+- [ ] `/design-system` ×18
 - [ ] `/create-control-manifest`, `/architecture-review` (bootstrap tr-registry)
 
 ## Décisions clés
@@ -41,7 +43,10 @@ par les skills du template.
 | Analyse vocale | DSP maison en C# pur — **FMOD retiré du chemin d'analyse** (ADR-0003) |
 | Chat vocal | **Interface maison, backend interchangeable.** Implémentation A gratuite (Steam natif + FMOD 3D) ; Dissonance en upgrade à 175 $, différé (ADR-0005) |
 | Licences | FMOD **gratuit** sous 200 k$ de revenu. Dissonance 120 $ + pont FMOD 55 $ : **non engagés, non nécessaires au MVP** |
-| Périmètre MVP | « La boucle de contrat tient », 4 joueurs — voir `design/mvp-scope.md` |
+| Périmètre MVP | « La boucle de contrat tient », 4 joueurs — 14 entrées dans `design/mvp-scope.md`, décomposées en **19 systèmes** dans `design/gdd/systems-index.md` |
+| Découpage en couches | Une couche = **ordre de conception**, pas dépendances de compilation. Foundation = aucune dépendance de conception envers un autre système |
+| Audio d'entrée | **Propriétaire unique du micro**, fourche brut→analyse / traité→chat. Résout le conflit de ressource par conception (ADR-0003 : « deux voies sur le même micro ») |
+| Canaux vocaux morts/vivants | **Routage codé maison** dans l'interface de chat vocal. Steam natif n'a pas de rooms ; on ne devance pas l'achat de Dissonance pour autant |
 | GDD canonique | `Obsedian_SUAC_FIA/GDD_Shut_Up_And_Carry_1.md` |
 | Convention de langue | Titres de sections en anglais (parsés par les skills), corps en français |
 | Projet Unity | `Unity/Shut_up_and_carry/` fait foi ; `SEP26` ignoré (template vierge) |
@@ -83,6 +88,11 @@ par les skills du template.
 retour local) ; transport de la voix → ADR-0005 (interface maison, implémentation A
 gratuite). Le périmètre MVP ne comporte plus d'hypothèse ouverte.)*
 
-## Rien n'a été commité
+## Suivi git
 
-Toutes les modifications sont dans l'arbre de travail. Aucun commit effectué.
+Dépôt : https://github.com/devonemoretry-sacha/suac_fullIA — branche `main`.
+Commits au fil des étapes.
+
+| Commit | Étape |
+|---|---|
+| `c8d1e9c` | Initial — template + projet + artefacts d'onboarding |

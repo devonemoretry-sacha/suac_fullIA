@@ -40,8 +40,9 @@ construits maintenant.
 | 11 | **Un appartement unique, fait à la main** | Support physique du contrat. Pas de génération procédurale. | ❌ Non commencé |
 | 12 | **Résolution de fin de contrat minimale** | Écran succès / échec. Pas d'évaluation détaillée. | ❌ Non commencé |
 | 13 | **Calibration vocale par joueur** | **Techniquement obligatoire** (ADR-0004 : plancher de bruit, repos, médiane, cri) et **porteuse de l'onboarding** (voir `game-concept.md` § Flow State Design). | ❌ Non commencé |
+| 14 | **Session / lobby** | **Prérequis de validation, pas un confort** : sans moyen de créer et rejoindre une partie, aucun test à 4 joueurs n'est possible. ADR-0001 décrit le Lobby Steam comme annuaire ; aucune entrée ne couvrait le flux. | ❌ Non commencé |
 
-### Précisions sur #11, #12 et #13
+### Précisions sur #11, #12, #13 et #14
 
 Confirmé par l'utilisateur le 2026-09-03 :
 
@@ -74,7 +75,10 @@ systèmes, ni spécifiés, ni estimés tant que le MVP n'est pas validé.
 
 ## Consequences
 
-- `/map-systems` ne décompose **que** les 13 systèmes ci-dessus.
+- `/map-systems` ne décompose **que** les 14 systèmes ci-dessus. La décomposition
+  effectuée le 2026-09-03 en a tiré **19 systèmes concevables** — voir
+  `design/gdd/systems-index.md`. Les 5 systèmes supplémentaires sont des
+  décompositions, pas des ajouts de périmètre.
 - `/design-system` n'écrit un GDD à 8 sections que pour ceux-là.
 - Tout ajout au périmètre passe par une révision datée de ce document, pas par
   une décision implicite en cours de sprint.
@@ -99,3 +103,4 @@ suffisent à un test de plaisir, avant même l'habitant et l'extraction.
 | 2026-09-03 | Périmètre initial arrêté | Utilisateur, via `/project-stage-detect` |
 | 2026-09-03 | #11 (appartement unique fait main) et #12 (résolution de fin minimale) confirmés — plus d'hypothèses ouvertes | Utilisateur |
 | 2026-09-03 | **Ajout du système 13 — calibration vocale par joueur.** Découvert en relisant `game-concept.md` : obligatoire techniquement (ADR-0004) et porteuse de l'onboarding. Le périmètre passe de 12 à 13 systèmes. | Utilisateur |
+| 2026-09-03 | **Ajout du système 14 — session / lobby.** Révélé par `/map-systems` : sans flux « créer / rejoindre une partie », aucun test à 4 joueurs n'est possible. Le périmètre passe de 13 à 14 entrées. | Utilisateur |

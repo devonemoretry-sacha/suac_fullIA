@@ -178,7 +178,7 @@ n'a pas eu lieu.
      déployables, progression, débriefing). Sans coupe explicite, `/create-epics` aurait
      produit un backlog ingérable.
    - **Résolution**: périmètre arrêté et figé dans `design/mvp-scope.md`.
-     Objectif « la boucle de contrat tient », 4 joueurs, 13 systèmes IN, 8 reports
+     Objectif « la boucle de contrat tient », 4 joueurs, 14 systèmes IN, 8 reports
      explicites. Deux hypothèses restent à confirmer (appartement unique fait main,
      résolution de fin minimale).
 
