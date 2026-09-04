@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Analyse vocale — Overview + Player Fantasy écrites, Detailed Design à suivre
+Task: GDD Analyse vocale — Overview, Player Fantasy, Detailed Design écrites — Formulas à suivre
 <!-- /STATUS -->
 
 ---
