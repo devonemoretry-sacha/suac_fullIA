@@ -41,6 +41,7 @@ par les skills du template.
 | Réseau | FishNet retenu (ADR-0001). Vérifié actif : 4.7.2R, avril 2026 |
 | Physique | Autorité hôte + **couche de retour local non autoritaire** (décalage amorti). Prédire l'avertissement, jamais le verdict (ADR-0002) |
 | Analyse vocale | DSP maison en C# pur — **FMOD retiré du chemin d'analyse** (ADR-0003) |
+| AEC | **En amont de la fourche**, protège analyse et communication. Reclassée de « confort » à **correction de gameplay** (ADR-0003 amendé le 2026-09-03). Sans AEC → **casque obligatoire**, prérequis de validité de la mesure |
 | Chat vocal | **Interface maison, backend interchangeable.** Implémentation A gratuite (Steam natif + FMOD 3D) ; Dissonance en upgrade à 175 $, différé (ADR-0005) |
 | Licences | FMOD **gratuit** sous 200 k$ de revenu. Dissonance 120 $ + pont FMOD 55 $ : **non engagés, non nécessaires au MVP** |
 | Périmètre MVP | « La boucle de contrat tient », 4 joueurs — 14 entrées dans `design/mvp-scope.md`, décomposées en **19 systèmes** dans `design/gdd/systems-index.md` |

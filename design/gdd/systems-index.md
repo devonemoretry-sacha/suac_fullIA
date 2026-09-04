@@ -248,7 +248,16 @@ dans la section *Detailed Rules* du GDD concerné.
 ### Points ouverts non tranchés par cette revue
 
 - **Persistance du profil de calibration** (système 6) — aucun propriétaire assigné, et la catégorie *Persistence* est déclarée inutilisée.
-- **Place de l'AEC dans ADR-0003** — l'analyse lit le signal brut, donc *avant* l'AEC. Un joueur sans casque injecte alors la voix de ses coéquipiers dans sa propre analyse gameplay. L'AEC n'étant pas destructrice (elle soustrait un signal connu), sa place logique est **avant la fourche**, pas sur la seule voie communication. ADR-0003 est à amender.
+- ~~**Place de l'AEC dans ADR-0003**~~ — **résolu le 2026-09-03.** ADR-0003 amendé :
+  l'AEC remonte **en amont de la fourche** et protège les deux voies. Elle est
+  reclassée de « confort d'écoute » à **correction de gameplay** : sans elle, un
+  joueur sans casque injecte la voix de ses coéquipiers dans sa propre analyse.
+  Elle peut remonter sans violer le principe de l'ADR parce qu'elle soustrait un
+  signal *connu* au lieu de filtrer — elle préserve donc le chuchotement.
+  ADR-0005 amendé en conséquence : **le casque devient un prérequis de validité de
+  la mesure** tant qu'on est en implémentation A (sans AEC), pas une consigne de confort.
+  → Contrainte pour le système 2 : l'AEC est le **seul** traitement autorisé en
+  amont de l'analyse.
 
 ---
 

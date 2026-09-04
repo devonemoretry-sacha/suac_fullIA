@@ -76,10 +76,35 @@ est `noEngineReferences` et reçoit des échantillons de l'extérieur.
 
 ### Architecture
 
-**Deux voies distinctes sur le même micro** :
+**Une AEC en amont, puis deux voies distinctes sur le même micro** :
 
-- **Voie communication** → signal **traité** (VAD, AGC, suppression de bruit, AEC) → chat vocal. Objectif : confort d'écoute.
-- **Voie analyse** → signal **brut**, prélevé avant tout traitement → FFT. Objectif : vérité du signal.
+```
+micro
+  │
+  ├── AEC — annulation d'écho acoustique (soustraction du signal joué par les haut-parleurs)
+  │
+  ├── voie ANALYSE      → aucun autre traitement → FFT.  Objectif : vérité du signal.
+  └── voie COMMUNICATION → VAD, AGC, suppression de bruit → chat vocal. Objectif : confort d'écoute.
+```
+
+- **Voie analyse** → signal brut **hormis l'AEC**, prélevé avant tout traitement de confort → FFT.
+- **Voie communication** → signal **traité** (VAD, AGC, suppression de bruit) → chat vocal.
+
+> **Amendement du 2026-09-03 — l'AEC remonte en amont de la fourche.**
+> La rédaction initiale plaçait l'AEC sur la seule voie communication, classée
+> « confort d'écoute ». C'était une erreur de classification : **l'AEC est un
+> traitement de correction de gameplay, pas de confort.**
+>
+> Sans elle sur la voie analyse, un joueur sans casque voit ses haut-parleurs rejouer
+> le cri d'un coéquipier, son micro le capte, et **ce cri entre dans sa propre analyse
+> gameplay**. Le meuble qu'il porte s'écrase à cause de la voix de quelqu'un d'autre.
+> C'est une **entrée fantôme dans le contrôleur**, pas une gêne auditive.
+>
+> L'AEC peut remonter sans violer le principe de cet ADR parce qu'elle n'est **pas
+> destructrice** : contrairement au VAD (qui coupe sous un seuil), à l'AGC (qui écrase
+> l'écart chuchotement/cri) et à la suppression de bruit (qui filtre spectralement),
+> l'AEC **soustrait un signal connu** — ce que le jeu joue lui-même. Elle préserve
+> la parole faible, donc le chuchotement, donc la mécanique centrale.
 
 **Chaîne d'analyse, entièrement côté client** :
 
@@ -131,7 +156,13 @@ Chaque bloc a une responsabilité unique et un contrat clair, testable indépend
 
 - Le **crest factor** (rapport crête/RMS) sur signal brut discrimine le percussif du
   continu — troisième brique de la grille voice-physics, sans traitement supplémentaire
-- L'AEC reste souhaitable **sur la voie communication** — elle règle au passage le point larsen
+- **L'AEC est obligatoire et vit en amont de la fourche** — elle protège les deux voies.
+  Sur la voie communication elle règle le larsen ; sur la voie analyse elle empêche
+  l'entrée fantôme. C'est le **seul** traitement autorisé en amont de l'analyse : tout
+  ajout à cet endroit doit être justifié par la même règle — soustraire un signal connu,
+  jamais filtrer, seuiller ou normaliser
+- **À défaut d'AEC disponible, le casque est obligatoire** — voir *Risks*. Ce n'est pas
+  une recommandation de confort, c'est la condition pour que la mesure vocale soit valide
 - **Le VAD ne peut pas servir de garde pour économiser la FFT** : l'analyse doit tourner
   même quand le VAD dit « pas de parole », précisément parce que le chuchotement passe sous son seuil
 - Gérer les buffers circulaires proprement (risque de fuite mémoire)
@@ -206,6 +237,8 @@ testable hors éditeur en millisecondes.
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|-----------|
 | **Contention de périphérique** : analyse et chat vocal lisent le même micro | **Moyenne** | **Élevé** | Non vérifié. À lever au POC audio, **avant tout achat de middleware vocal** (voir ADR-0005). C'est le point ouvert n°1 de cet ADR |
+| **Entrée fantôme par les haut-parleurs** : un joueur sans casque injecte la voix de ses coéquipiers dans sa propre analyse | **Élevée sans AEC ni casque** | **Élevé** | AEC en amont de la fourche (amendement du 2026-09-03). **À défaut : casque obligatoire**, documenté comme prérequis de test et non comme confort. Le cas le plus visible : un cri d'un tiers écrase le meuble que vous portez, et vous accusez le jeu |
+| L'AEC dégrade la mesure vocale qu'elle est censée protéger | Faible | Moyen | L'AEC soustrait un signal connu et préserve la parole faible. À vérifier tout de même au POC audio : mesurer un chuchotement AEC active vs inactive, et comparer |
 | Latence cumulée (analyse + réseau) trop élevée | Moyenne | Élevé | À mesurer dès le POC ; estimations du LOG non mesurées |
 | Les joueurs ne parviennent pas à contrôler leur voix assez finement | Moyenne | **Élevé** | Playtests critiques. Risque de design, pas technique |
 | Accessibilité : joueurs dysphoniques ou à voix atypique | Moyenne | Moyen | La normalisation par profil personnel atténue, sans annuler. À traiter en accessibilité |
@@ -236,6 +269,9 @@ dépendant.
 
 - [ ] La capture d'analyse et le chat vocal accèdent au micro simultanément, sans conflit de périphérique
 - [ ] Le signal lu par l'analyse est bien brut — ni VAD, ni AGC, ni suppression de bruit en amont
+- [ ] **L'AEC est active en amont de la fourche** et protège les deux voies
+- [ ] **Un chuchotement mesuré AEC active reste comparable à la même mesure AEC inactive** — l'AEC ne doit pas dégrader ce qu'elle protège
+- [ ] **Sans casque, le cri d'un coéquipier joué par les haut-parleurs ne modifie pas l'objet porté localement**
 - [ ] Un chuchotement produit des features exploitables (non écrasées par un seuil)
 - [ ] Un claquement de langue est distingué d'un son tenu par le crest factor
 - [ ] La charge CPU client mesurée est conforme à l'estimation

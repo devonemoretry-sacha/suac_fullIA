@@ -90,7 +90,7 @@ que cette interface, jamais le middleware derrière.
 
 | Implémentation | Coût | Ce qu'elle donne | Ce qui manque |
 |---|---|---|---|
-| **A — Steam natif + FMOD** *(initiale)* | **0 $** | Capture, compression, transport P2P Steam, **spatialisation 3D, occlusion et distance via FMOD** | AEC (larsen), suppression de bruit, système de rooms |
+| **A — Steam natif + FMOD** *(initiale)* | **0 $** | Capture, compression, transport P2P Steam, **spatialisation 3D, occlusion et distance via FMOD** | **AEC → impose le casque obligatoire**, suppression de bruit, système de rooms |
 | **B — Dissonance + FMOD** *(upgrade)* | 175 $ | Tout ce qui précède, plus Opus, RNNoise, **AEC**, contrôle de gain, FEC, rooms | — |
 
 **Pourquoi ce découpage.** Un adaptateur réseau doit exister **de toute façon** : le cœur
@@ -106,9 +106,12 @@ un, rien n'oblige à se coupler à un middleware payant avant d'en avoir besoin.
   c'est ce qui procure occlusion et atténuation par la distance sans middleware payant.
 - L'implémentation B fournit à Dissonance un canal **non fiable et non ordonné** — ce que
   le P2P Steam donne nativement. Dissonance fournit les classes de base d'adaptateur.
-- L'AEC vit sur la voie communication (voir ADR-0003). **Elle n'existe qu'en
-  implémentation B** : le point larsen du BACKLOG reste ouvert tant qu'on est en A
-  (mitigation en attendant : playtests au casque).
+- **L'AEC vit en amont de la fourche** (ADR-0003, amendé le 2026-09-03) et n'est plus
+  un traitement de confort : sans elle, un joueur sans casque injecte la voix de ses
+  coéquipiers dans **sa propre analyse gameplay**. Elle n'existe pourtant qu'en
+  implémentation B. **Conséquence pour l'implémentation A : le casque est obligatoire**,
+  comme prérequis de validité de la mesure et non comme recommandation de confort.
+  Le point larsen du BACKLOG reste ouvert jusqu'à B.
 
 ## Alternatives Considered
 
@@ -135,8 +138,9 @@ Gratuite et déjà embarquée via Facepunch, mais l'API Steam ne fait que captur
 compresser — pas d'audio 3D, pas de rooms, pas d'annulation d'écho, pas de suppression de
 bruit. **Rejetée comme solution finale**, mais **retenue comme implémentation initiale (A)** :
 combinée à FMOD, elle couvre la spatialisation, l'occlusion et la distance — c'est-à-dire
-tout ce que le gameplay exige. Ce qui manque (AEC, RNNoise, rooms) relève du confort, pas
-de la mécanique.
+tout ce que le gameplay exige en matière de spatialisation. Ce qui manque en RNNoise et
+en rooms relève du confort ; **l'AEC, elle, ne relève pas du confort** (ADR-0003 amendé) —
+son absence est compensée par l'obligation du casque, pas ignorée.
 
 ### Alternative 5: Acheter Dissonance immédiatement
 
@@ -180,8 +184,12 @@ figure pas dans cette liste.
   ce jour, et **aucune n'est nécessaire pour le MVP**.
   *(Note : FMOD lui-même est **gratuit** sous 200 000 $ de revenu annuel et 500 000 $ de
   financement — les 55 $ ne concernent que le pont Dissonance→FMOD.)*
-- **Pas d'AEC en implémentation A** : le larsen reste un point ouvert tant qu'on n'est pas
-  passé en B. Playtests au casque en attendant.
+- **Pas d'AEC en implémentation A — et depuis l'amendement d'ADR-0003, ce n'est plus
+  un simple inconfort.** Sans AEC, les haut-parleurs d'un joueur rejouent la voix de
+  ses coéquipiers, son micro la capte, et elle entre dans **sa propre analyse
+  gameplay** : le meuble qu'il porte réagit à la voix d'un autre. **Le casque devient
+  donc un prérequis de validité de la mesure**, pas une recommandation de confort — à
+  énoncer comme tel dans les consignes de playtest. Le larsen, lui, reste ouvert jusqu'à B.
 - Une interface de plus à définir et maintenir — coût réel, mais faible : l'adaptateur
   était à écrire de toute façon
 - Un adaptateur réseau à écrire **et à maintenir nous-mêmes**
@@ -205,6 +213,7 @@ figure pas dans cette liste.
 | Impossibilité de tester la voix en local | **Certaine** | Moyen | Contrainte acceptée. Prévoir des sessions de test à 2 machines dès le POC audio |
 | Budget 175 $ non engagé au moment où le système est nécessaire | Faible | Faible | **Neutralisé par l'implémentation A** : le MVP fonctionne à 0 $. L'achat devient un choix de confort, pas un blocage |
 | L'implémentation A s'avère insuffisante (larsen ingérable en playtest) | Moyenne | Moyen | Bascule en implémentation B — changement contenu derrière l'interface, pas une réécriture |
+| **Un testeur joue sans casque et fausse silencieusement la mesure** | **Élevée** | **Élevé** | L'absence d'AEC en implémentation A rend la voix des coéquipiers audible par le micro, donc active dans l'analyse gameplay. Consigne de playtest explicite : **casque obligatoire**. Le danger est que la donnée soit fausse *sans que personne ne s'en aperçoive* — le joueur accuse le jeu d'être injuste |
 | Le décodage des trames Steam vers FMOD est plus coûteux que prévu | Moyenne | Moyen | À évaluer au POC audio, en même temps que la contention de périphérique (ADR-0003) |
 
 ## Performance Implications
