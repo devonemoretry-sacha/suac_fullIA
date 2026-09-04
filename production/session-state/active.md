@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Premiers GDD — architecture en attente de la baseline TR
+Task: /art-bible — GDD Analyse vocale en pause (Overview écrite, 12 sections à faire)
 <!-- /STATUS -->
 
 ---
@@ -32,7 +32,9 @@ par les skills du template.
 - [x] ADR-0003 amendé — l'AEC remonte en amont de la fourche
 - [x] `/gate-check` Technical Setup → Pre-Production, passée en **inventaire** — FAIL attendu, rapport dans `production/gate-checks/`
 - [~] `/create-architecture` — **BLOQUÉ volontairement** : la skill exige une baseline TR extraite des GDD, or il n'y en a aucun. Reprise quand les premiers GDD existeront.
-- [ ] Rétro-documenter l'analyse vocale (code fait, GDD manquant) **← prochaine étape**
+- [~] GDD Analyse vocale — **en pause**, Overview écrite, 12 sections restantes. Reprise avec `/design-system voice-analysis`
+- [ ] `/art-bible` — étape sautée, à rattraper **← en cours**
+- [ ] `/prototype` — étape sautée, toujours non rattrapée : la Voice-Physics n'a jamais été validée comme amusante
 - [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features
 - [ ] `/design-system` ×18
 - [ ] Reprendre `/create-architecture` une fois des GDD écrits
@@ -57,7 +59,7 @@ par les skills du template.
 | GDD canonique | `Obsedian_SUAC_FIA/GDD_Shut_Up_And_Carry_1.md` |
 | Convention de langue | Titres de sections en anglais (parsés par les skills), corps en français |
 | Projet Unity | `Unity/Shut_up_and_carry/` fait foi ; `SEP26` ignoré (template vierge) |
-| Review mode | `lean` |
+| Review mode | **`full`** — bascule le 2026-09-03. Spécialistes convoqués à chaque section de GDD, CD-GDD-ALIGN par GDD, art-director actif. Coût en tokens nettement supérieur, assumé. |
 
 ## Fichiers créés ou modifiés cette session
 
