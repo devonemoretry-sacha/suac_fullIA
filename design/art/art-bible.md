@@ -299,7 +299,165 @@ La seule paire fragile est **Vidage / Menace proche** — voir l'avertissement e
 
 ## 3. Shape Language
 
-[To be designed]
+### 1. Silhouette des habitants — la reconnaissance par fragment
+
+En vue subjective, dans un couloir, **on ne voit jamais un habitant en entier** : un bras
+qui dépasse d'un renfoncement, une forme qui traverse une embrasure à contre-jour, un dos
+qui se retourne à bout portant. Une silhouette pensée pour être lue en pied à dix mètres
+est un langage mort ici.
+
+**Principe — la zone-signature.** Chaque habitant porte **une seule** zone exagérée,
+cohérente d'un individu à l'autre de son espèce : une main disproportionnée, un ruban qui
+traîne, un motif de couture. Elle est systématiquement placée dans la **bande 1-2 m**,
+celle du regard et de la portée de bras — la zone qui reste dans le cadre quel que soit
+le cadrage partiel.
+
+> **Test de conception** — *Quand une partie du corps est ambiguë entre discrète et
+> exagérée, l'exagérer sur cette seule zone signature, jamais répartie sur tout le corps.*
+
+**Effet recherché** : montrer un fragment force le cerveau à compléter la forme manquante
+— principe de clôture. **La reconnaissance partielle inquiète davantage qu'une silhouette
+entière et lisible.** La contrainte de caméra devient un atout.
+
+**Pilier servi** : Pilier 1 et la contrainte des parades — un joueur doit identifier
+l'espèce depuis un fragment pour savoir *quoi faire*, pas seulement *qu'il y a danger*.
+
+**Vérification en solo** : encadrer le modèle dans une embrasure de porte à hauteur de
+caméra joueur, vérifier que la zone-signature reste dans le cadre. Un aller-retour dans
+l'éditeur, pas de suite de tests.
+
+---
+
+### 2. La coquille est angulaire, la vie est courbe
+
+**C'est la distinction unique et suffisante du projet.**
+
+| Forme | Signifie |
+|---|---|
+| **Courbe organique** | maudit · vivant · **transportable** |
+| **Angulaire, arêtes vives** | décor · fixe · **non transportable** |
+
+L'architecture, les cartons, l'adhésif suivent une grille rectiligne stricte — réemploi
+modulaire, cohérent avec un appartement réel. Tout ce qui est maudit ou habité casse
+cette grille par une courbe organique : affaissement, renflement, bosse.
+
+C'est la traduction géométrique directe de la règle de la section 1 : angulaire et
+réemployable = le décor qu'on vide ; courbe et unique = ce qui refuse de partir.
+
+**La courbe ne désigne pas un objectif, elle déclare une catégorie.** Plusieurs objets
+courbes cohabitent dans une pièce sans qu'il soit nécessaire de les distinguer entre eux.
+Comme le contrat consiste à **vider** l'appartement, tout ce qui est courbe est à sortir —
+il n'y a pas d'objectif unique à signaler.
+
+> **Test de conception** — *Quand une forme est ambiguë entre objet maudit et décor
+> neutre, lui donner une courbe organique ; tout le reste garde l'angle droit.*
+
+#### Pourquoi ça se lit sans renfort de lumière ni de couleur
+
+Le principe « matière avant forme » fait le travail. Sous un fini mat à réflexion large,
+**une courbe produit un dégradé continu de luminance ; un angle produit une rupture de ton
+nette entre facettes.** C'est un contraste de *type de transition tonale*, pas de couleur —
+il survit donc intact à la désaturation de l'état « Menace proche ».
+
+#### Deux seuils obligatoires
+
+**Amplitude minimale** — la courbure doit rompre la boîte englobante de l'objet d'au moins
+**15 à 20 % sur au moins deux faces adjacentes, en continu**. Un simple chanfrein arrondi
+ne suffit pas : il se lit comme de l'angulaire adouci.
+
+**Discipline du kit décor** — les pièces modulaires angulaires gardent des arêtes
+**strictement vives, zéro arrondi, même décoratif**. ⚠️ C'est contre-intuitif : l'habitude
+en temps réel est de biseauter légèrement les arêtes pour qu'elles accrochent la lumière.
+Si le kit générique le fait « pour faire propre », **l'opposition binaire s'effondre et
+tout le langage de formes avec elle.** Règle de production, pas préférence.
+
+#### Le vide comme matière
+
+Les rectangles fantômes et empreintes au sol sont des **décalques plats**, pas de la
+géométrie.
+
+**Leur fonction est rétrospective et narrative uniquement.** Un meuble est resté des
+années contre un mur ; on le prend ; la trace apparaît derrière — décoloration, poussière,
+lavages. Elle raconte ce qui vient de partir, ou ce qui est parti avant nous.
+**Elle n'indique jamais où aller.** Aucune fonction de guidage ne doit lui être assignée.
+
+Ils jouent en revanche un rôle **compositionnel** : zones plates et neutres autour
+desquelles les courbes se détachent. Ségrégation figure-fond obtenue par l'espace négatif,
+jamais par un projecteur — ce qui hiérarchise la *catégorie*, jamais un individu.
+
+---
+
+### 3. Grammaire de l'UI — l'instrument d'atelier usé
+
+Le seul élément d'interface acté est le **sonomètre diégétique**, qui mesure ce que le
+joueur émet et jamais ce que ça provoque.
+
+Il n'emprunte ni la courbe organique — réservée au vivant, ce serait un contresens
+fictionnel — ni un langage numérique net, qui se lirait comme une jauge précise et
+contredirait son imprécision voulue.
+
+**Principe — instrument corporate bon marché.** Même géométrie angulaire, institutionnelle
+et usée que la coquille de l'appartement : cadran mécanique, aiguille, étiquette Karma
+Logistics écaillée. **Jamais un HUD à l'écran.**
+
+> **Test de conception** — *Quand un élément d'interface est ambigu entre précision
+> technologique et outil low-cost, choisir la forme d'un instrument d'atelier usé, jamais
+> un graphisme numérique net.*
+
+**Deux bénéfices de cette forme :**
+
+**L'imprécision mécanique de l'objet justifie diégétiquement** pourquoi la lecture est
+floue et retardée — plus besoin de la décréter par une règle de gameplay invisible.
+
+**Partageant la géométrie du décor mort plutôt que la courbe du vivant, il se signale
+comme incapable de sentir la créature.** La décision du 2026-07-27 devient un rappel
+visuel inscrit dans la forme du prop.
+
+**Pilier servi** : anti-pilier « pas de HUD informatif », et Pilier 1.
+
+*La section 6 précisera l'implémentation.*
+
+---
+
+### 4. Hiérarchie et affordances — sans désignation d'objectif
+
+**Aucun marqueur d'objectif de contrat.** Écartés explicitement : la mise en lumière par
+practicable, la règle du plus gros volume, la trace au sol correspondante, le marquage
+Karma Logistics apposé par l'entreprise. Le jeu ne désigne pas ses cibles — **les joueurs
+apprennent à lire le vocabulaire de formes avec le temps.**
+
+La hiérarchie existe déjà structurellement, sans mise en avant : peint à la main = ce qui
+compte, kit réemployé = fond.
+
+#### Points d'ancrage — affordance de proximité
+
+Les points de prise du portage collectif sont **visibles à courte portée uniquement**.
+Pas une balise lisible depuis le bout de la pièce : une affordance qu'on découvre en
+s'approchant.
+
+**Règle de modélisation** : l'affordance est **dupliquée à chaque point de prise**, par
+symétrie de placement. Quel que soit le côté par lequel un joueur aborde l'objet, le même
+signal apparaît — sans quoi deux porteurs abordant par des côtés opposés découvriraient
+l'information à des instants différents, au pire moment pour improviser une répartition
+à la voix sous pression.
+
+**Conséquence utile** : le **nombre d'ancrages visibles dit le nombre de porteurs
+nécessaires**. En faisant le tour du meuble, on apprend « il en faut trois » sans une
+seule ligne d'interface.
+
+#### Composition — par la densité, jamais par la hiérarchie
+
+Une pièce sans mise en avant individuelle peut devenir du bruit visuel si trop d'objets
+courbes s'accumulent. Deux leviers, tous deux compatibles avec l'absence de désignation :
+
+- **Rationner le nombre d'objets courbes par pièce** — règle de placement, pas de rendu.
+- **Exploiter le vide** — zones vides et rectangles fantômes servent de fond neutre autour
+  des courbes.
+
+> ⚠️ **Conséquence hors art bible** : le rationnement des objets courbes par pièce est une
+> contrainte de **level design** (système 11) qui touche aussi la **boucle de contrat**
+> (système 16) — le nombre d'objets courbes détermine la quantité de travail d'un contrat,
+> donc sa durée et son rythme. À transmettre lors de la rédaction de ces GDD.
 
 ---
 
