@@ -246,7 +246,150 @@ cadence globale, qui coûterait ≈ 8 Ko/s pour un besoin ponctuel.
 
 ## Formulas
 
-[To be designed]
+### 1. `Loudness`
+
+```
+x        = clamp((Rms_dB − Floor_dB) / (Scream_dB − Floor_dB), 0, 1)
+Loudness = x ^ γ
+```
+
+| Variable | Symbole | Type | Plage | Description |
+|---|---|---|---|---|
+| RMS lissé, en dB | `Rms_dB` | float | −∞ … 0 | Sortie de l'`EnvelopeFollower` |
+| Plancher de bruit | `Floor_dB` | float | calibré | Profil joueur |
+| Cri de référence | `Scream_dB` | float | calibré | Profil joueur |
+| Exposant perceptif | `γ` | float | 0,5 … 1,0 · **PROVISOIRE 0,65** | Étire le registre bas |
+
+**Sortie** : 0 à 1. Sous le plancher → 0. Au-dessus du cri → 1.
+
+**Exemple** : `Floor = −50 dB`, `Scream = −10 dB`, `Rms = −30 dB`
+→ `x = (−30 − (−50)) / (−10 − (−50)) = 0,5` → `Loudness = 0,5^0,65 ≈ 0,64`.
+
+**Pourquoi `γ` et pas une interpolation linéaire en dB.** Le dB compresse déjà
+l'amplitude, mais la sonie perçue croît de façon **convexe** avec le dB. Une
+interpolation linéaire ferait correspondre `0,5` à mi-chemin de la *grandeur physique*,
+pas de l'*effort ressenti* — et l'écart entre les deux est **maximal dans le registre
+bas, celui du chuchotement**, qui est le registre central du jeu.
+
+---
+
+### 2. `Pitch`
+
+```
+Pitch = 12 · log2(F0_Hz / F0_habituel)
+```
+
+| Variable | Symbole | Type | Plage | Description |
+|---|---|---|---|---|
+| F0 après filtre médian | `F0_Hz` | float | médiane ± 1 octave | Sortie de l'étape 7 de la chaîne |
+| Hauteur habituelle | `F0_habituel` | float | calibré | Médiane de repos du profil |
+
+**Sortie** : **−12 à +12 demi-tons**. La plage n'est pas arbitraire — elle découle de la
+4ᵉ défense contre l'erreur d'octave, qui resserre la recherche autour de la médiane du
+joueur ± une octave. Hors calibration, l'analyse ne produit que du silence : aucune
+`Pitch` n'existe.
+
+**Exemples**, avec `F0_habituel = 120 Hz` :
+
+| `F0_Hz` | `Pitch` |
+|---|---|
+| 240 | **+12** (une octave au-dessus) |
+| 120 | **0** (sa voix normale) |
+| 90 | **−4,98** |
+
+**Aux extrêmes** : quand `Voiced` est faux, `VoiceFrame` force `Pitch` à 0. Un
+consommateur qui lit `Pitch` sans vérifier `Voiced` lit une valeur qui n'a pas de sens.
+
+---
+
+### 3. `Continuity`
+
+```
+CrestDb    = 20 · log10(Peak / Rms)
+Continuity = clamp(1 − (CrestDb − CrestMinDb) / (CrestMaxDb − CrestMinDb), 0, 1)
+```
+
+| Variable | Symbole | Type | Plage | Description |
+|---|---|---|---|---|
+| Crête, en dB | `CrestDb` | float | ≥ 0 | Dérivé de `RawLoudness.CrestFactor` |
+| Borne son tenu | `CrestMinDb` | float | **PROVISOIRE 8** | Voyelle tenue humaine |
+| Borne percussif | `CrestMaxDb` | float | **PROVISOIRE 20** | Claquement de langue |
+
+**Sortie** : 0 à 1. **0 = percussif, 1 = régulier.**
+
+**Exemple** : `Peak/Rms = 3` → `CrestDb = 20·log10(3) = 9,54`
+→ `Continuity = 1 − (9,54 − 8)/(20 − 8) ≈ 0,87`.
+
+> **⚠️ Cas limite obligatoire.** Si `Rms = 0`, la formule diverge : `log10(0)` tend vers
+> −∞ et `Continuity` serait bornée à 1 — c'est-à-dire « parfaitement tenu » sur du
+> **silence**. Garde explicite : **`Rms = 0` → `Continuity = 0`.** Sur du silence, il n'y
+> a pas de forme à décrire. Le code existant renvoie déjà `CrestFactor = 0` dans ce cas ;
+> la garde doit être portée aussi par la conversion.
+
+**Pourquoi le domaine dB.** La crête a une distribution très asymétrique ; le dB la
+linéarise. Les bornes initialement proposées — 1,4 et 6 en linéaire — étaient fausses
+dans les deux sens : **1,4 suppose un sinus pur**, or le pouls glottique et les formants
+montent la crête de toute voyelle humaine ; et **6 est trop bas** pour un transitoire de
+5–20 ms noyé dans une fenêtre de 21 ms à moitié silencieuse.
+
+---
+
+### 4. Porte de voisement
+
+```
+Voiced    = IsVoiced_YIN
+            AND (Rms_dB > Floor_dB + Margin_dB)
+            AND (JitterPct > JitterMin)
+
+JitterPct = 100 · écart-type(T_i) / moyenne(T_i)   sur les N dernières périodes acceptées
+```
+
+| Variable | Symbole | Type | Plage | Description |
+|---|---|---|---|---|
+| Périodicité YIN | `IsVoiced_YIN` | bool | | Apériodicité sous le seuil 0,15 |
+| Marge au-dessus du plancher | `Margin_dB` | float | 6 … 8 · **PROVISOIRE 7** | |
+| Jitter relatif de période | `JitterPct` | float | % | |
+| Jitter minimal | `JitterMin` | float | **PROVISOIRE 0,5** | En dessous : trop stable pour une voix |
+| Fenêtre du jitter | `N` | int | 3 … 5 · **PROVISOIRE 4** | |
+
+**Sortie** : booléen.
+
+**Exemples** :
+
+| Source | `JitterPct` | Résultat |
+|---|---|---|
+| Ronflement de frigo à 100 Hz | ≈ 0,05 % | **non voisé, même fort** |
+| Voyelle chantée tenue | 1 – 2 % | voisé |
+
+**Amorçage** : tant que moins de `N` périodes sont disponibles, **le test de jitter passe
+par défaut**. Le faire échouer coûterait ~80 ms de silence au début de chaque prise de
+parole — soit précisément l'attaque, la partie la plus perceptible d'une voix. Rater
+80 ms d'attaque est pire que laisser passer 80 ms de bourdonnement.
+
+---
+
+### ⚠️ Porte de mesure — ces valeurs ne sont pas validées
+
+**Les cinq valeurs marquées PROVISOIRE sont des ordres de grandeur défendables, pas des
+mesures.** Elles permettent d'implémenter et de tester ; **elles ne sont pas canon.**
+
+**Protocole A — bornes de crête** *(≈ 3 minutes)*
+Enregistrer : une voyelle tenue chuchotée, une voyelle tenue criée, dix claquements de
+langue. Lire la crête réelle sur fenêtre de 21 ms.
+→ Fixe `CrestMinDb` et `CrestMaxDb`.
+
+**Protocole B — exposant perceptif** *(une courte session de test)*
+Quatre ou cinq testeurs notent leur effort ressenti de 1 à 5, du chuchotement au cri ;
+relever le `Rms_dB` correspondant. Caler `γ` pour que les paliers ressentis tombent à
+intervalles réguliers sur l'échelle 0–1.
+→ Fixe `γ`.
+
+Tant que ces protocoles n'ont pas tourné, **aucune de ces valeurs ne doit être citée
+ailleurs comme acquise**. Un critère d'acceptation le vérifie en section *Acceptance
+Criteria*.
+
+> **Coût de révision : quasi nul.** Tous ces paramètres passent par constructeur —
+> rien n'est codé en dur dans le projet (ADR-0004).
 
 ## Edge Cases
 
