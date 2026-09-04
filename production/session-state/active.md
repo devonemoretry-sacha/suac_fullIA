@@ -103,3 +103,8 @@ Commits au fil des étapes.
 | Commit | Étape |
 |---|---|
 | `c8d1e9c` | Initial — template + projet + artefacts d'onboarding |
+| `79900d4` | `/map-systems` — 19 systèmes, 4 couches |
+| `5b4d817` | Revue directeurs + palier « Bac à sable Voice-Physics » |
+| `b787542` | ADR-0003 amendé — AEC en amont de la fourche |
+| `fd649a0` | Inventaire `/gate-check` Technical Setup → Pre-Production |
+| `2a40531` | Contraintes moteur consignées, `/create-architecture` en pause |
