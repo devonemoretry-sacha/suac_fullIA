@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Analyse vocale — 8 sections obligatoires bouclées ; restent Visual/Audio, UI, Open Questions
+Task: GDD Analyse vocale COMPLET (11 sections) — prochaine étape /design-review en session neuve
 <!-- /STATUS -->
 
 ---

@@ -295,10 +295,10 @@ là où le développeur travaille.
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 19 |
-| Design docs started | **1** *(Analyse vocale — 7 sections sur 13)* |
-| Design docs reviewed | 0 |
+| Design docs started | **1** *(Analyse vocale — complet, 11 sections)* |
+| Design docs reviewed | 0 *(`/design-review` à lancer en session neuve)* |
 | Design docs approved | 0 |
-| MVP systems designed | 0 / 19 |
+| MVP systems designed | 1 / 19 |
 | Systems implemented without GDD | **0** *(l'analyse vocale a désormais son GDD)* |
 
 ---

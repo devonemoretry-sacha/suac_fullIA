@@ -637,11 +637,186 @@ Trois valeurs ressemblent à des réglages et n'en sont pas :
 
 ## Visual/Audio Requirements
 
-[To be designed]
+Ce système ne produit ni image ni son. Il transforme un micro en quatre nombres. Ses
+exigences existent pourtant dans les deux domaines, et elles vont en sens inverse : côté
+audio, ce sont des **interdits sur le trajet du signal** ; côté visuel, c'est ce que le
+joueur doit **voir de sa propre mesure** pour que la promesse d'attribution tienne.
+
+### Les interdits sur le trajet du signal
+
+Tout traitement situé en aval de la fourche AEC (ADR-0003) reste sur la branche **chat
+vocal**. Aucun ne doit toucher la branche d'analyse.
+
+| Traitement interdit | Casse | Pourquoi |
+|---|---|---|
+| **AGC** — contrôle automatique de gain | `Loudness` | Il égalise chuchotement et cri au même niveau de sortie. C'est exactement la grandeur que `Loudness` mesure |
+| **Suppression de bruit** (type RNNoise) | `Continuity`, le chuchotement | Elle écrase le rapport crête/RMS. Et un vrai chuchotement — apériodique, proche du plancher — ressemble à du bruit : il est supprimé au lieu d'être mesuré |
+| **VAD tiers** — détecteur de voix du chat | `Voiced` | Il crée une seconde porte de voisement concurrente de la porte interne. Deux vérités sur « est-ce que je parle », dont l'une peut tronquer l'attaque que l'autre mesure |
+| **Compression / limiting** | `Continuity`, `Loudness` | Ils écrasent directement le rapport crête/RMS et l'écart plancher–cri sur lesquels les formules reposent |
+
+**Aucun de ces quatre ne lève d'erreur.** Chacun détruit une valeur en silence — c'est ce
+qui les rend dangereux, et c'est pourquoi ils sont listés comme interdits plutôt que comme
+préférences.
+
+### Sidetone — le joueur doit-il s'entendre ?
+
+**Non.** Le jeu n'injecte pas de retour de la voix du joueur sur le trajet d'analyse.
+
+La raison n'est pas le coût, elle est l'attribution. Un sidetone donnerait au joueur une
+**seconde référence de sa propre voix, à une latence différente de celle sur laquelle le
+jeu agit**. Deux retours désaccordés du même geste, c'est précisément la confusion que ce
+système existe pour éviter.
+
+> **Le coût est réel et assumé** : en casque fermé, le joueur perd le retour acoustique
+> naturel de sa voix. Ce manque est porté par le visuel — le sonomètre — et non par l'audio.
+> Noter que le sonomètre n'est pas instantané non plus : il lit `Loudness`, donc une valeur
+> déjà passée par l'enveloppe. Sa latence est celle du jeu, ce qui est le point.
+
+### `Degraded` est muet, et c'est un défaut d'attribution
+
+`Loudness = 0` parce que le micro est coupé et `Loudness = 0` parce que le joueur se tait
+sont **indiscernables**. Le joueur parle, rien ne bouge, et il accuse le jeu — l'échec
+d'attribution que *Player Fantasy* interdit nommément.
+
+- Le signalement se déclenche **sans lissage**, dès l'événement du système 2. C'est un
+  drapeau d'état, pas une mesure : contrairement à l'enveloppe, il n'a aucune raison de
+  traîner.
+- Le sonomètre doit afficher un état **visuellement distinct de « je me tais »**. Un
+  sonomètre à zéro ne suffit pas : c'est exactement l'ambiguïté à lever.
+- Une alerte sonore non diégétique discrète est **recommandée en complément**, à arbitrer
+  avec le `sound-designer` et l'UI. Ce n'est pas une exigence audio à elle seule.
+
+### Ce que le joueur doit voir de sa mesure
+
+Les quatre valeurs ne méritent pas le même traitement.
+
+| Valeur | Retour | Raison |
+|---|---|---|
+| `Loudness` | **Permanent** — le sonomètre du système 19 | Seule valeur dont l'attribution dépend en continu |
+| `Continuity` | **Contextuel** — sur les objets qui l'exigent | Un affichage permanent dupliquerait le sonomètre pour une information secondaire |
+| `Pitch` | **Contextuel** — sur les mécaniques qui l'utilisent | Un affichage permanent en ferait un curseur qu'on regarde, ce qui contredit « la voix comme geste » |
+| `Voiced` | **Aucun** | C'est une porte interne. L'exposer inviterait à surveiller une lampe plutôt qu'à écouter sa propre voix |
+
+### Larsen et contamination croisée
+
+**Garanti.** Chaque `VoiceFrame` n'analyse que la capture locale du joueur, après annulation
+de ce que ses haut-parleurs émettent — c'est-à-dire la voix des autres. Aucun mixage
+serveur, aucune capture d'un autre client n'entre jamais dans une chaîne d'analyse.
+
+**Gratuit.** Le larsen est déjà couvert sans effort supplémentaire : un effet Larsen est
+**quasi parfaitement périodique**, il tombe donc sous le test de jitter au même titre qu'un
+ronflement électrique. La porte de voisement le rejette par construction.
+
+**Non garanti, et il faut le dire.** Deux joueurs dans la même pièce : le micro de l'un
+capte la voix de l'autre. **Aucun DSP ne sépare deux voix captées par le même micro** — ce
+n'est pas un manque d'ingénierie, c'est le problème lui-même. Il n'y a pas de réponse à ce
+stade. Il faut des données de playtest en configuration « même pièce » pour juger si cela
+casse réellement l'attribution avant d'investir dans une atténuation. Casque recommandé
+en attendant.
+
+---
 
 ## UI Requirements
 
-[To be designed]
+### Les écrans requis
+
+- **Écran de calibration** — première utilisation, bloquant tant qu'il n'est pas validé
+- **Accès à la calibration** depuis le menu du lobby **et** en surcouche en jeu, sans
+  quitter la partie
+- **Indicateur d'état vocal permanent** — `Uncalibrated` / `Calibrated` / `Degraded` —
+  **distinct du sonomètre diégétique**
+- **Sonomètre diégétique** (système 19) — inchangé : il ne montre que ce que le joueur émet
+- **Écran de blocage** pour qui tente de rejoindre sans profil calibré
+
+### Le parcours de calibration
+
+Le vrai problème d'UX de ce jeu n'est pas technique : **il faut demander à quelqu'un de
+crier dans son micro, et beaucoup de joueurs sont dans un salon avec d'autres gens.** La
+calibration doit se présenter comme le réglage d'un instrument, jamais comme une épreuve à
+réussir.
+
+L'ordre des étapes fait tout le travail :
+
+1. **D'abord la mesure au repos** — « parle normalement, comme si tu discutais ». Geste
+   socialement neutre, qui donne `Floor_dB` et `F0_habituel`.
+2. **Ensuite seulement la montée**, progressive, avec une jauge qui répond en temps réel.
+   Le joueur pousse **à son rythme** jusqu'à un plateau détecté automatiquement — pas
+   d'ordre frontal du type « crie le plus fort possible ».
+
+Deux garanties non négociables :
+
+- **Aucune diffusion vers le lobby pendant la calibration.** C'est un moment privé, même
+  en multijoueur. *Contrat à reporter dans le GDD du chat vocal.*
+- **L'étape forte se refait seule**, sans repasser par l'étape calme.
+
+> **Couplage à surveiller.** La détection automatique de plateau et la validation du profil
+> se contredisent si le plateau est reconnu trop tôt : l'écart `Scream_dB − Floor_dB`
+> tombe sous les 20 dB et le profil est refusé — le joueur a coopéré et se fait rejeter.
+> **Le seuil de détection du plateau doit être calé sur le seuil de validation, pas
+> indépendamment.**
+
+### Le refus de profil
+
+Trois profils sont rejetés par validation. Un message technique est inacceptable ici.
+
+- **Aucun vocabulaire technique** — ni dB, ni écart dynamique, ni F0.
+- **Chaque cause a sa formulation**, orientée cause probable et non verdict sur la voix du
+  joueur. Par exemple, pour un écart dynamique insuffisant : *« on n'arrive pas à
+  distinguer ta voix calme de ta voix forte — essaie avec le micro plus proche »*.
+- **L'échec ne renvoie jamais au début** : seule l'étape en cause est relancée.
+- Le ton reste celui d'un **réglage technique imparfait** — micro, environnement — jamais
+  celui d'une performance vocale insuffisante.
+
+### La porte d'entrée en partie
+
+Un joueur sans profil est bloqué, et ses amis l'attendent déjà. Le blocage doit se lire
+comme **une étape restante, pas comme une exclusion** :
+
+- Annoncer une durée courte et estimée (« ~2 min ») et enchaîner sur la calibration **en un
+  seul geste**.
+- Les autres joueurs du lobby voient un état explicite — *« X termine sa configuration »* —
+  plutôt qu'un silence qui laisse croire à un plantage.
+- Tout le parcours reste opérable **au clavier et à la souris seuls**, sans exception.
+
+### L'état `Degraded`
+
+Le sonomètre diégétique **ne peut pas porter ce signal** : à zéro, il est indiscernable
+d'un joueur qui se tait. Il faut donc un indicateur non diégétique.
+
+- **Toujours visible pendant `Degraded`** — dans le HUD, pas seulement dans un menu.
+- **Déclenché en moins d'une à deux secondes** après la perte de signal. Au-delà, le joueur
+  conclut au bug plutôt qu'au micro coupé.
+- **Accès immédiat au diagnostic** — choix du périphérique, recalibration — sans quitter la
+  partie.
+
+> **Il n'existe aucune solution de repli.** La voix n'a pas d'équivalent clavier : la seule
+> sortie de secours est de rétablir l'entrée micro, pas de la remplacer.
+
+### La recalibration en cours de partie
+
+La recalibration est autorisée à tout moment, y compris pendant qu'on porte un meuble à
+plusieurs. Pendant ces quelques secondes, **la sortie du joueur tombe à zéro** et le poids
+perçu par ses coéquipiers sur le même objet peut varier brutalement.
+
+**Ni ce document ni l'UI ne peuvent trancher seuls** si l'objet doit être verrouillé,
+lissé, ou laissé tel quel pendant cette fenêtre — c'est une décision de gameplay, traitée
+en *Open Questions* (OQ-11).
+
+Ce que l'UI doit garantir dans tous les cas : **tous les porteurs d'un même objet voient
+un signal clair identifiant le coéquipier en recalibration.** Sans quoi le comportement
+se confond avec un bug.
+
+### Accessibilité
+
+**Garanti** : opérabilité complète au clavier et à la souris sur tous les écrans de
+calibration et de menu, texte redimensionnable, sous-titrage de toute instruction, aucun
+flash ni pic sonore surprise pendant la calibration.
+
+**Hors de portée, et écrit noir sur blanc plutôt que masqué** : un joueur qui ne peut pas
+produire de voix — extinction, trouble de la parole, environnement où parler fort est
+impossible — **ne peut pas jouer à la mécanique centrale telle qu'elle est définie**. Aucun
+mode clavier ne remplace l'entrée vocale sans redéfinir le pilier du jeu. C'est une
+exclusion assumée, pas un oubli.
 
 ## Acceptance Criteria
 
@@ -827,4 +1002,164 @@ détecter.
 
 ## Open Questions
 
-[To be designed]
+### Comment lire cette section
+
+Une question ouverte n'a pas le même poids selon ce qu'elle empêche. Trois catégories, et
+c'est l'ordre dans lequel il faut les traiter :
+
+- **Bloque le code** — on ne peut pas écrire le `VoiceAnalyzer` sans trancher. Trois
+  questions.
+- **Bloque le réglage** — le code s'écrit, mais les valeurs restent des paris. Trois
+  questions, toutes résolubles par la mesure.
+- **Appartient ailleurs** — la réponse existera dans un autre GDD ; elle est listée ici
+  pour ne pas se perdre entre deux documents. Trois questions.
+
+Une quatrième catégorie, à part : **deux risques non levés**, dont le premier peut faire
+pivoter l'architecture entière et dont aucun ne se résout par le raisonnement.
+
+---
+
+### Bloque le code
+
+#### OQ-1 — La médiane de l'anneau pendant l'amorçage
+
+**Le défaut.** Ce document justifie la taille impaire de l'anneau (5) en disant que la
+médiane est « toujours un élément, jamais une moyenne de deux, ce qui la rend testable sans
+ambiguïté ». Il précise aussi qu'avec moins de cinq valeurs, « la médiane porte sur les
+valeurs disponibles » — donc parfois sur 2 ou 4. **L'ambiguïté que la parité impaire devait
+supprimer revient exactement pendant l'amorçage** : les premières trames de chaque prise de
+parole, celles que le joueur remarque le plus.
+
+Trois issues :
+
+| Option | Conséquence |
+|---|---|
+| **A — convention explicite** : sur un nombre pair, prendre l'élément **bas** des deux centraux | Le filtre tourne dès la deuxième trame. Biais systématique vers le grave à chaque attaque de voix, faible mais réel |
+| **B — pas de lissage tant que l'anneau n'est pas plein** : `Pitch` passe brut | Aucun biais, aucune ambiguïté. Les erreurs d'octave de YIN ne sont pas filtrées pendant ~100 ms au début de chaque phrase |
+| **C — n'émettre `Pitch` qu'une fois l'anneau plein** | Le plus propre à tester, le pire à jouer : la hauteur arrive en retard sur le volume, et le joueur sent un décalage entre deux composantes du même geste |
+
+> **Recommandation : A.** Le biais est d'une valeur d'anneau, sur deux trames, et il est
+> *déterministe* — donc testable et documentable. B laisse passer précisément les erreurs
+> d'octave, qui sont le mode d'échec le plus visible de YIN, et au pire moment. C introduit
+> une désynchronisation entre `Loudness` et `Pitch` qui heurte le ressenti « ma voix est un
+> geste ».
+
+#### OQ-2 — La sortie de `Degraded` n'est pas spécifiée
+
+Ce document décrit l'entrée dans l'état — micro coupé, périphérique changé — et jamais le
+retour. Le micro revient : est-ce automatique, ou faut-il une action du joueur ?
+
+L'enjeu n'est pas technique, il est d'attribution. Un retour automatique silencieux
+rend le système intermittent sans que le joueur sache pourquoi il l'était. Une action
+explicite coûte une friction, mais elle *nomme* l'incident.
+
+**Le volet UI de ce document a répondu à la moitié de la question** : indicateur non
+diégétique dans le HUD, déclenché en moins de deux secondes, avec accès immédiat au
+diagnostic. Ce qui reste ouvert est la machine à états elle-même — le retour en
+`Calibrated` se fait-il tout seul dès que les échantillons reviennent, ou exige-t-il que
+le joueur valide ? *Réponse attendue du GDD du système 6.*
+
+#### OQ-3 — Cadence implicite ou `deltaTime` explicite
+
+**C'est la question la plus importante des trois.** L'`EnvelopeFollower` dérive ses
+coefficients de l'`updateRateHz` reçu au constructeur, mais **rien ne vérifie que les
+appels arrivent réellement à ce rythme**. Une dérive casse le lissage sans exception, sans
+NaN, sans trace — le seul symptôme est un jeu qui répond mal, et personne ne remonte de là
+jusqu'à la cause.
+
+Deux formes possibles :
+
+- **Garder la cadence implicite** et en faire un contrat écrit, tenu par le système 2.
+  Coût zéro, garantie zéro.
+- **Passer un `deltaTime` explicite** à chaque trame, recalculer les coefficients ou
+  signaler l'écart au nominal au-delà d'une tolérance. Coût réel — cela touche la signature
+  publique et le seul type à état de l'assembly.
+
+> **Ceci mérite un ADR, pas une ligne de test.** Tant qu'il n'est pas tranché, le critère
+> AC-14 vérifie que le lissage est correct *quand la cadence est correcte* — il ne détecte
+> rien du cas qui nous inquiète.
+
+---
+
+### Bloque le réglage
+
+#### OQ-4 — Les six valeurs provisoires
+
+`γ`, `Margin_dB`, `JitterMin`, `CrestMinDb`, `CrestMaxDb`, l'écart dynamique minimal du
+profil. Aucune n'est mesurée. Les deux protocoles décrits en *Edge Cases* les donnent en
+une session d'enregistrement et une session de playtest. **Rien d'autre dans le projet ne
+doit les citer comme acquises avant** — c'est l'objet des critères AC-43 et AC-44.
+
+#### OQ-5 — Les constantes de temps de l'enveloppe
+
+Attaque et relâchement, laissées *à mesurer* plutôt qu'inventées. Elles gouvernent
+directement le ressenti « ma voix est un geste » et se règlent à l'oreille, pas au
+raisonnement. Le POC audio les donnera.
+
+#### OQ-6 — Le TTL de l'anneau
+
+Sans valeur. Le critère AC-35 est écrit mais non exécutable tant qu'elle manque. Ce n'est
+pas un réglage de confort : trop long, une reprise de parole se lisse contre une hauteur
+périmée ; trop court, l'anneau se vide entre deux mots et le filtre médian ne sert plus à
+rien.
+
+---
+
+### Le risque non levé
+
+#### OQ-7 — Le micro peut-il vraiment être partagé ?
+
+Toute l'architecture repose sur une hypothèse non vérifiée : **le système 2 possède le
+périphérique et le fourche** — une branche vers l'analyse, une branche vers le chat vocal —
+avec l'AEC en amont de la fourche. Personne n'a testé que c'est faisable sur la cible, avec
+la pile audio de Windows, le client Steam et les périphériques réels des joueurs.
+
+Si le partage s'avère impossible ou instable, ce n'est pas un correctif : **c'est un
+pivot de conception.** Il faudrait alors choisir entre la voix comme contrôleur et la voix
+comme chat, ou reconstruire tout le trajet.
+
+> **Ce test se mène en une demi-journée et n'exige aucun des GDD restants.** Il n'a pas
+> besoin d'attendre le POC complet, et il devrait le précéder : c'est la seule question du
+> document dont une mauvaise réponse invaliderait le reste.
+
+#### OQ-8 — Deux joueurs dans la même pièce
+
+Le micro de l'un capte la voix de l'autre, et **aucun DSP ne sépare deux voix captées par
+le même micro**. Ce n'est pas un manque d'ingénierie : c'est le problème lui-même. Le jeu
+étant coopératif et destiné à se jouer entre amis, la configuration « même canapé » n'est
+pas marginale.
+
+Il n'y a pas de réponse à ce stade, et il ne faut pas en inventer une. Ce qu'il faut, ce
+sont **des données de playtest en configuration même-pièce** avant de décider si cela casse
+réellement l'attribution — et donc avant d'investir dans une atténuation. Casque recommandé
+en attendant, ce qui est une consigne, pas une solution.
+
+---
+
+### Appartient à un autre système
+
+| # | Question | Propriétaire |
+|---|---|---|
+| OQ-9 | À quelle fréquence rééchantillonner la `VoiceFrame` pour le réseau — 50 Hz vers 20–30 Hz, et selon quelle règle de décimation ? | **Système 5 — Réseau.** Explicitement hors de `Voice.Core` |
+| OQ-10 | Où et sous quel format persiste le `VoiceProfile` entre les sessions ? Local, cloud, lié au compte Steam ? | **Système 6 — Calibration.** Ce besoin était signalé **sans propriétaire** dans l'index des systèmes ; il en a un désormais |
+| OQ-11 | Que vivent les coéquipiers pendant qu'un joueur recalibre en portant un meuble à plusieurs ? La bascule est atomique côté données — elle ne dit rien de ce que subit le groupe pendant les quelques secondes de mesure | **Systèmes 6 et 12.** Problème de coopération, pas de DSP |
+
+> **OQ-11 est le seul de ce tableau qui puisse dégrader une partie en cours.** Autoriser la
+> recalibration à tout moment était une décision de confort ; elle ouvre une fenêtre où un
+> joueur cesse d'agir sur un objet que d'autres portent avec lui — l'objet devient-il plus
+> lourd, se verrouille-t-il, ou ne se passe-t-il rien ? Le volet UI a tranché ce qu'il
+> pouvait trancher seul : **tous les porteurs doivent voir qui recalibre**, pour ne pas
+> confondre le comportement avec un bug. Le reste est une décision de gameplay, à prendre
+> avant que la calibration ne s'implémente.
+
+---
+
+### État du code aujourd'hui
+
+Pour mémoire, et parce que cela conditionne la suite : `SUAC.Voice.Core` contient les
+primitives — mesure de niveau, décimation, YIN, enveloppe — et 41 tests verts. **Rien ne
+produit encore de `VoiceFrame`** : le `VoiceAnalyzer` que ce document spécifie n'existe
+pas, et la conversion du rapport crête/RMS vers `Continuity` est explicitement reportée
+dans les commentaires du code. Ce document est donc bien une spécification à écrire, pas
+une description de l'existant.
+
