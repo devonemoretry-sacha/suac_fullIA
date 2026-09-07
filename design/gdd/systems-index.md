@@ -42,7 +42,7 @@ autre (voir *Revision History*).
 | 3 | Propagation du son *(inféré)* | Gameplay | MVP | Not Started | — | 1 |
 | 4 | Restitution spatialisée *(inféré)* | Audio | MVP | Not Started | — | — |
 | 5 | Réseau | Core | MVP | Not Started | — | — |
-| 6 | Calibration vocale | Audio | MVP | Not Started | — | 1, 2 |
+| 6 | Calibration vocale | Audio | MVP | **In Design** | `voice-calibration.md` | 1, 2 |
 | 7 | 3C — caméra, contrôles, personnage | Core | MVP | Not Started | — | 5 |
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
