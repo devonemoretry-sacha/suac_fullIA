@@ -40,9 +40,11 @@ par les skills du template.
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
 - [ ] `/prototype` — étape sautée, toujours non rattrapée : la Voice-Physics n'a jamais été validée comme amusante
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
-- [ ] **Choisir le backend vocal** — recommandation : Dissonance (120 $ + 55 $ pont FMOD), repli transport maison (Concentus sur FishNet, gratuit, à écrire)
-- [ ] Auditer `DissonanceVoiceForFishNet` — intégration **communautaire**, seul point d'incertitude du candidat recommandé
-- [ ] Amender ADR-0005 en conséquence du backend retenu
+- [x] **Backend vocal retenu : Dissonance** (2026-09-07). 120 $ + 55 $ pont FMOD, **dès le départ et non en upgrade** — ADR-0005 amendé
+- [x] Audit de `DissonanceVoiceForFishNet` — verdict **vendoriser, ne pas dépendre** : 800 lignes MIT, auteur d'origine parti mais dépôt vivant (l'auteur de Dissonance y a lui-même contribué)
+- [ ] **Compiler l'intégration contre Dissonance 9.0.7 / FishNet 4.7.2R** — dernier alignement documenté : Dissonance **8**. Seul vrai inconnu du choix
+- [ ] Corriger le démarrage avant authentification (issue #12) — notre topologie Steam a un authenticator, on traversera ce chemin
+- [ ] Vérifier le canal non fiable et non ordonné exigé par Dissonance
 - [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features. **Conditionné à ADR-0008**
 - [ ] Playtest « même pièce » (OQ-8) — **avant** d'écrire les GDD des systèmes 3 et 12, qui encoderont tous deux « une voix par `VoiceFrame` »
 - [ ] `/design-system` ×18
@@ -61,7 +63,7 @@ par les skills du template.
 | Cadence d'analyse | **`deltaTime` explicite** (ADR-0007). Unity n'offre aucun rappel à 50 Hz fixe — `Update` suit l'affichage, `FixedUpdate` rattrape, `Microphone` est en polling, `OnAudioFilterRead` dépend d'un tampon modifiable. À appliquer **avant** d'écrire le `VoiceAnalyzer` |
 | Backend vocal | **L'ingestion de PCM externe est éliminatoire** (ADR-0008, `Proposed`). Si aucun backend acceptable n'existe : renoncer au chat intégré est préférable à renoncer à l'AEC en amont — le premier coûte du confort, le second coûte le Pilier 1 |
 | AEC | **En amont de la fourche**, protège analyse et communication. Reclassée de « confort » à **correction de gameplay** (ADR-0003 amendé le 2026-09-03). Sans AEC → **casque obligatoire**, prérequis de validité de la mesure |
-| Chat vocal | **Interface maison, backend interchangeable.** Implémentation A gratuite (Steam natif + FMOD 3D) ; Dissonance en upgrade à 175 $, différé (ADR-0005) |
+| Chat vocal | **Interface maison, backend interchangeable** (ADR-0005). Backend retenu le 2026-09-07 : **Dissonance**, 175 $ **dès le départ**. L'implémentation A gratuite est morte — Steam Voice n'accepte pas de PCM externe et applique un VAD (ADR-0008). Intégration FishNet **vendorisée**, pas subie : 800 lignes MIT |
 | Licences | FMOD **gratuit** sous 200 k$ de revenu. Dissonance 120 $ + pont FMOD 55 $ : **non engagés, non nécessaires au MVP** |
 | Périmètre MVP | « La boucle de contrat tient », 4 joueurs — 14 entrées dans `design/mvp-scope.md`, décomposées en **19 systèmes** dans `design/gdd/systems-index.md` |
 | Découpage en couches | Une couche = **ordre de conception**, pas dépendances de compilation. Foundation = aucune dépendance de conception envers un autre système |

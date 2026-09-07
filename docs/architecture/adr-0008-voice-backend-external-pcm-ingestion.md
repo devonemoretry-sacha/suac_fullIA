@@ -2,7 +2,11 @@
 
 ## Status
 
-**Proposed** — le critère est arrêté, **l'inventaire est fait**, le backend ne l'est pas.
+**Accepted** — critère arrêté, inventaire fait, **backend retenu : Dissonance**, intégration
+FishNet auditée et vendorisée plutôt que subie.
+
+> Reste à valider par la pratique : compilation contre Dissonance 9.0.7, et le test de
+> partage de périphérique d'OQ-7. Voir *Validation Criteria*.
 
 > **Effet de bord établi le 2026-09-07 : ADR-0005 doit être amendé.** Son « implémentation A
 > gratuite (Steam natif + FMOD 3D) » n'est pas réalisable — Steam Voice n'accepte pas de PCM
@@ -254,6 +258,110 @@ obstacle, ou si l'audit de l'intégration FishNet est défavorable.
 pas — la montée en charge — en créant deux problèmes qu'il n'a pas non plus, une facture
 et un plafond.
 
+## Audit de l'intégration FishNet — 2026-09-07
+
+> Réserve posée par l'inventaire, levée ici. **Backend retenu : Dissonance.**
+
+`DissonanceVoiceForFishNet` — dépôt `ltd-backup/DissonanceVoiceForFishNet`, licence **MIT**,
+78 étoiles, 21 forks.
+
+### Le signal qui inquiétait, et ce qu'il vaut réellement
+
+Le compte d'origine `LambdaTheDev` **redirige vers `ltd-backup`** — l'auteur a renommé son
+compte en « backup ». Le dernier commit de sa main date du **2024-04-18**, et c'était le
+dernier alignement de versions explicite : *« BREAKING: Changed Unity version to 2021 LTS,
+and updated to FishNet 4 & Dissonance 8! »*
+
+Mais le dépôt n'est pas mort pour autant. Trois contributions extérieures ont été fusionnées
+depuis :
+
+| Date | Auteur | Objet |
+|---|---|---|
+| 2025-04-03 | **Martin Evans** | `base.OnDisable` — *c'est l'auteur de Dissonance lui-même* |
+| 2025-12-02 | Yazan Yahya | Refonte de `DissonanceFishNetPlayer` |
+| 2026-04-30 | Holly Newlands | Correction d'une `NullReference` à la destruction du joueur |
+
+**L'éditeur de Dissonance a lui-même contribué à cette intégration.** Ce n'est pas un
+support officiel — la documentation de Dissonance la classe explicitement en
+*community-developed*, aux côtés de PurrNet et par opposition à dix intégrations
+officielles — mais ce n'est pas non plus un dépôt abandonné dans un coin.
+
+### Le vrai risque technique : un écart de version majeure
+
+| | Dernier alignement documenté | Notre projet |
+|---|---|---|
+| FishNet | 4 | **4.7.2R** (avril 2026) |
+| Dissonance | **8** | **9.0.7** (avril 2026) |
+
+**Personne n'a publiquement confirmé la compatibilité avec Dissonance 9.** Le README
+n'énonce *aucune* version supportée — pas de matrice de compatibilité, seulement un lien
+Discord. L'activité d'avril 2026 laisse penser que des gens l'utilisent aujourd'hui, à une
+date où Dissonance 9.0.7 était déjà sorti, mais **c'est une inférence, pas une
+vérification**. À établir en compilant.
+
+### Un défaut connu, non corrigé, et qui nous concerne presque sûrement
+
+Issues **#11 et #12** — le même défaut, signalé deux fois le même jour, ouvert depuis le
+2025-01-29 :
+
+> Si `DissonanceFishNetComms` est présent et que le serveur utilise un authenticator, le
+> client peut être éjecté : *« sent a broadcast which requires authentication, but client
+> was not authenticated »*. Dissonance démarre et tente d'émettre **avant que le client soit
+> authentifié**.
+
+Notre topologie est P2P Steam via FishyFacepunch (ADR-0001), où un authenticator à ticket
+Steam est le motif standard. **Nous traverserons donc ce chemin.** La bonne nouvelle est que
+le rapporteur a diagnostiqué précisément et nommé le correctif : ne démarrer Dissonance
+qu'une fois l'authentification terminée, dans `DissonanceFishNetComms.cs`. Un fichier, un
+point d'entrée.
+
+Deux autres issues sont ouvertes : #11 est un doublon de #12, et #10 (`ArgumentNullException`,
+août 2024) a plausiblement été traitée par le correctif d'avril 2026 sans que le lien soit
+fait.
+
+### Le chiffre qui change la question
+
+| Périmètre | Taille |
+|---|---|
+| Cœur de l'intégration (9 fichiers) | **≈ 27 Ko, ~800 lignes** |
+| Démos et éditeur (6 fichiers) | ≈ 8 Ko, non nécessaires |
+
+Les deux plus gros fichiers font 7,5 Ko et 7 Ko. C'est un **adaptateur mince** au-dessus des
+classes de base de Dissonance — ce que sa documentation confirme : *« Dissonance includes
+base classes which can be extended to create a new network integration relatively easily. »*
+
+### Décision : on l'intègre au projet, on n'en dépend pas
+
+La question n'était pas la bonne. « Faut-il dépendre d'un dépôt communautaire dont
+l'auteur est parti ? » — non. Mais à **800 lignes sous licence MIT**, ce n'est pas une
+dépendance, c'est **un point de départ**.
+
+- **Vendoriser** le cœur dans `Assets/_Project/`, sous notre contrôle de version. La licence
+  MIT l'autorise explicitement.
+- **Corriger le défaut d'authentification** nous-mêmes — il est déjà diagnostiqué, et nous
+  aurions eu à le corriger de toute façon.
+- **Ne pas reprendre** les démos ni les scripts d'éditeur.
+- **Remonter le correctif en amont** si l'occasion se présente, sans en dépendre.
+
+La question de maintenance se dissout : nous ne parions pas sur un mainteneur, nous
+adoptons 800 lignes que nous saurons relire.
+
+### Ce qu'il reste à vérifier, et dans cet ordre
+
+1. **Compiler contre Dissonance 9.0.7 et FishNet 4.7.2R.** C'est le seul vrai inconnu.
+2. **Vérifier que FishNet expose un canal non fiable et non ordonné.** Dissonance l'exige
+   nommément — *« TCP is not suitable for high quality voice chat »*. FishNet propose des
+   canaux non fiables ; à confirmer que l'intégration les utilise bien.
+3. **Corriger le démarrage avant authentification** (#12).
+4. **Alors seulement**, le test de partage de périphérique d'OQ-7.
+
+### Écarté en cours d'audit
+
+Dissonance possède une intégration **officielle** Steamworks.NET (P2P), qui éviterait le
+code communautaire. Elle est écartée : notre stack utilise **Facepunch.Steamworks**, pas
+Steamworks.NET. Introduire un second wrapper Steam dans le projet coûterait plus cher, et
+en durabilité et en confusion, que de vendoriser 800 lignes qu'on relit une fois.
+
 ## Alternatives Considered
 
 ### Alternative 1 : tester le partage d'abord, choisir le SDK ensuite
@@ -311,10 +419,16 @@ favorable — la contrainte s'applique avant le premier choix, non après.
 
 - [x] **Un inventaire écrit des SDK candidats et de leur capacité d'ingestion PCM, sourcé.**
       Fait le 2026-09-07 — voir ci-dessus.
-- [ ] Un backend retenu, consigné en amendement, l'ADR passant en `Accepted`.
-      **Recommandation posée : Dissonance**, sous réserve de l'audit de l'intégration FishNet.
-- [ ] Audit de l'intégration `DissonanceVoiceForFishNet` — communautaire, non officielle.
-      Seul point d'incertitude du candidat recommandé.
+- [x] **Un backend retenu.** **Dissonance**, décidé le 2026-09-07. 120 $ + 55 $ pour le pont
+      de lecture FMOD.
+- [x] **Audit de l'intégration `DissonanceVoiceForFishNet`.** Fait — voir ci-dessus.
+      Verdict : **vendoriser**, ne pas dépendre. 800 lignes MIT, auteur d'origine parti mais
+      dépôt vivant, un défaut connu et déjà diagnostiqué à corriger.
+- [ ] **Compiler contre Dissonance 9.0.7 et FishNet 4.7.2R.** Dernier alignement documenté :
+      Dissonance **8**. C'est le seul vrai inconnu de ce choix.
+- [ ] Vérifier que le canal utilisé est **non fiable et non ordonné** — exigence explicite de
+      Dissonance.
+- [ ] Corriger le démarrage avant authentification (issue #12) dans `DissonanceFishNetComms.cs`.
 - [ ] Le test de partage OQ-7 exécuté **sur ce backend**, et concluant.
 - [ ] **ADR-0005 amendé** — son implémentation A gratuite n'est plus réalisable.
 
@@ -337,6 +451,8 @@ Consultées le 2026-09-07. Documentation éditeur de préférence à toute sourc
 | Steam Voice — signal non brut, VAD | [ISteamUser Interface](https://partner.steamgames.com/doc/api/isteamuser) |
 | Opus en C# pur | [Concentus](https://github.com/lostromb/concentus) |
 | Motif transport maison | [UniVoice](https://github.com/adrenak/univoice) |
+| Intégration FishNet — dépôt, commits, issues, tailles | [DissonanceVoiceForFishNet](https://github.com/ltd-backup/DissonanceVoiceForFishNet) *(API GitHub, 2026-09-07)* |
+| Intégration FishNet — statut communautaire | [Choosing A Network](https://placeholder-software.co.uk/dissonance/docs/Basics/Choosing-A-Network.html) |
 
 ## GDD Requirements Addressed
 

@@ -28,9 +28,19 @@
 > **Conséquence sur le coût.** Le raisonnement « gratuit d'abord, Dissonance en upgrade
 > quand l'AEC deviendra nécessaire » ne tient plus par deux bouts : l'étape gratuite
 > n'existe pas, et l'AEC a été reclassée de confort à **correctness** par l'amendement
-> d'ADR-0003. Dissonance passe donc du statut d'upgrade optionnel à celui de **candidat
-> recommandé**, à égalité avec un transport vocal maison (Concentus sur FishNet), lui aussi
-> gratuit mais à écrire. Arbitrage ouvert — voir ADR-0008.
+> d'ADR-0003.
+>
+> ### Backend retenu le 2026-09-07 : **Dissonance**
+>
+> 120 $ plus 55 $ pour le pont de lecture FMOD, soit les 175 $ que cet ADR anticipait — mais
+> **dès le départ, et non en upgrade optionnel**. Ce qui était présenté ici comme un achat
+> différable devient le coût d'entrée du chat vocal.
+>
+> Le premier paragraphe de ce Summary reste vrai à la lettre : *« Dissonance n'a pas
+> d'intégration FishNet officielle »*. L'audit d'ADR-0008 en tire une conséquence différente
+> de celle de 2026-09-03 : l'intégration communautaire fait **800 lignes sous licence MIT**,
+> donc elle se **vendorise** plutôt qu'elle ne se subit. L'absence d'intégration officielle
+> n'était pas une raison d'écarter Dissonance — c'était une raison d'en assumer 800 lignes.
 
 ## Date
 
