@@ -78,3 +78,13 @@ secrets.json
 # État de session éphémère (gitignoré par conception du template)
 # ─────────────────────────────────────────────────────────────
 production/session-logs/
+
+# ─────────────────────────────────────────────────────────────
+# Exception à la règle `*~` ci-dessus
+# ─────────────────────────────────────────────────────────────
+# Le suffixe `~` sert ici à faire ignorer le dossier par UNITY, pas par git :
+# c'est du code tiers vendorisé, volontairement non compilé tant que Dissonance
+# et FishNet ne sont pas installés (voir sa VENDORING.md et ADR-0008).
+# Sans ces deux lignes, la règle `*~` l'exclut entièrement et on commite du vide.
+!Unity/Shut_up_and_carry/Assets/_Project/ThirdParty/DissonanceFishNet~/
+!Unity/Shut_up_and_carry/Assets/_Project/ThirdParty/DissonanceFishNet~/**

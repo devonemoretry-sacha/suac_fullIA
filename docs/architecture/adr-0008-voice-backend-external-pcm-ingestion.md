@@ -346,6 +346,38 @@ dépendance, c'est **un point de départ**.
 La question de maintenance se dissout : nous ne parions pas sur un mainteneur, nous
 adoptons 800 lignes que nous saurons relire.
 
+### Vendorisation faite le 2026-09-07
+
+| Champ | Valeur |
+|---|---|
+| Emplacement | `Unity/Shut_up_and_carry/Assets/_Project/ThirdParty/DissonanceFishNet~/` |
+| Commit épinglé | `18386e0fee21a3dfca0d121db10950fd10bc8d3c` |
+| Contenu | 11 fichiers `.cs`, 2 `.asmdef`, `LICENSE` (MIT), `VENDORING.md` |
+| Écarté | Le dossier `Demos/` de l'amont |
+| État | **Import à l'identique, aucune modification locale** |
+
+**Le dossier est délibérément inerte.** Son nom se termine par `~`, donc Unity l'ignore
+entièrement — ni compilation, ni `.meta`, ni erreur. C'est nécessaire : au 2026-09-07,
+**ni FishNet ni Dissonance ne sont installés** (aucun paquet réseau dans le manifeste, pas
+de Dissonance dans `Assets/`). Activer ce code maintenant mettrait le projet en erreur de
+compilation permanente et emporterait les 41 tests verts de `SUAC.Voice.Core` avec lui.
+L'activation se fait par un simple renommage, une fois les dépendances en place.
+
+> **Piège rencontré et corrigé.** Le `.gitignore` du projet contenait `*~`, la règle usuelle
+> pour les fichiers de sauvegarde d'éditeur — elle excluait **tout le dossier vendorisé**.
+> Sans exception explicite, la vendorisation aurait commité du vide, sans le moindre
+> avertissement. Deux lignes de négation ont été ajoutées, commentées sur place.
+
+Trois découvertes de l'import, consignées en détail dans `VENDORING.md` :
+
+1. **`BroadcastHelper` contient du code `unsafe`** — l'asmdef amont porte bien
+   `allowUnsafeCode: true`.
+2. **Dissonance ne livre pas d'asmdef.** Il faudra les créer nous-mêmes après achat, selon
+   la convention de l'éditeur.
+3. **Les asmdef amont référencent par GUID, pas par nom.** Ces GUID sont ceux du projet de
+   l'auteur : ceux de Dissonance **ne résoudront pas**, puisque nous créerons ses asmdef
+   nous-mêmes et qu'Unity leur donnera de nouveaux GUID. À réécrire par nom à l'activation.
+
 ### Ce qu'il reste à vérifier, et dans cet ordre
 
 1. **Compiler contre Dissonance 9.0.7 et FishNet 4.7.2R.** C'est le seul vrai inconnu.
@@ -424,6 +456,10 @@ favorable — la contrainte s'applique avant le premier choix, non après.
 - [x] **Audit de l'intégration `DissonanceVoiceForFishNet`.** Fait — voir ci-dessus.
       Verdict : **vendoriser**, ne pas dépendre. 800 lignes MIT, auteur d'origine parti mais
       dépôt vivant, un défaut connu et déjà diagnostiqué à corriger.
+- [x] **Vendoriser l'intégration.** Fait le 2026-09-07, import à l'identique au commit
+      `18386e0`, sous `Assets/_Project/ThirdParty/DissonanceFishNet~/`, **inerte** tant que
+      les dépendances manquent.
+- [ ] Acheter Dissonance (120 $) + pont FMOD (55 $), installer FishNet et FishyFacepunch.
 - [ ] **Compiler contre Dissonance 9.0.7 et FishNet 4.7.2R.** Dernier alignement documenté :
       Dissonance **8**. C'est le seul vrai inconnu de ce choix.
 - [ ] Vérifier que le canal utilisé est **non fiable et non ordonné** — exigence explicite de

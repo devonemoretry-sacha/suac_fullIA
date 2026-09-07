@@ -42,7 +42,10 @@ par les skills du template.
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
 - [x] **Backend vocal retenu : Dissonance** (2026-09-07). 120 $ + 55 $ pont FMOD, **dès le départ et non en upgrade** — ADR-0005 amendé
 - [x] Audit de `DissonanceVoiceForFishNet` — verdict **vendoriser, ne pas dépendre** : 800 lignes MIT, auteur d'origine parti mais dépôt vivant (l'auteur de Dissonance y a lui-même contribué)
+- [x] **Intégration vendorisée** — `Assets/_Project/ThirdParty/DissonanceFishNet~/`, commit amont `18386e0` épinglé, import à l'identique, **inerte** (suffixe `~` : Unity l'ignore). Procédure d'activation dans sa `VENDORING.md`
+- [ ] Acheter Dissonance + pont FMOD, installer FishNet et FishyFacepunch — **rien ne compile avant**
 - [ ] **Compiler l'intégration contre Dissonance 9.0.7 / FishNet 4.7.2R** — dernier alignement documenté : Dissonance **8**. Seul vrai inconnu du choix
+- [ ] Réécrire les références des asmdef **par nom** — celles de l'amont sont par GUID et celles de Dissonance ne résoudront pas
 - [ ] Corriger le démarrage avant authentification (issue #12) — notre topologie Steam a un authenticator, on traversera ce chemin
 - [ ] Vérifier le canal non fiable et non ordonné exigé par Dissonance
 - [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features. **Conditionné à ADR-0008**
