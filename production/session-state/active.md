@@ -39,7 +39,10 @@ par les skills du template.
 - [ ] Re-revue du GDD analyse vocale après révisions
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
 - [ ] `/prototype` — étape sautée, toujours non rattrapée : la Voice-Physics n'a jamais été validée comme amusante
-- [ ] **Inventaire des SDK vocaux** (ADR-0008) — **précède le POC audio**, sinon le POC ne mesure rien
+- [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
+- [ ] **Choisir le backend vocal** — recommandation : Dissonance (120 $ + 55 $ pont FMOD), repli transport maison (Concentus sur FishNet, gratuit, à écrire)
+- [ ] Auditer `DissonanceVoiceForFishNet` — intégration **communautaire**, seul point d'incertitude du candidat recommandé
+- [ ] Amender ADR-0005 en conséquence du backend retenu
 - [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features. **Conditionné à ADR-0008**
 - [ ] Playtest « même pièce » (OQ-8) — **avant** d'écrire les GDD des systèmes 3 et 12, qui encoderont tous deux « une voix par `VoiceFrame` »
 - [ ] `/design-system` ×18

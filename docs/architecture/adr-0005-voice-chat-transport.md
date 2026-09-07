@@ -2,7 +2,35 @@
 
 ## Status
 
-Accepted
+**Accepted — implémentation initiale invalidée le 2026-09-07 par ADR-0008.**
+
+> ### ⚠️ Amendement du 2026-09-07 — l'implémentation A gratuite n'est pas réalisable
+>
+> Le principe de cet ADR tient, et c'est même lui qui absorbe le choc sans réécriture :
+> l'interface reste à nous, le backend reste interchangeable. **C'est l'implémentation
+> initiale qui tombe.**
+>
+> L'inventaire d'ADR-0008 établit deux faits sur la **voix native Steam** (`ISteamUser`) :
+>
+> 1. **Aucune API d'injection.** Le flux est `StartVoiceRecording` → `GetVoice` : Steam
+>    capture, toujours. Nous ne pouvons pas lui remettre notre PCM. L'utiliser en parallèle
+>    de notre propre capture ouvrirait un **second lecteur sur le micro**, qu'ADR-0003
+>    interdit explicitement.
+> 2. **Le flux « non compressé » n'est pas brut.** La documentation `ISteamUser` précise
+>    qu'il peut avoir traversé des filtres de pré-traitement, avoir eu ses silences retirés,
+>    et **n'être disponible que si des niveaux audibles de parole sont détectés** — soit un
+>    VAD, que le GDD de l'analyse vocale interdit nommément sur le trajet de mesure.
+>
+> **Steam reste le transport** — le P2P Facepunch n'est pas remis en cause, et rien
+> n'empêche d'y faire passer notre propre audio encodé. C'est l'API de voix qui est écartée,
+> pas Steam.
+>
+> **Conséquence sur le coût.** Le raisonnement « gratuit d'abord, Dissonance en upgrade
+> quand l'AEC deviendra nécessaire » ne tient plus par deux bouts : l'étape gratuite
+> n'existe pas, et l'AEC a été reclassée de confort à **correctness** par l'amendement
+> d'ADR-0003. Dissonance passe donc du statut d'upgrade optionnel à celui de **candidat
+> recommandé**, à égalité avec un transport vocal maison (Concentus sur FishNet), lui aussi
+> gratuit mais à écrire. Arbitrage ouvert — voir ADR-0008.
 
 ## Date
 
