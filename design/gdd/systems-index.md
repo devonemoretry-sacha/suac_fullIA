@@ -296,9 +296,10 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **1** *(Analyse vocale — complet, 11 sections)* |
-| Design docs reviewed | 0 *(`/design-review` à lancer en session neuve)* |
-| Design docs approved | 0 |
+| Design docs reviewed | **1** *(2026-09-07, verdict NEEDS REVISION — révisions appliquées le jour même)* |
+| Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 1 / 19 |
+| ADR ouverts par la revue | **2** — ADR-0007 (`Accepted`), ADR-0008 (`Proposed`) |
 | Systems implemented without GDD | **0** *(l'analyse vocale a désormais son GDD)* |
 
 ---

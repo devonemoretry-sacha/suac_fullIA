@@ -1,10 +1,14 @@
 # Analyse vocale
 
-> **Status**: In Design
+> **Status**: In Design — révisé après `/design-review` du 2026-09-07 (verdict NEEDS REVISION)
 > **Author**: Sacha (devonemoretry-sacha) + Claude
-> **Last Updated**: 2026-09-03
-> **Implements Pillar**: Pilier 1 — « La Voice-Physics récompense le contrôle, pas le silence »
+> **Last Updated**: 2026-09-07
+> **Enables Pillar**: Pilier 1 — « La Voice-Physics récompense le contrôle, pas le silence ».
+> **Ce système n'implémente pas le Pilier 1 : il en garantit la précondition.** Le pilier
+> appartient à l'effet voix → objets. Quiconque parcourt l'index des systèmes en cherchant
+> la couverture du Pilier 1 ne doit pas s'arrêter ici.
 > **System**: #1 dans `design/gdd/systems-index.md` · Foundation · MVP
+> **Revue**: `design/gdd/reviews/voice-analysis-2026-09-07.md`
 
 > Titres de sections en anglais (lus par les skills), corps en français.
 >
@@ -103,7 +107,7 @@ Pilier 1. À rouvrir seulement si la maîtrise vocale s'avère trop facile en pl
 « fantasme délégué », cœur « fantasme par la négative », clause de vivacité pour border
 le risque de mollesse.*
 
-## Detailed Design
+## Detailed Rules
 
 ### Core Rules
 
@@ -315,6 +319,12 @@ Continuity = clamp(1 − (CrestDb − CrestMinDb) / (CrestMaxDb − CrestMinDb),
 | Borne son tenu | `CrestMinDb` | float | **PROVISOIRE 8** | Voyelle tenue humaine |
 | Borne percussif | `CrestMaxDb` | float | **PROVISOIRE 20** | Claquement de langue |
 
+**Précondition sur les bornes** : `CrestMaxDb > CrestMinDb` **strictement**, validé au
+chargement de la configuration. C'est le **deuxième dénominateur réglable du document**, et
+il souffre exactement du défaut que la validation de `Floor_dB`/`Scream_dB` empêche :
+transposées, les bornes inversent `Continuity` et un claquement se lit comme une note
+tenue, sans `NaN` ni erreur. Voir *Edge Cases* et AC-26b.
+
 **Sortie** : 0 à 1. **0 = percussif, 1 = régulier.**
 
 **Exemple** : `Peak/Rms = 3` → `CrestDb = 20·log10(3) = 9,54`
@@ -402,16 +412,54 @@ médiocre mais honnête) ou **cosmétique**.
 > Le profil **persiste sur disque**. Un profil dégénéré empoisonnerait toutes les sessions
 > futures — la validation au commit n'est donc pas une précaution, c'est une nécessité.
 
-- **Si l'écart `Scream_dB − Floor_dB` est inférieur à un minimum** *(PROVISOIRE ~20 dB, à
-  fixer au Protocole A)* : le profil est **refusé au commit** ; la calibration redemande
-  l'étape du cri. **Bloquant** — sans marge dynamique, `x` diverge et `Loudness` devient `NaN`.
+#### L'écart dynamique fait deux métiers — il lui faut deux constantes
+
+Un seul seuil était chargé à la fois d'empêcher le dénominateur de dégénérer et de
+garantir une mesure de qualité. Ce sont deux exigences différentes, et les fusionner
+oblige à choisir entre exclure des joueurs légitimes et accepter des mesures instables.
+**Elles se séparent :**
+
+- **Plancher dur** *(PROVISOIRE ~12–15 dB)* — en dessous, le profil est **refusé au
+  commit** ; la calibration redemande l'étape du cri. **Bloquant** — sans marge dynamique,
+  `x` dégénère et `Loudness` devient `NaN` à l'égalité exacte.
+- **Bande de qualité** *(PROVISOIRE ~20 dB)* — entre le plancher dur et cette valeur, le
+  profil est **accepté**, mais marqué **`LowRange`** : le lissage d'enveloppe est renforcé
+  pour ce joueur. Il joue, avec une mesure plus molle et honnêtement signalée comme telle.
+
+> **Pourquoi ce découpage.** Un joueur qui ne peut pas crier — voisinage, timidité, voix
+> faible — fournit un effort *relatif* parfaitement exploitable. Le refuser au nom d'une
+> exigence de qualité, c'est exclure quelqu'un que le système sait mesurer. À l'inverse,
+> à 20 dB tout juste, une oscillation de 2 dB déplace `Loudness` de 0,148 à 0,286 : elle
+> double, et c'est du bruit, pas un geste.
+>
+> **Attention au faux remède.** Ce doublement ne se corrige *pas* en déplaçant le seuil,
+> quel qu'il soit. Il se corrige en exigeant que le système 6 mesure `Floor_dB` **avec une
+> marge déclarée au-dessus du bruit propre du micro**. Le seuil est un leurre pour ce
+> défaut-là.
+
+#### Les trois retournements silencieux
+
 - **Si `Floor_dB > Scream_dB`** — recalibration dans un environnement plus bruyant que le
-  cri de référence : profil **refusé au commit**. **Bloquant, et c'est le cas le plus
-  dangereux de ce document** : le dénominateur devient négatif, `x` s'inverse
-  **silencieusement**, et parler plus fort fait *baisser* `Loudness`. Aucun `NaN`
-  détectable — juste une valeur plausible et fausse.
-- **Si `F0_habituel = 0`** — aucune période voisée captée pendant la calibration : profil
-  **refusé au commit**. **Bloquant** — `Pitch` divergerait vers l'infini.
+  cri de référence : profil **refusé au commit**. **Bloquant** : le dénominateur devient
+  négatif, `x` s'inverse **silencieusement**, et parler plus fort fait *baisser*
+  `Loudness`. Aucun `NaN` détectable — juste une valeur plausible et fausse.
+- **Si `CrestMaxDb ≤ CrestMinDb`** — bornes transposées ou égales, par édition de config
+  ou par un réglage mal recopié : la configuration est **refusée au chargement**.
+  **Bloquant, exactement la même classe de défaut que le précédent** : le dénominateur
+  `CrestMaxDb − CrestMinDb` s'inverse ou s'annule, et un claquement percussif se lit comme
+  une note parfaitement tenue. Sans `NaN`, sans exception, sans rien.
+- **Si `F0_habituel` est nul ou quasi nul** — aucune période voisée captée pendant la
+  calibration, ou résidu numérique : profil **refusé au commit** si
+  `F0_habituel < 20 Hz`. **Bloquant** — l'égalité exacte à zéro ne suffit pas : à
+  0,01 Hz, `Pitch = 12 · log2(120 / 0,01)` vaut environ **+162 demi-tons**, treize fois
+  hors de la plage documentée `−12 … +12`, sans jamais diverger vers l'infini. Le seuil
+  est à 20 Hz parce qu'aucune voix humaine ne descend là.
+
+> **Les trois se ressemblent, et ce n'est pas un hasard.** Chaque fois qu'une formule de
+> ce document divise par un écart entre deux valeurs réglables, cet écart doit être validé
+> à la source. C'est la règle générale dont ces trois cas sont les instances connues —
+> toute formule ajoutée plus tard y est soumise.
+
 - **Si un profil invalide arrive malgré tout** — chargé du disque, reçu du réseau,
   corrompu : l'analyse **reste `Uncalibrated`** et renvoie `VoiceFrame.Silence`. Elle
   **n'invente jamais** de valeur de remplacement : un plancher artificiel masquerait un
@@ -459,6 +507,25 @@ médiocre mais honnête) ou **cosmétique**.
   monterait vers 1 — le système rapporterait « voix parfaitement tenue » sur un signal
   distordu, sans aucune alerte. On ne connaît plus la forme du signal, donc **on ne
   modifie pas ce qu'on en affirme**.
+- **Le gel se relâche dès la première trame non écrêtée.** Il n'y a rien à temporiser :
+  le signal est redevenu lisible, on reprend la mesure.
+- **Si l'écrêtage dure au-delà d'une fenêtre** *(PROVISOIRE ~250 ms)* : `Continuity`
+  **dérive vers 0,5** au lieu de tenir indéfiniment sa dernière valeur. **Dégradant si non
+  traité** — un cri prolongé peut saturer plusieurs secondes, et geler une valeur extraite
+  d'une trame vieille de trois secondes revient à affirmer avec certitude quelque chose
+  qu'on ne mesure plus. Dériver vers le milieu d'échelle **affirme moins**, ce qui est la
+  seule chose honnête à faire quand on ne sait pas.
+
+> **La trame incohérente qui en résulte.** Pendant un cri saturé, la `VoiceFrame` peut
+> porter simultanément `Voiced = true`, `Loudness ≈ 1` et une `Continuity` gelée ou en
+> dérive — trois champs dont l'un ne décrit plus le même instant que les deux autres. Ce
+> n'est pas un bug, c'est le prix assumé du gel, mais **les consommateurs doivent le
+> savoir** : un système qui croise `Loudness` et `Continuity` pour décider quelque chose
+> se trompera pendant ces fenêtres-là.
+>
+> *L'alternative serait d'ajouter un drapeau de confiance à `VoiceFrame`. Elle est écartée
+> pour l'instant — elle élargit la seule surface publique de l'assembly. À rouvrir si le
+> playtest montre que la fenêtre gêne réellement.*
 - **`Loudness` n'est pas affectée** par l'écrêtage : il implique un signal fort, et la
   valeur est déjà bornée à 1.
 
@@ -547,10 +614,31 @@ bidirectionnelle** — voici donc les contrats à reporter le jour où ils s'éc
 - **Posséder le périphérique** et le fourcher — jamais un second lecteur.
 - Signaler les événements de périphérique (coupure, changement) pour que l'analyse bascule
   en `Degraded`.
+- **Anti-rebondir ces événements avant de les signaler.** Ce document note lui-même qu'ils
+  « se déclenchent souvent à tort ». Sans anti-rebond, l'état clignote entre `Calibrated`
+  et `Degraded`, et le joueur voit une alerte apparaître et disparaître sans rien
+  comprendre — **pire que l'un ou l'autre état tenu**. C'est le système 2 qui filtre, pas
+  l'analyse : elle n'a pas l'information pour juger.
+- Le crochet moteur est **`AudioSettings.OnAudioConfigurationChanged`** (Unity 6.3), pas un
+  sondage périodique.
+
+> **Piège Unity 6.3 pour qui implémentera ce système.** `[SerializeField]` est désormais
+> **réservé aux champs** : l'appliquer à une propriété est une **erreur de compilation**,
+> plus un avertissement. Pour une propriété auto-implémentée, écrire
+> `[field: SerializeField]`.
 
 **Système 6 — Calibration vocale**
-- Produire `VoiceProfile` : `Floor_dB`, repos, `F0_habituel`, `Scream_dB`.
-- **Valider avant de committer** — refuser les trois profils dégénérés listés en *Edge Cases*.
+- Produire `VoiceProfile` : `Floor_dB`, repos, `F0_habituel`, `Scream_dB`, plus le drapeau
+  **`LowRange`**.
+- **Valider avant de committer** — refuser les profils dégénérés listés en *Edge Cases*,
+  et marquer `LowRange` entre plancher dur et bande de qualité au lieu de refuser.
+- **Mesurer `Floor_dB` avec une marge déclarée au-dessus du bruit propre du micro.**
+  C'est ce contrat, et non le seuil d'écart dynamique, qui empêche une oscillation de 2 dB
+  de faire doubler `Loudness`. Déplacer le seuil ne corrige pas ce défaut — seule la marge
+  le fait.
+- **Caler le seuil de détection de plateau sur le seuil de validation**, pas
+  indépendamment. Sinon un plateau reconnu trop tôt produit un écart sous le plancher dur
+  et le profil est refusé alors que le joueur a coopéré.
 - **Persister le profil entre les sessions.** *(Ce besoin de persistance était signalé
   comme sans propriétaire dans l'index des systèmes — il revient ici.)*
 - Être **relançable à tout moment**, depuis le lobby comme en jeu.
@@ -591,11 +679,13 @@ réglable.**
 | `Margin_dB` — porte de volume | **7** | 6 – 8 | le chuchotement chanté est coupé : un registre central du jeu disparaît | le bruit de fond franchit la porte |
 | `JitterMin` | **0,5 %** | 0,3 – 1,0 | une voix très stable, tenue et posée, est rejetée comme un bourdonnement | un ronflement de frigo passe pour une voix |
 | `N` — fenêtre de jitter | **4** | 3 – 5 | réaction plus lente à un changement de source | variance trop bruitée pour discriminer |
-| Attaque de l'enveloppe | *à mesurer* | — | le cri met du temps à se voir : le joueur ne sent plus sa voix comme un geste | le poids du meuble vibre sur chaque syllabe |
-| Relâchement de l'enveloppe | *à mesurer* | — | le meuble reste lourd longtemps après le cri | clignotement lourd/léger entre deux mots |
+| Attaque de l'enveloppe | **10–20 ms** | 5 – 40 ms | le cri met du temps à se voir : le joueur ne sent plus sa voix comme un geste | le poids du meuble vibre sur chaque syllabe |
+| Relâchement de l'enveloppe | **120–200 ms** | 80 – 400 ms | le meuble reste lourd longtemps après le cri | clignotement lourd/léger entre deux mots |
 | Taille de l'anneau médian | **5** | 3, 5, 7 — **impair obligatoire** | latence de réaction à un vrai changement de hauteur | erreurs d'octave non filtrées |
 | TTL de l'anneau | *à définir* | — | reprise de parole lissée contre une hauteur périmée | anneau vidé trop souvent, filtre médian inopérant |
-| Écart dynamique minimal du profil | **~20 dB** | — | des joueurs légitimes voient leur calibration refusée | des profils dégénérés passent la validation |
+| Plancher dur de l'écart dynamique | **~12–15 dB** | — | des joueurs légitimes voient leur calibration refusée | des profils dégénérés passent la validation |
+| Bande de qualité de l'écart dynamique | **~20 dB** | — | trop de joueurs marqués `LowRange` et lissés inutilement | des profils instables jouent sans lissage renforcé |
+| Fenêtre de gel sur écrêtage | **~250 ms** | 100 – 500 ms | `Continuity` affirme trop longtemps une valeur périmée sur un cri tenu | dérive vers 0,5 dès un cri normal, on perd l'information |
 | Cadence de décimation | **8 kHz** ; 12 kHz si voix aiguë | — | coût CPU inutile sur YIN | le cri des voix aiguës sort de la plage de recherche |
 
 ### Les interactions — tourner un curseur peut en annuler un autre
@@ -630,10 +720,19 @@ Trois valeurs ressemblent à des réglages et n'en sont pas :
 - **Le seuil d'apériodicité de YIN (0,15)** — fixé par la littérature et arbitré en
   ADR-0004. Le toucher, c'est rouvrir un ADR.
 
-> **Sur les constantes de temps de l'enveloppe.** Elles sont laissées *à mesurer* plutôt
-> qu'inventées : elles gouvernent directement le ressenti « ma voix est un geste » et se
-> règlent à l'oreille, pas au raisonnement. Le POC audio ou le prototype les donnera en une
-> session.
+> **Sur les constantes de temps de l'enveloppe.** Elles étaient laissées *à mesurer* — un
+> vide qui laissait le document sans point de départ et sans critère. Elles portent
+> désormais des valeurs **PROVISOIRES**, au même titre que `γ` : 10–20 ms d'attaque,
+> 120–200 ms de relâchement. Ce ne sont pas des mesures, ce sont des paris explicites,
+> réglables et testables. Elles gouvernent le ressenti « ma voix est un geste » et se
+> règlent à l'oreille : le POC audio les tranchera en une session.
+
+> **Règle générale de report.** Ce document diffère plusieurs décisions, et c'est
+> légitime — mais un report n'est acceptable que s'il porte **une valeur provisoire, un
+> déclencheur nommé, et un propriétaire**. Sans les trois, ce n'est pas un report, c'est
+> un trou avec un paragraphe dessus. `γ` satisfait les trois. Les constantes d'enveloppe
+> les satisfont depuis cette révision. **Le TTL de l'anneau n'en satisfait aucun** — c'est
+> le dernier manquement de cette catégorie dans le document.
 
 ## Visual/Audio Requirements
 
@@ -717,6 +816,18 @@ en attendant.
 ---
 
 ## UI Requirements
+
+> **Cette section est un contrat hérité, en transit.** Un système sans interface n'a
+> normalement pas de section UI — la revue du 2026-09-07 le relève à juste titre, et
+> recommande de déplacer ce contenu vers le GDD du système 6, Calibration.
+>
+> **Il n'est pas déplacé maintenant, et c'est délibéré :** le GDD du système 6 n'existe pas
+> encore. Sortir du contenu pour le reloger « plus tard » est la manière la plus ordinaire
+> de le perdre. Cette section reste donc ici, **à migrer telle quelle** le jour où le
+> système 6 s'écrit — avec les trois réserves de l'UX designer, qui sont de son ressort et
+> non du nôtre : l'inconfort social de la calibration, le couplage plateau/validation, et
+> l'anti-rebond du signalement `Degraded` (ce dernier étant déjà porté par le contrat du
+> système 2, plus haut).
 
 ### Les écrans requis
 
@@ -835,6 +946,16 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 
 ### A — Formules
 
+> **Les valeurs attendues se dérivent, elles ne se recopient pas.** Trois critères de cette
+> section n'ont la valeur annoncée que pour un jeu précis de constantes provisoires : AC-01
+> ne donne 0,64 que si `γ = 0,65`, AC-04 ne donne 0,87 que si `CrestMinDb = 8` et
+> `CrestMaxDb = 20`. Les écrire en dur ferait exactement ce qu'AC-43 et AC-44 interdisent —
+> transformer un pari en acquis, dans le document qui l'interdit.
+>
+> **Règle : le test calcule sa valeur attendue à partir de la constante nommée**, et les
+> nombres ci-dessous sont des repères de lecture, pas des littéraux à copier. Quand une
+> constante bouge après mesure, ces critères suivent **sans être réécrits**.
+
 | # | Critère | Type |
 |---|---|---|
 | AC-01 | GIVEN `Floor_dB = −50`, `Scream_dB = −10` WHEN `Rms_dB = −30` THEN `Loudness = 0,64` (± 0,005) | `[UNIT]` |
@@ -871,7 +992,9 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 | AC-17 | GIVEN l'état `Uncalibrated` THEN chaque appel renvoie `VoiceFrame.Silence(tick)` **et `Tick` avance quand même** | `[UNIT]` |
 | AC-18 | GIVEN `Calibrated` WHEN le micro se coupe ou change de périphérique THEN état `Degraded`, sortie `Silence`, `Tick` continue, **profil conservé intact** | `[UNIT]` |
 | AC-19 | GIVEN un changement de périphérique THEN **aucune recalibration n'est déclenchée** et le profil reste valide | `[UNIT]` |
-| AC-20 | GIVEN `Degraded` WHEN un nouveau profil valide est reçu THEN le profil est mis à jour **sans repasser `Calibrated`** | `[UNIT]` |
+| AC-20 | GIVEN `Degraded` WHEN un nouveau **profil** valide est reçu THEN le profil est mis à jour **sans repasser `Calibrated`** — recevoir un profil ne prouve pas que la capture est revenue | `[UNIT]` |
+| AC-20b | GIVEN `Degraded` WHEN des **échantillons** valides reviennent THEN l'état repasse `Calibrated`. **Ce critère et AC-20 doivent être lus ensemble** : sans lui, AC-20 se lit comme s'il n'existait aucune sortie de `Degraded` | `[UNIT]` |
+| AC-20c | GIVEN une série d'événements de périphérique en rafale THEN l'état ne bascule pas à chaque événement : l'anti-rebond du système 2 les absorbe. Un `Calibrated ⇄ Degraded` clignotant est pire que l'un ou l'autre état | `[INTEG]` |
 | AC-21 | GIVEN un joueur portant un meuble WHEN une recalibration aboutit THEN le basculement est **atomique** : aucune trame ne combine l'ancien `Floor_dB` avec le nouveau `Scream_dB` | `[UNIT]` |
 | AC-22 | GIVEN un profil calibré en session 1 WHEN le joueur revient en session 2 THEN il rejoint une partie **sans recalibrer** | `[INTEG]` |
 | AC-23 | GIVEN un joueur **sans profil calibré** WHEN il tente de rejoindre une partie THEN l'entrée est **refusée** jusqu'à création du profil | `[INTEG]` |
@@ -881,9 +1004,10 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 
 | # | Critère | Type |
 |---|---|---|
-| AC-25 | GIVEN `Scream_dB − Floor_dB < 20 dB` THEN le commit du profil est **refusé** | `[UNIT]` |
-| AC-26 | GIVEN `Floor_dB > Scream_dB` THEN le commit est **refusé** — c'est le cas le plus dangereux du système, il inverse `x` sans produire ni NaN ni erreur | `[UNIT]` |
-| AC-27 | GIVEN `F0_habituel = 0` THEN le commit est **refusé** | `[UNIT]` |
+| AC-25 | GIVEN un écart `Scream_dB − Floor_dB` **sous le plancher dur** THEN le commit est **refusé** ; GIVEN un écart **entre plancher dur et bande de qualité** THEN le profil est **accepté et marqué `LowRange`**, avec lissage renforcé. Les deux seuils sont lus depuis leurs constantes nommées, jamais recopiés | `[UNIT]` |
+| AC-26 | GIVEN `Floor_dB > Scream_dB` THEN le commit est **refusé** — il inverse `x` sans produire ni NaN ni erreur | `[UNIT]` |
+| AC-26b | GIVEN `CrestMaxDb ≤ CrestMinDb` THEN la configuration est **refusée au chargement** — même classe de retournement silencieux qu'AC-26, sur l'autre dénominateur du document | `[UNIT]` |
+| AC-27 | GIVEN `F0_habituel < 20 Hz` — **et non pas seulement `= 0`** — THEN le commit est **refusé**. Cas de test obligatoire : `F0_habituel = 0,01` doit être rejeté, sans quoi `Pitch` vaut ≈ +162 demi-tons sans jamais diverger | `[UNIT]` |
 | AC-28 | GIVEN un profil invalide transmis malgré tout à l'analyse THEN l'état **reste `Uncalibrated`** — aucune valeur substituée, aucun défaut inventé | `[UNIT]` |
 | AC-29 | GIVEN le micro coupé pendant la calibration THEN l'étape est annulée et **aucun profil partiel** n'est écrit | `[UNIT]` |
 | AC-30 | GIVEN `médiane / 2 < 70 Hz` THEN la plage de recherche devient `[70 ; médiane × 2]` | `[UNIT]` |
@@ -894,6 +1018,9 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 | # | Critère | Type |
 |---|---|---|
 | AC-32 | GIVEN `Peak` saturé sur plusieurs échantillons consécutifs THEN `Continuity` **gèle sa dernière valeur** au lieu de suivre un `CrestDb` faussé | `[UNIT]` |
+| AC-32b | GIVEN un écrêtage qui cesse THEN `Continuity` **reprend la mesure dès la première trame non écrêtée** — le gel ne se temporise pas au relâchement | `[UNIT]` |
+| AC-32c | GIVEN un écrêtage **prolongé au-delà de la fenêtre de gel** THEN `Continuity` dérive vers 0,5 au lieu de tenir indéfiniment une valeur périmée | `[UNIT]` |
+| AC-32d | GIVEN une trame de cri saturé THEN elle peut légitimement porter `Voiced = true`, `Loudness ≈ 1` et une `Continuity` gelée — **la trame est incohérente par conception**, et ce critère existe pour que personne ne la traite comme un bug | `[UNIT]` |
 | AC-33 | GIVEN écrêtage THEN `Loudness` **n'est pas gelée** — elle est déjà bornée à 1 et un signal écrêté est fort | `[UNIT]` |
 | AC-34 | GIVEN une trame non voisée THEN son `F0` **n'entre pas dans l'anneau**, et `Pitch` **conserve sa dernière valeur lissée** — il ne retombe pas à 0 | `[UNIT]` |
 | AC-35 | GIVEN l'anneau figé au-delà du TTL sans voisement THEN il est **vidé** ; la reprise de parole ne se lisse pas contre une hauteur périmée | `[UNIT]` |
@@ -919,21 +1046,45 @@ automatisable et un versant humain ; les deux sont listés.
 
 | # | Critère | Type |
 |---|---|---|
-| AC-41 | GIVEN 1 000 trames traitées THEN **aucune allocation managée** n'est observée sur la chaîne complète (`GC.GetAllocatedBytesForCurrentThread` identique avant/après) | `[UNIT]` |
-| AC-42 | GIVEN la chaîne exécutée sur un profil de charge nominal THEN le coût **thread principal** reste sous 1 ms/frame | `[HUMAIN]` — profilage sur cible, pas en test headless |
+#### Le profil de charge nominal — une instance, pas huit
 
-### I — La porte de mesure
+**Il n'existe qu'un seul `VoiceAnalyzer` par client, quel que soit le nombre de joueurs.**
+ADR-0003 est explicite : chaque client analyse son propre micro en local et ne transmet
+que des features. Les `VoiceFrame` des autres joueurs **arrivent par le réseau** ; elles ne
+sont jamais recalculées. Le coût de l'analyse ne dépend donc pas de la taille de la partie.
 
-Six valeurs de ce document sont **provisoires** : `γ`, `Margin_dB`, `JitterMin`,
-`CrestMinDb`, `CrestMaxDb`, l'écart dynamique minimal du profil. Deux protocoles les
-valideront. Le risque n'est pas qu'elles soient fausses — c'est qu'elles **cessent
-silencieusement d'être signalées comme provisoires** en se propageant dans le code et
-dans les autres documents.
+Le pire cas nominal n'est pas une partie pleine — c'est **un joueur à voix aiguë**, dont le
+profil impose la décimation à 12 kHz. YIN étant en O(fenêtre²), une fenêtre une fois et
+demie plus longue coûte environ **2,25 fois plus cher**. C'est ce profil-là qu'il faut
+mesurer, et non une moyenne.
+
+**Propriété du thread.** L'analyse ne tourne pas sur le thread principal. Ce que le budget
+de 1 ms/frame doit couvrir n'est pas le calcul mais **la remise de la `VoiceFrame` au
+thread principal** — le point de synchronisation, pas la chaîne DSP.
 
 | # | Critère | Type |
 |---|---|---|
-| AC-43 | GIVEN le code de `Voice.Core` THEN chacune des six valeurs apparaît **en un seul endroit**, comme constante nommée — aucun littéral dupliqué ailleurs dans l'assembly | `[UNIT]` par inspection statique des sources |
-| AC-44 | GIVEN un document de design citant l'une des six valeurs THEN il la marque **provisoire** ou renvoie ici — aucune ne peut être citée comme acquise avant que les deux protocoles aient tourné | `[HUMAIN]` — relecture, à la charge de `/design-review` |
+| AC-41 | GIVEN 1 000 trames traitées THEN **aucune allocation managée** n'est observée sur la chaîne complète. Méthode obligatoire : boucle de chauffe puis `GC.Collect()` **avant** la fenêtre mesurée, sinon la première trame porte les allocations de la JIT et le test ment | `[UNIT]` |
+| AC-41b | GIVEN une bascule de profil à chaud pendant la mesure THEN elle est **explicitement dans ou hors** du périmètre d'AC-41 — la reconstruction du `Decimator` et du `PitchDetector` alloue par nature, et confondre les deux rend le critère ininterprétable | `[UNIT]` |
+| AC-42 | GIVEN **un** analyseur sur le profil de charge nominal ci-dessus — voix aiguë, décimation 12 kHz — THEN le coût **thread principal** reste sous 1 ms/frame | `[HUMAIN]` — profilage sur cible |
+| AC-42b | GIVEN une exécution en jeu THEN un compteur `ProfilerRecorder` expose en continu le coût par instance en µs/frame **et l'écart de cadence au nominal** — le second est la seule instrumentation qui rende visible le défaut décrit en OQ-3 | `[INTEG]` |
+
+### I — La porte de mesure
+
+**Dix** valeurs de ce document sont **provisoires** : `γ`, `Margin_dB`, `JitterMin`,
+`CrestMinDb`, `CrestMaxDb`, le **plancher dur** et la **bande de qualité** de l'écart
+dynamique, l'**attaque** et le **relâchement** de l'enveloppe, la **fenêtre de gel sur
+écrêtage**. Les quatre dernières ont été ajoutées à la révision du 2026-09-07 : elles
+étaient auparavant des vides sans valeur ni critère, ce qui est pire qu'un pari signalé.
+
+Deux protocoles les valideront. Le risque n'est pas qu'elles soient fausses — c'est
+qu'elles **cessent silencieusement d'être signalées comme provisoires** en se propageant
+dans le code et dans les autres documents.
+
+| # | Critère | Type |
+|---|---|---|
+| AC-43 | GIVEN le code de `Voice.Core` THEN chacune des dix valeurs apparaît **en un seul endroit**, comme constante nommée — aucun littéral dupliqué ailleurs dans l'assembly | `[UNIT]` par inspection statique des sources |
+| AC-44 | GIVEN un document de design citant l'une des dix valeurs THEN il la marque **provisoire** ou renvoie ici — aucune ne peut être citée comme acquise avant que les deux protocoles aient tourné | `[HUMAIN]` — relecture, à la charge de `/design-review` |
 
 ---
 
@@ -942,25 +1093,25 @@ dans les autres documents.
 Quatre trous subsistent, dont le premier est un **défaut de spécification** et non un
 manque de test.
 
-**1. La médiane pendant l'amorçage est ambiguë.** Ce document justifie la taille impaire
-de l'anneau en disant que la médiane est alors « toujours un élément, jamais une moyenne
-de deux, ce qui la rend testable sans ambiguïté ». Mais il précise aussi qu'avec moins de
-cinq valeurs, « la médiane porte sur les valeurs disponibles » — donc parfois sur 2 ou 4.
-**L'ambiguïté que la parité impaire devait supprimer revient exactement pendant
-l'amorçage.** Il faut trancher : médiane de deux valeurs, c'est laquelle ? Sans réponse,
-AC-16 ne couvre pas les premières trames de chaque prise de parole — et ce sont celles
-que le joueur remarque le plus.
+**1. ~~La médiane pendant l'amorçage est ambiguë.~~ RÉSOLU au 2026-09-07.** Sur un nombre
+pair de valeurs disponibles, la médiane prend **l'élément bas des deux centraux**. Le
+biais est d'une valeur d'anneau, sur deux trames, et il est déterministe — donc testable.
+Voir OQ-1, close.
 
-**2. La sortie de `Degraded` n'est pas spécifiée.** Ce document décrit l'entrée dans
-l'état, jamais le retour. Le micro revient : est-ce automatique, ou faut-il une action
-du joueur ? AC-18 couvre l'aller ; rien ne couvre le retour.
-
-**3. Le TTL de l'anneau n'a pas de valeur.** AC-35 est écrit mais non exécutable tant que
+**2. Le TTL de l'anneau n'a pas de valeur.** AC-35 est écrit mais non exécutable tant que
 le curseur reste « à définir ».
 
-**4. Écrêtage et non-voisement simultanés.** Les deux gardes de gel portent sur des cibles
+**3. Écrêtage et non-voisement simultanés.** Les deux gardes de gel portent sur des cibles
 différentes — `Continuity` d'un côté, l'anneau `F0` de l'autre — donc elles ne devraient
 pas entrer en conflit. Aucun critère ne le vérifie explicitement.
+
+> **Un quatrième trou a été signalé par la revue puis retiré : la sortie de `Degraded`.**
+> Elle *est* spécifiée — table des transitions, `Degraded → Calibrated` sur retour
+> d'échantillons valides, l'état étant déjà propre. La revue et une version antérieure de
+> cette section affirmaient toutes deux le contraire. AC-20 ne la contredit pas : recevoir
+> un *profil* ne rétablit pas `Calibrated`, recevoir des *échantillons* si — ce sont deux
+> déclencheurs distincts. Ce qui manquait réellement était l'anti-rebond, désormais porté
+> par le contrat du système 2.
 
 ### Les trois cas difficiles
 
@@ -973,7 +1124,7 @@ humain et qu'aucune astuce ne remplacera.
 
 **La porte de mesure.** Un test unitaire ne voit pas au-delà de son assembly : il ne peut
 pas vérifier « ailleurs dans le projet ». AC-43 fait ce qui est faisable — une inspection
-statique des sources qui échoue si l'une des six valeurs est dupliquée hors de son fichier
+statique des sources qui échoue si l'une des dix valeurs est dupliquée hors de son fichier
 de constantes. C'est un test de **discipline**, pas de comportement, et il doit être
 documenté comme tel. Le reste (AC-44) est une relecture humaine.
 
@@ -1007,8 +1158,10 @@ détecter.
 Une question ouverte n'a pas le même poids selon ce qu'elle empêche. Trois catégories, et
 c'est l'ordre dans lequel il faut les traiter :
 
-- **Bloque le code** — on ne peut pas écrire le `VoiceAnalyzer` sans trancher. Trois
-  questions.
+- **Bloque le code** — on ne peut pas écrire le `VoiceAnalyzer` sans trancher. **Les trois
+  questions de cette catégorie ont été fermées à la revue du 2026-09-07** : deux tranchées
+  ici, une promue en ADR. Elles restent écrites, avec leur résolution — un document de
+  fondation doit garder la trace de ce qu'il a décidé, pas seulement de ce qu'il ignore.
 - **Bloque le réglage** — le code s'écrit, mais les valeurs restent des paris. Trois
   questions, toutes résolubles par la mesure.
 - **Appartient ailleurs** — la réponse existera dans un autre GDD ; elle est listée ici
@@ -1038,63 +1191,78 @@ Trois issues :
 | **B — pas de lissage tant que l'anneau n'est pas plein** : `Pitch` passe brut | Aucun biais, aucune ambiguïté. Les erreurs d'octave de YIN ne sont pas filtrées pendant ~100 ms au début de chaque phrase |
 | **C — n'émettre `Pitch` qu'une fois l'anneau plein** | Le plus propre à tester, le pire à jouer : la hauteur arrive en retard sur le volume, et le joueur sent un décalage entre deux composantes du même geste |
 
-> **Recommandation : A.** Le biais est d'une valeur d'anneau, sur deux trames, et il est
-> *déterministe* — donc testable et documentable. B laisse passer précisément les erreurs
-> d'octave, qui sont le mode d'échec le plus visible de YIN, et au pire moment. C introduit
-> une désynchronisation entre `Loudness` et `Pitch` qui heurte le ressenti « ma voix est un
+> ### ✅ TRANCHÉ le 2026-09-07 — **option A**
+>
+> Sur un nombre pair de valeurs disponibles, la médiane prend **l'élément bas des deux
+> centraux**. Le biais est d'une valeur d'anneau, sur deux trames, et il est *déterministe*
+> — donc testable et documentable. B laisse passer précisément les erreurs d'octave, qui
+> sont le mode d'échec le plus visible de YIN, et au pire moment. C introduit une
+> désynchronisation entre `Loudness` et `Pitch` qui heurte le ressenti « ma voix est un
 > geste ».
 
-#### OQ-2 — La sortie de `Degraded` n'est pas spécifiée
+#### OQ-2 — ~~La sortie de `Degraded` n'est pas spécifiée~~
 
-Ce document décrit l'entrée dans l'état — micro coupé, périphérique changé — et jamais le
-retour. Le micro revient : est-ce automatique, ou faut-il une action du joueur ?
-
-L'enjeu n'est pas technique, il est d'attribution. Un retour automatique silencieux
-rend le système intermittent sans que le joueur sache pourquoi il l'était. Une action
-explicite coûte une friction, mais elle *nomme* l'incident.
-
-**Le volet UI de ce document a répondu à la moitié de la question** : indicateur non
-diégétique dans le HUD, déclenché en moins de deux secondes, avec accès immédiat au
-diagnostic. Ce qui reste ouvert est la machine à états elle-même — le retour en
-`Calibrated` se fait-il tout seul dès que les échantillons reviennent, ou exige-t-il que
-le joueur valide ? *Réponse attendue du GDD du système 6.*
+> ### ✅ FERMÉ le 2026-09-07 — **la question était fausse**
+>
+> Elle **est** spécifiée, et depuis le début : table des transitions,
+> `Degraded → Calibrated` sur **retour d'échantillons valides**, l'état étant déjà propre.
+> Une version antérieure de cette section affirmait le contraire, et la revue externe l'a
+> répété en aggravant — en concluant d'AC-20 qu'il n'existait peut-être aucune sortie du
+> tout. AC-20 ne dit rien de tel : recevoir un **profil** ne rétablit pas `Calibrated`,
+> recevoir des **échantillons** si. Deux déclencheurs distincts, aucune contradiction.
+>
+> **Ce qui manquait réellement** n'était pas la transition mais son **anti-rebond** : ces
+> événements de périphérique se déclenchent souvent à tort, et sans filtrage l'état
+> clignote. C'est désormais un contrat du système 2, et AC-20c le couvre.
 
 #### OQ-3 — Cadence implicite ou `deltaTime` explicite
 
-**C'est la question la plus importante des trois.** L'`EnvelopeFollower` dérive ses
-coefficients de l'`updateRateHz` reçu au constructeur, mais **rien ne vérifie que les
-appels arrivent réellement à ce rythme**. Une dérive casse le lissage sans exception, sans
-NaN, sans trace — le seul symptôme est un jeu qui répond mal, et personne ne remonte de là
-jusqu'à la cause.
+L'`EnvelopeFollower` dérive ses coefficients de l'`updateRateHz` reçu au constructeur, mais
+**rien ne vérifie que les appels arrivent réellement à ce rythme**. Une dérive casse le
+lissage sans exception, sans NaN, sans trace — le seul symptôme est un jeu qui répond mal,
+et personne ne remonte de là jusqu'à la cause.
 
-Deux formes possibles :
-
-- **Garder la cadence implicite** et en faire un contrat écrit, tenu par le système 2.
-  Coût zéro, garantie zéro.
-- **Passer un `deltaTime` explicite** à chaque trame, recalculer les coefficients ou
-  signaler l'écart au nominal au-delà d'une tolérance. Coût réel — cela touche la signature
-  publique et le seul type à état de l'assembly.
-
-> **Ceci mérite un ADR, pas une ligne de test.** Tant qu'il n'est pas tranché, le critère
+> ### ✅ TRANCHÉ le 2026-09-07 — **le moteur a répondu à notre place**
+>
+> Ce document présentait deux options. **La première n'existe pas.** Garder la cadence
+> implicite comme simple contrat écrit supposait qu'une cadence fixe à 50 Hz soit
+> *atteignable* sous Unity. Elle ne l'est pas :
+>
+> | Mécanisme | Pourquoi il ne donne pas 50 Hz fixe |
+> |---|---|
+> | `Update` | Couplé à l'affichage — donc variable par nature |
+> | `FixedUpdate` | Ordonnanceur à rattrapage : zéro, une ou plusieurs exécutions par frame |
+> | `Microphone` | Interrogation seule, aucun rappel |
+> | `OnAudioFilterRead` | Piloté par le nombre d'échantillons, avec une taille de tampon **modifiable à l'exécution** |
+>
+> Il reste donc une seule voie : **passer un `deltaTime` explicite**. Ce n'est plus un
+> arbitrage coût/garantie, c'est la seule forme réalisable. Elle touche la signature
+> publique du seul type à état de l'assembly, ce qui la rend structurante.
+>
+> **→ ADR-0007.** À écrire **avant** le `VoiceAnalyzer`. Tant qu'il n'est pas appliqué,
 > AC-14 vérifie que le lissage est correct *quand la cadence est correcte* — il ne détecte
-> rien du cas qui nous inquiète.
+> rien du cas qui nous inquiète, et AC-42b est la seule instrumentation qui le rende visible.
 
 ---
 
 ### Bloque le réglage
 
-#### OQ-4 — Les six valeurs provisoires
+#### OQ-4 — Les dix valeurs provisoires
 
-`γ`, `Margin_dB`, `JitterMin`, `CrestMinDb`, `CrestMaxDb`, l'écart dynamique minimal du
-profil. Aucune n'est mesurée. Les deux protocoles décrits en *Edge Cases* les donnent en
-une session d'enregistrement et une session de playtest. **Rien d'autre dans le projet ne
-doit les citer comme acquises avant** — c'est l'objet des critères AC-43 et AC-44.
+`γ`, `Margin_dB`, `JitterMin`, `CrestMinDb`, `CrestMaxDb`, le plancher dur et la bande de
+qualité de l'écart dynamique, l'attaque et le relâchement de l'enveloppe, la fenêtre de gel
+sur écrêtage. Aucune n'est mesurée. Les deux protocoles décrits en *Edge Cases* en donnent
+la plupart en une session d'enregistrement et une session de playtest ; les constantes
+d'enveloppe se règlent séparément, à l'oreille, au POC audio. **Rien d'autre dans le projet
+ne doit les citer comme acquises avant** — c'est l'objet des critères AC-43 et AC-44.
 
 #### OQ-5 — Les constantes de temps de l'enveloppe
 
-Attaque et relâchement, laissées *à mesurer* plutôt qu'inventées. Elles gouvernent
-directement le ressenti « ma voix est un geste » et se règlent à l'oreille, pas au
-raisonnement. Le POC audio les donnera.
+Attaque et relâchement portent désormais des valeurs **PROVISOIRES** — 10–20 ms et
+120–200 ms — là où elles étaient laissées *à mesurer*, c'est-à-dire vides. Le changement
+n'est pas cosmétique : un vide ne se teste pas et ne se conteste pas, tandis qu'un pari
+explicite fait les deux. Elles gouvernent le ressenti « ma voix est un geste » et se
+règlent à l'oreille, pas au raisonnement. Le POC audio les tranchera.
 
 #### OQ-6 — Le TTL de l'anneau
 
@@ -1118,9 +1286,24 @@ Si le partage s'avère impossible ou instable, ce n'est pas un correctif : **c'e
 pivot de conception.** Il faudrait alors choisir entre la voix comme contrôleur et la voix
 comme chat, ou reconstruire tout le trajet.
 
-> **Ce test se mène en une demi-journée et n'exige aucun des GDD restants.** Il n'a pas
-> besoin d'attendre le POC complet, et il devrait le précéder : c'est la seule question du
-> document dont une mauvaise réponse invaliderait le reste.
+> ### ⚠️ RECADRÉ le 2026-09-07 — **ce n'était pas la bonne question**
+>
+> Formulée comme « le micro se partage-t-il », c'est une question de pile audio, réglée par
+> une demi-journée de test. Mais ce test **présuppose** ce qui n'est pas acquis : que le SDK
+> de chat vocal accepte du **PCM fourni de l'extérieur** au lieu de posséder lui-même la
+> capture. **La plupart des SDK possèdent la capture.**
+>
+> Si le nôtre la possède, il n'y a rien à fourcher : le système 2 ne peut pas être
+> propriétaire du périphérique, et tout le trajet décrit dans ce document s'effondre — quel
+> que soit le résultat du test de partage.
+>
+> **L'ordre correct est donc :** d'abord établir quels SDK acceptent du PCM externe et
+> lequel on retient → **ADR-0008** ; ensuite seulement, tester le partage sur la cible.
+> Mener la demi-journée de test avant cela ne mesure rien d'utilisable.
+>
+> ADR-0005 avait retenu « interface maison, implémentation interchangeable ». L'interface
+> est bien à nous — mais **l'interchangeabilité n'est réelle que parmi les backends
+> capables d'ingérer du PCM externe**, et ce sous-ensemble n'a jamais été établi.
 
 #### OQ-8 — Deux joueurs dans la même pièce
 
@@ -1133,6 +1316,11 @@ Il n'y a pas de réponse à ce stade, et il ne faut pas en inventer une. Ce qu'i
 sont **des données de playtest en configuration même-pièce** avant de décider si cela casse
 réellement l'attribution — et donc avant d'investir dans une atténuation. Casque recommandé
 en attendant, ce qui est une consigne, pas une solution.
+
+> **Déclencheur, pas mise en garde.** Ce playtest doit avoir lieu **avant l'écriture des
+> GDD des systèmes 3 et 12**. Les deux encoderont l'hypothèse « une voix par `VoiceFrame` »
+> dans leurs propres règles ; la remettre en cause après coup coûterait deux documents,
+> alors qu'une soirée de test la valide ou l'invalide maintenant.
 
 ---
 
