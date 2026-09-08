@@ -2,7 +2,27 @@
 
 ## Status
 
-Accepted
+**Accepted — élargi le 2026-09-08** par la revue de chaîne
+(`voice-chain-td-review-2026-09-08.md`).
+
+> ### Amendement du 2026-09-08 — l'ADR ne corrigeait qu'un défaut sur cinq
+>
+> La décision d'origine reste juste : aucun mécanisme Unity ne fournit 50 Hz fixes, le
+> `deltaTime` explicite est la seule voie. **Ce n'est pas rouvert.**
+>
+> Mais l'ADR n'injectait le temps que dans l'`EnvelopeFollower`, laissant **quatre horloges
+> implicites** en place — les fenêtres d'analyse, la fenêtre de jitter, le TTL de l'anneau
+> et la fenêtre de gel sur écrêtage, toutes trois exprimées en trames ou en millisecondes
+> sans référence. Une dérive de cadence les fausse toutes.
+>
+> **Le `deltaTime` devient un `AnalysisTiming { DeltaSeconds, SampleRate }.`** L'ajout du
+> `SampleRate` ferme du même geste un défaut que personne n'avait vu : **aucun document du
+> projet ne nomme la fréquence d'échantillonnage**, alors que le code en dépend pour
+> décimer et pour convertir une période en hertz.
+>
+> **Le coût était surestimé.** L'ADR annonçait le remaniement des tests comme « le coût
+> réel » : `EnvelopeFollowerTests` porte **7 tests sur 41**, dont quatre gardent leur sens
+> tels quels. Une demi-journée, et les 34 autres ne bougent pas.
 
 ## Date
 
@@ -108,27 +128,58 @@ cadence peut changer en cours de partie.
 
 ### Architecture
 
-`EnvelopeFollower` — et par extension tout élément à état de la chaîne — reçoit
-l'intervalle écoulé **à chaque appel**, au lieu de le supposer.
+> **⚠️ Élargi le 2026-09-08 par la revue de chaîne.** La version d'origine n'injectait qu'un
+> `deltaTime`, et **ne corrigeait qu'un élément dépendant du temps sur cinq**. Voir
+> l'amendement en tête de document. Ce qui suit est la version en vigueur.
+
+La chaîne reçoit **à chaque trame** un descripteur de temps, et non un simple intervalle :
+
+```
+AnalysisTiming {
+    float DeltaSeconds;   // intervalle réel écoulé depuis la trame précédente
+    int   SampleRate;     // relevés par seconde du signal entrant
+}
+```
+
+Tout élément dépendant du temps le consomme. Il y en a **cinq**, pas un :
+
+| Élément | Dépendait implicitement de | Consomme désormais |
+|---|---|---|
+| `EnvelopeFollower` | `updateRateHz` du constructeur | `DeltaSeconds` |
+| Fenêtres d'analyse (21 / 46 ms) | Une cadence d'échantillonnage supposée | `SampleRate` |
+| Fenêtre de jitter `N` | Un compte de **trames** | Exprimée en **secondes** |
+| TTL de l'anneau médian | Un compte de **trames** | Exprimé en **secondes** |
+| Fenêtre de gel sur écrêtage | 250 ms, comptés sans référence | `DeltaSeconds` |
 
 - Les coefficients sont recalculés lorsque l'intervalle s'écarte du précédent au-delà d'un
-  epsilon. Un intervalle stable ne coûte donc rien de plus qu'aujourd'hui : le cas nominal
-  reste un simple test de comparaison.
-- Les constantes de temps d'attaque et de relâchement, exprimées en **millisecondes**
-  (ADR ne fixe pas les valeurs — voir le GDD, PROVISOIRE 10–20 ms et 120–200 ms),
-  deviennent la vérité de référence. La cadence n'est plus qu'une donnée d'entrée.
-- L'écart au nominal est **exposé**, pas seulement absorbé : la chaîne publie une mesure de
-  déviation de cadence, consommée par le compteur `ProfilerRecorder` du critère AC-42b.
+  epsilon. Un intervalle stable ne coûte donc rien de plus qu'aujourd'hui.
+- Les constantes de temps, exprimées en **millisecondes ou en secondes**, deviennent la
+  vérité de référence. Cadence d'appel et cadence d'échantillonnage ne sont plus que des
+  données d'entrée.
+- L'écart au nominal est **exposé**, pas seulement absorbé — consommé par le compteur
+  `ProfilerRecorder` du critère AC-42b.
+
+> **Pourquoi `SampleRate` voyage avec `DeltaSeconds`.** Ce sont les deux faces du même
+> défaut. Si l'intervalle dérive, le nombre de relevés par trame dérive avec lui : les
+> séparer laisserait la moitié du problème en place. Les injecter ensemble ferme d'un seul
+> geste la dérive de cadence **et** l'absence de fréquence d'échantillonnage documentée.
 
 ### Implementation Guidelines
 
-- L'intervalle est fourni en **secondes**, en `float`, par l'appelant — c'est-à-dire par
-  `SUAC.Voice.Capture`, qui a le droit de connaître Unity.
-- Un intervalle nul, négatif ou aberrant (au-delà d'un plafond) est **rejeté** : la trame
-  réutilise le dernier intervalle valide. Un tampon audio en retard ne doit pas produire un
-  coefficient absurde.
-- Cette valeur n'entre **pas** dans `VoiceFrame` : elle est une donnée d'entrée de la
-  chaîne, pas une mesure de la voix. La surface publique reste `{ VoiceFrame, VoiceProfile }`.
+- `AnalysisTiming` est fourni par l'appelant — `SUAC.Voice.Capture`, qui a le droit de
+  connaître Unity. `DeltaSeconds` en secondes, en `float`.
+- **Un `SampleRate` incompatible avec la décimation demandée est refusé à la construction.**
+  `Decimator` n'accepte qu'un **facteur entier** : 48 000 → 8 000 vaut 6, mais
+  44 100 → 8 000 vaudrait 5,5125, ce qui n'existe pas. Le refus est explicite ; **arrondir
+  serait le pire des comportements**, puisque toutes les hauteurs seraient alors fausses en
+  silence.
+- **Un intervalle nul, négatif ou aberrant est signalé, pas substitué.** *(Règle corrigée le
+  2026-09-08 : la version d'origine réutilisait le dernier intervalle valide. Substituer une
+  valeur en silence est précisément le mode d'échec que ce projet traque — le lissage
+  redevenait faux sans que rien ne l'indique. La trame est marquée comme suspecte et la
+  déviation remonte au compteur.)*
+- `AnalysisTiming` n'entre **pas** dans `VoiceFrame` : c'est une entrée de la chaîne, pas une
+  mesure de la voix.
 
 ## Alternatives Considered
 

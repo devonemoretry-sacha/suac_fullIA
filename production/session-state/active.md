@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Note de cadrage poids/voix ecrite — revue technique non traitee, prototype a monter
+Task: Corrections de la chaine vocale — 3 defauts sur 9 traites (cadence, dB, ADR-0007)
 <!-- /STATUS -->
 
 ---

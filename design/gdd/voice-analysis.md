@@ -275,6 +275,48 @@ interpolation linéaire ferait correspondre `0,5` à mi-chemin de la *grandeur p
 pas de l'*effort ressenti* — et l'écart entre les deux est **maximal dans le registre
 bas, celui du chuchotement**, qui est le registre central du jeu.
 
+> ### ⚠️ L'étape manquante — ajoutée le 2026-09-08
+>
+> Ce tableau annonce `Rms_dB` comme « sortie de l'`EnvelopeFollower` ». **Le code n'en
+> produisait rien de tel** : `RawLoudness.Rms` est une valeur **linéaire**, l'enveloppe la
+> lisse telle quelle, et une vérification par `grep` sur tout `Voice.Core` confirme
+> qu'**aucune conversion en décibels n'existe nulle part**. La chaîne de dix étapes n'en
+> comportait aucune non plus.
+>
+> **La conversion est une étape à part entière**, insérée entre la mesure de niveau et le
+> lissage :
+>
+> ```
+> Rms_dB = 20 · log10( max(Rms , MinAmp) )      MinDb PROVISOIRE −120 dBFS
+> ```
+>
+> La garde n'est pas optionnelle : `log10(0)` diverge vers −∞, et le silence est le cas le
+> plus fréquent de tout le système. Le plancher est une **constante absolue**, pas
+> `Floor_dB` — celui-ci vient du profil, qui peut ne pas exister.
+>
+> #### Et l'enveloppe lisse en dB, pas en linéaire
+>
+> Ce n'est pas un détail d'implémentation, c'est une décision de ressenti. **Une
+> décroissance exponentielle en amplitude est une rampe droite en décibels**, et
+> réciproquement — ce sont deux courbes différentes.
+>
+> C'est le problème du variateur de lampe : baisser la *puissance* régulièrement fait voir
+> à l'œil un effondrement brutal suivi d'une traîne interminable. Pour que la descente
+> *paraisse* régulière, il faut la faire dans le domaine de la perception. L'oreille
+> fonctionne pareil.
+>
+> Nos constantes — 10–20 ms d'attaque, 120–200 ms de relâchement — ont toutes été pensées
+> en raisonnant en dB. **Les appliquer en linéaire donnerait « ça retombe sec puis ça
+> traîne » au lieu de « ça retombe régulièrement »** — et précisément sur le moment qui
+> porte le ressenti central du jeu, le meuble qui s'allège quand on cesse de crier.
+>
+> **Trois conséquences à retenir :**
+> - **AC-14 se mesure en dB.** Sans cette phrase, le critère était ambigu : selon le
+>   domaine, il passait ou il échouait.
+> - Le facteur `LowRange ×1,5` s'applique à des constantes **du domaine dB**.
+> - `Peak` reste **linéaire** : il ne sert qu'au rapport crête/RMS, converti séparément en
+>   `CrestDb`. Ne pas le convertir deux fois.
+
 ---
 
 ### 2. `Pitch`
@@ -607,8 +649,25 @@ Aucun système voisin n'a de GDD à ce jour. Les règles du projet exigent une *
 bidirectionnelle** — voici donc les contrats à reporter le jour où ils s'écriront.
 
 **Système 2 — Audio d'entrée**
-- Pousser les échantillons à **cadence fixe et connue** (~50 Hz). Une cadence variable
-  casse le lissage **en silence**.
+- Pousser les échantillons à **cadence fixe et connue** (~50 Hz), accompagnés d'un
+  `AnalysisTiming { DeltaSeconds, SampleRate }` (ADR-0007).
+- **Livrer une fréquence d'échantillonnage compatible avec la décimation** — c'est-à-dire
+  telle que le facteur soit **entier**. Le rééchantillonnage appartient au système 2, pas à
+  `Voice.Core`.
+
+> **⚠️ Défaut corrigé le 2026-09-08.** Jusqu'ici, **aucun document du projet ne nommait la
+> fréquence d'échantillonnage**, alors que tout en dépend. Le code compte en relevés, les
+> GDD comptent en millisecondes, et personne ne possédait la conversion. Deux conséquences
+> concrètes :
+>
+> - `Decimator` n'accepte qu'un **facteur entier**. 48 000 → 8 000 vaut 6 ; 44 100 → 8 000
+>   vaudrait **5,5125**, ce qui n'existe pas.
+> - `PitchDetector` calcule `F0 = SampleRate / période`. Croire 48 000 quand le micro
+>   délivre 44 100 fausse **toutes les hauteurs de 8,8 %**, soit environ un ton et demi —
+>   en permanence, sans exception ni `NaN`.
+>
+> C'est le phénomène des films PAL, accélérés de 4 % : rien ne « plantait », c'était
+> simplement faux. Notre décalage serait deux fois pire.
 - Livrer le signal **brut** : post-AEC uniquement, jamais de VAD, d'AGC ni de suppression
   de bruit.
 - **Posséder le périphérique** et le fourcher — jamais un second lecteur.
@@ -903,7 +962,10 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 |---|---|---|
 | AC-12 | GIVEN une trame traitée THEN `Tick` s'incrémente d'exactement 1 — y compris quand la sortie est `Silence` | `[UNIT]` |
 | AC-13 | GIVEN deux `Tick` A et B WHEN on les ordonne THEN la comparaison se fait par **différence modulaire sur `uint`** (`(int)(B − A) > 0`) et reste correcte au passage `uint.MaxValue → 0` | `[UNIT]` |
-| AC-14 | GIVEN un échelon injecté à la cadence nominale THEN le temps de montée de l'`EnvelopeFollower` correspond à la constante déclarée (± 10 %) | `[UNIT]` |
+| AC-14 | GIVEN un échelon injecté à la cadence nominale THEN le temps de montée de l'`EnvelopeFollower` correspond à la constante déclarée (± 10 %), **mesuré dans le domaine dB** — le lissage opère en décibels, voir *Formulas* | `[UNIT]` |
+| AC-14b | GIVEN `Rms = 0` THEN `Rms_dB` vaut le plancher `MinDb` et **ne diverge pas** vers −∞ | `[UNIT]` |
+| AC-14c | GIVEN un `SampleRate` dont la décimation demandée ne donnerait pas un facteur entier THEN la construction **échoue explicitement** — jamais d'arrondi silencieux | `[UNIT]` |
+| AC-14d | GIVEN un intervalle nul, négatif ou aberrant THEN la trame est **signalée**, et aucune valeur n'est substituée en silence | `[UNIT]` |
 | AC-15 | GIVEN une enveloppe descendue sous le plancher de dénormalisation THEN elle vaut exactement `0f` — pas un résidu `1e-40` | `[UNIT]` |
 | AC-16 | GIVEN l'anneau médian **plein** WHEN un point aberrant isolé entre THEN il n'apparaît pas en sortie ; GIVEN un anneau de taille paire passé au constructeur THEN la construction **échoue** | `[UNIT]` |
 
