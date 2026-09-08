@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Revue de chaine ENTIEREMENT traitee — 9 defauts sur 9, AEC retrogradee (option A)
+Task: Prototype Charge vocale monte dans prototypes/ — a jouer et regler
 <!-- /STATUS -->
 
 ---
@@ -40,7 +40,7 @@ par les skills du template.
 - [x] **GDD Calibration vocale — COMPLET**, 11 sections, 1480 lignes
 - [ ] `/design-review voice-calibration` — jamais relu
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
-- [ ] `/prototype` — étape sautée, toujours non rattrapée. **Cahier des charges désormais écrit** : `design/voice-weight-response.md`
+- [~] `/prototype` — **banc monté** : `prototypes/charge-vocale/`, servi sur `http://localhost:4321` (`node prototypes/charge-vocale/serve.js`). Cahier des charges : `design/voice-weight-response.md`. Reste à jouer, régler, et consigner les résultats dans son `README.md`
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
 - [x] **Backend vocal retenu : Dissonance** (2026-09-07). 120 $ + 55 $ pont FMOD, **dès le départ et non en upgrade** — ADR-0005 amendé
 - [x] Audit de `DissonanceVoiceForFishNet` — verdict **vendoriser, ne pas dépendre** : 698 lignes MIT, auteur d'origine parti mais dépôt vivant (l'auteur de Dissonance y a lui-même contribué)

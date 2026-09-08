@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "charge-vocale",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["prototypes/charge-vocale/serve.js"],
+      "port": 4321
+    }
+  ]
+}

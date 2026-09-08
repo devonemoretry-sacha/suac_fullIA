@@ -1,0 +1,598 @@
+<title>Charge vocale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+  :root{
+    --ground:#14110F;
+    --surface:#1E1A17;
+    --surface-2:#262019;
+    --line:#332B24;
+    --ink:#EDE6DE;
+    --muted:#8C817A;
+    --dim:#5F564F;
+
+    --calm:#5E9C87;
+    --warn:#F2B441;
+    --heavy:#E8622C;
+    --max:#C4342A;
+
+    --ui:'Archivo','Helvetica Neue',Arial,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--ui);
+    margin:0;
+    padding:20px;
+    line-height:1.5;
+  }
+
+  .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+  /* ---- masthead ---- */
+  .masthead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;
+            border-bottom:1px solid var(--line);padding-bottom:14px}
+  .masthead h1{font-size:26px;font-weight:700;letter-spacing:-.015em;margin:0;text-wrap:balance}
+  .masthead p{margin:6px 0 0;color:var(--muted);font-size:13.5px;max-width:62ch}
+  .stamp{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:right;line-height:1.7;
+         text-transform:uppercase;letter-spacing:.08em}
+
+  /* ---- layout ---- */
+  .grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+  .panel{background:var(--surface);border:1px solid var(--line);padding:16px}
+  .panel h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;
+            color:var(--muted);margin:0 0 14px}
+
+  /* ---- mic gate ---- */
+  .gate{display:flex;flex-direction:column;gap:10px}
+  button{font-family:var(--ui);font-size:14px;font-weight:600;cursor:pointer;
+         background:var(--heavy);color:#160D07;border:none;padding:11px 16px;transition:filter .12s}
+  button:hover{filter:brightness(1.12)}
+  button:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+  button.ghost:hover{background:var(--surface-2);filter:none}
+  .note{font-size:12px;color:var(--muted);line-height:1.55}
+  .note code{font-family:var(--mono);font-size:11px;color:var(--calm)}
+
+  /* ---- sliders ---- */
+  .knobs{display:flex;flex-direction:column;gap:16px}
+  .knob{display:flex;flex-direction:column;gap:6px}
+  .knob .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .knob label{font-size:13px;font-weight:500}
+  .knob .val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--warn);
+             font-variant-numeric:tabular-nums}
+  .knob .hint{font-size:11.5px;color:var(--dim);line-height:1.45}
+  input[type=range]{width:100%;accent-color:var(--heavy);height:20px;cursor:pointer}
+  input[type=range]:focus-visible{outline:2px solid var(--warn);outline-offset:3px}
+
+  /* ---- stage ---- */
+  .stagewrap{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);background:var(--surface)}
+
+  .meters{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+  .meter{padding:11px 14px}
+  .meter+.meter{border-left:1px solid var(--line)}
+  .meter .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .meter .name{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+  .meter .num{font-family:var(--mono);font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+  .bar{height:7px;background:var(--ground);position:relative;overflow:hidden}
+  .bar i{display:block;height:100%;width:0%;transition:width .05s linear}
+  .thresh{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.65}
+
+  .stage{position:relative;height:290px;overflow:hidden;cursor:grab;
+         background:
+           radial-gradient(120% 90% at 50% 115%, #221C17 0%, var(--surface) 62%);
+         touch-action:none;user-select:none}
+  .stage.dragging{cursor:grabbing}
+  .floor{position:absolute;left:0;right:0;bottom:56px;height:1px;background:var(--line)}
+  .door{position:absolute;right:26px;bottom:57px;width:74px;height:104px;
+        border:1px dashed var(--dim);display:flex;align-items:flex-end;justify-content:center;
+        padding-bottom:6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .door.lit{border-color:var(--calm);color:var(--calm)}
+
+  .sofa{position:absolute;width:132px;height:56px;left:0;top:0;will-change:transform}
+  .sofa .body{position:absolute;inset:0;background:#3A2F26;border:1.5px solid #55463A;border-radius:5px 5px 3px 3px}
+  .sofa .cushion{position:absolute;top:9px;height:20px;width:calc(50% - 14px);background:#4A3C31;border-radius:3px}
+  .sofa .c1{left:9px}.sofa .c2{right:9px}
+  .sofa .halo{position:absolute;inset:-7px;border:2px solid transparent;border-radius:9px;pointer-events:none}
+
+  .hint-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+                text-align:center;padding:24px;pointer-events:none}
+  .hint-overlay p{max-width:34ch;color:var(--muted);font-size:13.5px;margin:0}
+
+  .timeline{border-top:1px solid var(--line);padding:10px 14px 12px}
+  .timeline .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .timeline .name{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+  .legend{display:flex;gap:14px;font-size:11px;color:var(--dim);font-family:var(--mono)}
+  .legend span::before{content:'';display:inline-block;width:8px;height:8px;margin-right:5px;vertical-align:1px}
+  .lg-charge::before{background:var(--heavy)}
+  .lg-warn::before{background:var(--warn)}
+  .lg-voice::before{background:var(--calm)}
+  canvas{display:block;width:100%;height:74px;background:var(--ground)}
+
+  /* ---- verdict ---- */
+  .verdict{display:flex;flex-direction:column;gap:12px}
+  .verdict .q{font-size:14.5px;font-weight:600;text-wrap:balance}
+  .verdict .sub{font-size:12.5px;color:var(--muted);margin-top:-4px}
+  .vbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .vbtns button{font-size:13px;padding:10px 8px}
+  .yes{background:var(--calm);color:#0C1713}
+  .no{background:var(--max);color:#1A0A08}
+
+  .results{display:flex;flex-direction:column;gap:0;margin-top:2px}
+  .rrow{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;
+        padding:8px 0;border-top:1px solid var(--line);font-size:12px}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .rrow .cfg{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .rrow .act{font-size:11px;color:var(--dim)}
+  .empty{font-size:12px;color:var(--dim);padding:9px 0;border-top:1px solid var(--line)}
+
+  /* ---- readouts ---- */
+  .derived{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .derived div{background:var(--surface);padding:10px 12px}
+  .derived .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+  .derived .v{font-family:var(--mono);font-size:15px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+
+  footer{border-top:1px solid var(--line);padding-top:14px;color:var(--dim);font-size:12px;line-height:1.65}
+  footer strong{color:var(--muted);font-weight:600}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Charge vocale</h1>
+      <p>Banc d'essai jetable pour <em>Shut&nbsp;Up&nbsp;&amp;&nbsp;Carry&nbsp;!</em> — on ne règle ici que
+         des constantes de temps. Parlez : la charge monte, le canapé s'alourdit. Le but est de
+         trouver la fenêtre où l'on a <em>le temps de se taire</em>.</p>
+    </div>
+    <div class="stamp">
+      Système 11<br>voice-weight-response.md<br>Aucune calibration
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ================= COLONNE RÉGLAGES ================= -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+
+      <section class="panel">
+        <h2>Micro</h2>
+        <div class="gate">
+          <button id="micBtn">Activer le micro</button>
+          <p class="note" id="micNote">
+            Capture demandée avec <code>echoCancellation</code>, <code>noiseSuppression</code>
+            et <code>autoGainControl</code> désactivés — les trois traitements que le GDD
+            interdit sur le trajet d'analyse.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Réglages</h2>
+        <div class="knobs">
+
+          <div class="knob">
+            <div class="row"><label for="kThresh">Seuil de parole</label><span class="val" id="vThresh">−45 dB</span></div>
+            <input type="range" id="kThresh" min="-70" max="-20" step="1" value="-45">
+            <div class="hint">Pas de calibration ici. Réglez-le juste au-dessus du bruit de votre pièce.</div>
+          </div>
+
+          <div class="knob">
+            <div class="row"><label for="kFill">Temps de remplissage</label><span class="val" id="vFill">1,50 s</span></div>
+            <input type="range" id="kFill" min="0.3" max="4" step="0.05" value="1.5">
+            <div class="hint">Durée pour atteindre le poids maximal, à pleine voix.</div>
+          </div>
+
+          <div class="knob">
+            <div class="row"><label for="kDrain">Temps de vidange</label><span class="val" id="vDrain">1,50 s</span></div>
+            <input type="range" id="kDrain" min="0.3" max="6" step="0.05" value="1.5">
+            <div class="hint">Retour au transportable, une fois le silence revenu.</div>
+          </div>
+
+          <div class="knob">
+            <div class="row"><label for="kWarn">Délai d'avertissement</label><span class="val" id="vWarn">200 ms</span></div>
+            <input type="range" id="kWarn" min="0" max="900" step="10" value="200">
+            <div class="hint">Quand le canapé « s'excite ». Sous 400 ms de fenêtre utile, l'avertissement cesse d'être actionnable.</div>
+          </div>
+
+          <div class="knob">
+            <div class="row"><label for="kBite">Ralentissement d'amorçage</label><span class="val" id="vBite">15 %</span></div>
+            <input type="range" id="kBite" min="0" max="50" step="1" value="15">
+            <div class="hint">Le poids bouge déjà, imperceptiblement. Ce ralentissement fait partie de l'avertissement.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Dérivé</h2>
+        <div class="derived">
+          <div><div class="k">Fenêtre utile</div><div class="v" id="dWindow">200 ms</div></div>
+          <div><div class="k">Mi-poids à</div><div class="v" id="dHalf">850 ms</div></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= SCÈNE ================= -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+
+      <div class="stagewrap">
+
+        <div class="meters">
+          <div class="meter">
+            <div class="cap"><span class="name">Entrée micro</span><span class="num" id="nInput">—</span></div>
+            <div class="bar"><i id="bInput" style="background:var(--calm)"></i><span class="thresh" id="tMark"></span></div>
+          </div>
+          <div class="meter">
+            <div class="cap"><span class="name">Charge</span><span class="num" id="nCharge">0 %</span></div>
+            <div class="bar"><i id="bCharge" style="background:var(--heavy)"></i></div>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="floor"></div>
+          <div class="door" id="door">Sortie</div>
+          <div class="sofa" id="sofa">
+            <div class="body"></div>
+            <div class="cushion c1"></div>
+            <div class="cushion c2"></div>
+            <div class="halo" id="halo"></div>
+          </div>
+          <div class="hint-overlay" id="overlay">
+            <p id="overlayText">Activez le micro, puis attrapez le canapé et emmenez-le jusqu'à la sortie — en parlant.</p>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <div class="cap">
+            <span class="name">Dix dernières secondes</span>
+            <span class="legend">
+              <span class="lg-voice">voix</span>
+              <span class="lg-warn">avertissement</span>
+              <span class="lg-charge">charge</span>
+            </span>
+          </div>
+          <canvas id="tl" width="1200" height="148"></canvas>
+        </div>
+
+      </div>
+
+      <section class="panel verdict">
+        <div>
+          <div class="q">« J'ai senti que ça montait, j'ai eu le temps de me taire. »</div>
+          <div class="sub">Le critère de réussite du banc n'est pas un nombre, c'est cette phrase. Répondez après un essai.</div>
+        </div>
+        <div class="vbtns">
+          <button class="yes" id="btnYes">Oui, j'ai eu le temps</button>
+          <button class="no"  id="btnNo">Non, c'était trop tard</button>
+        </div>
+        <div class="results" id="results">
+          <div class="empty" id="emptyRow">Aucun essai enregistré. Réglez, jouez, tranchez.</div>
+        </div>
+        <button class="ghost" id="btnClear" style="align-self:flex-start;font-size:12px;padding:7px 12px">Effacer les essais</button>
+      </section>
+
+    </div>
+  </div>
+
+  <footer>
+    <strong>Ce que ce banc ne teste pas.</strong> La physique Unity, le portage à deux, le réseau,
+    la normalisation par joueur. Il ne mesure que des constantes de temps — et le temps est le même
+    dans tous les moteurs. Questions restées ouvertes : la voix d'un non-porteur agit-elle sur l'objet ?
+    Les charges de plusieurs porteurs s'additionnent-elles ?
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var K = {
+    thresh:-45, fill:1.5, drain:1.5, warnMs:200, bite:0.15
+  };
+
+  var el = function(id){ return document.getElementById(id); };
+
+  /* ---------------- audio ---------------- */
+  var analyser=null, buf=null, micOn=false;
+  var envDb = -100;                 // enveloppe en dB
+  var ATT = 0.015, REL = 0.150;     // constantes provisoires du GDD, domaine dB
+  var MIN_DB = -100;
+
+  function micFail(title, detail){
+    el('micNote').innerHTML = '<strong style="color:var(--max)">'+title+'</strong><br>'+detail;
+  }
+
+  el('micBtn').addEventListener('click', function(){
+    if(micOn) return;
+
+    // Garde : dans un contexte non sécurisé ou une frame bridée, mediaDevices
+    // est absent et l'appel jetterait avant même de produire une promesse.
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      micFail('Capture indisponible dans ce contexte.',
+        'Contexte sécurisé : <code>'+window.isSecureContext+'</code> · '+
+        'document de premier niveau : <code>'+(window.top===window.self)+'</code>.<br>'+
+        'Le micro exige les deux. Ouvrez la page depuis <code>http://localhost:4321</code>.');
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    }).then(function(stream){
+      var ctx = new (window.AudioContext||window.webkitAudioContext)();
+      var src = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      buf = new Float32Array(analyser.fftSize);
+      src.connect(analyser);
+      micOn = true;
+      el('micBtn').textContent = 'Micro actif';
+      el('micBtn').disabled = true;
+      el('micBtn').style.background = 'var(--calm)';
+      el('micNote').innerHTML = 'Capture brute en cours. Rien n\'est enregistré, rien ne quitte cette page.';
+      setOverlay('Attrapez le canapé et emmenez-le à la sortie — en parlant.');
+    }).catch(function(err){
+      var name = (err && err.name) || 'Erreur inconnue';
+      var why = {
+        NotAllowedError : 'Refusé — soit par vous, soit par la <em>Permissions Policy</em> de la page qui héberge celle-ci. Si vous n\'avez vu aucune demande d\'autorisation, c\'est le second cas.',
+        NotFoundError   : 'Aucun périphérique d\'entrée détecté.',
+        NotReadableError: 'Le micro est occupé par une autre application.',
+        SecurityError   : 'Contexte non sécurisé.'
+      }[name] || 'Cause non identifiée.';
+      micFail('Micro indisponible — <code>'+name+'</code>',
+        why+'<br>Contexte sécurisé : <code>'+window.isSecureContext+'</code> · '+
+        'premier niveau : <code>'+(window.top===window.self)+'</code>.');
+    });
+  });
+
+  function readDb(){
+    if(!analyser) return MIN_DB;
+    analyser.getFloatTimeDomainData(buf);
+    var s=0;
+    for(var i=0;i<buf.length;i++) s += buf[i]*buf[i];
+    var rms = Math.sqrt(s/buf.length);
+    return 20*Math.log10(Math.max(rms,1e-5));
+  }
+
+  /* ---------------- état ---------------- */
+  var charge=0, voiced=false, warnActive=false;
+  var crossedAt=null, verdictWindow=null;
+
+  /* ---------------- scène ---------------- */
+  var stage=el('stage'), sofa=el('sofa'), halo=el('halo'), door=el('door');
+  var sx=90, sy=150, tx=90, ty=150, dragging=false, atDoor=false;
+  var FOLLOW_LIGHT=15, FOLLOW_HEAVY=1.1;
+
+  function stagePoint(e){
+    var r = stage.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  stage.addEventListener('pointerdown', function(e){
+    dragging=true; stage.classList.add('dragging'); stage.setPointerCapture(e.pointerId);
+    var p=stagePoint(e); tx=p.x; ty=p.y;
+    setOverlay('');
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!dragging) return;
+    var p=stagePoint(e); tx=p.x; ty=p.y;
+  });
+  function endDrag(){ dragging=false; stage.classList.remove('dragging'); }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  function setOverlay(txt){
+    el('overlay').style.display = txt ? 'flex' : 'none';
+    if(txt) el('overlayText').textContent = txt;
+  }
+
+  /* ---------------- frise ---------------- */
+  var cv=el('tl'), cx=cv.getContext('2d');
+  var HIST=[], HIST_MS=10000;
+
+  function drawTimeline(now){
+    var W=cv.width, H=cv.height;
+    cx.clearRect(0,0,W,H);
+    cx.fillStyle='#14110F'; cx.fillRect(0,0,W,H);
+
+    // grille : une ligne par seconde
+    cx.strokeStyle='#2A231D'; cx.lineWidth=1;
+    for(var s=1;s<10;s++){
+      var gx=Math.round(W - (s*1000/HIST_MS)*W)+0.5;
+      cx.beginPath(); cx.moveTo(gx,0); cx.lineTo(gx,H); cx.stroke();
+    }
+
+    if(HIST.length<2) return;
+
+    // bandes voix + avertissement
+    for(var i=0;i<HIST.length;i++){
+      var p=HIST[i];
+      var x=W-((now-p.t)/HIST_MS)*W;
+      if(p.voiced){ cx.fillStyle='rgba(94,156,135,.20)'; cx.fillRect(x,0,2.2,H); }
+      if(p.warn){   cx.fillStyle='rgba(242,180,65,.30)'; cx.fillRect(x,0,2.2,10); }
+    }
+
+    // courbe de charge
+    cx.beginPath();
+    for(var j=0;j<HIST.length;j++){
+      var q=HIST[j];
+      var qx=W-((now-q.t)/HIST_MS)*W;
+      var qy=H-4-q.c*(H-12);
+      if(j===0) cx.moveTo(qx,qy); else cx.lineTo(qx,qy);
+    }
+    cx.strokeStyle='#E8622C'; cx.lineWidth=2; cx.lineJoin='round'; cx.stroke();
+  }
+
+  /* ---------------- réglages ---------------- */
+  function fmt(n,d){ return n.toFixed(d).replace('.',','); }
+
+  function syncKnobs(){
+    K.thresh = +el('kThresh').value;
+    K.fill   = +el('kFill').value;
+    K.drain  = +el('kDrain').value;
+    K.warnMs = +el('kWarn').value;
+    K.bite   = +el('kBite').value/100;
+
+    el('vThresh').textContent = '−'+Math.abs(K.thresh)+' dB';
+    el('vFill').textContent   = fmt(K.fill,2)+' s';
+    el('vDrain').textContent  = fmt(K.drain,2)+' s';
+    el('vWarn').textContent   = K.warnMs+' ms';
+    el('vBite').textContent   = Math.round(K.bite*100)+' %';
+
+    // repère de seuil sur le mètre d'entrée
+    el('tMark').style.left = pctFromDb(K.thresh)+'%';
+
+    // dérivés
+    el('dWindow').textContent = K.warnMs+' ms';
+    var halfMs = Math.round(halfWeightTime()*1000);
+    el('dHalf').textContent = halfMs+' ms';
+    el('dWindow').style.color = K.warnMs>0 && K.warnMs<400 ? 'var(--max)' : 'var(--ink)';
+  }
+
+  // instant où la lourdeur atteint 50 %
+  function halfWeightTime(){
+    var warnAt = Math.min(0.95, (K.warnMs/1000)/K.fill);
+    for(var t=0;t<=K.fill*1.2;t+=0.01){
+      var c=Math.min(1,t/K.fill);
+      if(heaviness(c,warnAt)>=0.5) return t;
+    }
+    return K.fill;
+  }
+
+  function heaviness(c, warnAt){
+    if(c<=0) return 0;
+    var early = K.bite * Math.min(c/Math.max(warnAt,0.001), 1);
+    var main  = warnAt>=1 ? 0 : Math.max(0,(c-warnAt)/(1-warnAt));
+    return Math.min(1, early + main*(1-K.bite));
+  }
+
+  function pctFromDb(db){
+    return Math.max(0, Math.min(100, ((db+70)/70)*100));
+  }
+
+  ['kThresh','kFill','kDrain','kWarn','kBite'].forEach(function(id){
+    el(id).addEventListener('input', syncKnobs);
+  });
+
+  /* ---------------- essais ---------------- */
+  var trials=[];
+  function record(ok){
+    trials.unshift({
+      ok:ok,
+      cfg:'remplissage '+fmt(K.fill,2)+'s · vidange '+fmt(K.drain,2)+'s · avert. '+K.warnMs+'ms · amorçage '+Math.round(K.bite*100)+'%',
+      when:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+    });
+    if(trials.length>8) trials.pop();
+    renderTrials();
+  }
+  function renderTrials(){
+    var box=el('results');
+    box.innerHTML='';
+    if(!trials.length){
+      var e=document.createElement('div');
+      e.className='empty'; e.textContent='Aucun essai enregistré. Réglez, jouez, tranchez.';
+      box.appendChild(e); return;
+    }
+    trials.forEach(function(t){
+      var row=document.createElement('div'); row.className='rrow';
+      var d=document.createElement('span'); d.className='dot';
+      d.style.background = t.ok ? 'var(--calm)' : 'var(--max)';
+      var c=document.createElement('span'); c.className='cfg'; c.textContent=t.cfg;
+      var a=document.createElement('span'); a.className='act'; a.textContent=t.when;
+      row.appendChild(d); row.appendChild(c); row.appendChild(a);
+      box.appendChild(row);
+    });
+  }
+  el('btnYes').addEventListener('click', function(){ record(true); });
+  el('btnNo').addEventListener('click',  function(){ record(false); });
+  el('btnClear').addEventListener('click', function(){ trials=[]; renderTrials(); });
+
+  /* ---------------- boucle ---------------- */
+  var last=performance.now();
+
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+
+    // --- niveau, enveloppe en dB ---
+    var db = micOn ? readDb() : MIN_DB;
+    var coef = db>envDb ? (1-Math.exp(-dt/ATT)) : (1-Math.exp(-dt/REL));
+    envDb += (db-envDb)*coef;
+    if(envDb<MIN_DB) envDb=MIN_DB;
+
+    voiced = micOn && envDb > K.thresh;
+
+    // --- charge ---
+    var warnAt = Math.min(0.95,(K.warnMs/1000)/K.fill);
+    if(voiced){
+      var above = Math.max(0, Math.min(1,(envDb-K.thresh)/25));
+      charge += (0.35+0.65*above) * dt / K.fill;
+      if(crossedAt===null) crossedAt=now;
+    }else{
+      charge -= dt / K.drain;
+      crossedAt=null;
+    }
+    charge = Math.max(0, Math.min(1, charge));
+
+    var h = heaviness(charge, warnAt);
+    var wasWarn = warnActive;
+    warnActive = charge>0 && charge < Math.max(warnAt,0.02)*1.6 && voiced;
+
+    // --- affichage mètres ---
+    el('nInput').textContent = micOn ? (envDb<=-99 ? '—' : Math.round(envDb)+' dB') : '—';
+    el('bInput').style.width = pctFromDb(envDb)+'%';
+    el('bInput').style.background = voiced ? 'var(--warn)' : 'var(--calm)';
+    el('nCharge').textContent = Math.round(charge*100)+' %';
+    el('bCharge').style.width = (charge*100)+'%';
+    el('bCharge').style.background = charge>0.75 ? 'var(--max)' : (charge>0.3 ? 'var(--heavy)' : 'var(--warn)');
+    el('nCharge').style.color = charge>0.75 ? 'var(--max)' : (charge>0.3 ? 'var(--heavy)' : 'var(--ink)');
+
+    // --- physique du canapé ---
+    var follow = FOLLOW_LIGHT + (FOLLOW_HEAVY-FOLLOW_LIGHT)*h;
+    var k = 1-Math.exp(-follow*dt);
+    if(dragging){ sx += (tx-sx-66)*k; sy += (ty-sy-28)*k; }
+
+    var r=stage.getBoundingClientRect();
+    sx=Math.max(0,Math.min(r.width-132,sx));
+    sy=Math.max(0,Math.min(r.height-118,sy));
+    sofa.style.transform='translate('+sx+'px,'+sy+'px)';
+
+    // avertissement : halo ambre, avant que le poids ne se sente
+    if(warnActive){
+      var pulse=0.55+0.45*Math.sin(now/90);
+      halo.style.borderColor='rgba(242,180,65,'+pulse.toFixed(2)+')';
+    }else if(h>0.35){
+      halo.style.borderColor='rgba(232,98,44,'+(0.25+h*0.5).toFixed(2)+')';
+    }else{
+      halo.style.borderColor='transparent';
+    }
+
+    // porte atteinte
+    var reached = sx>r.width-215 && sy>r.height-190;
+    if(reached!==atDoor){ atDoor=reached; door.classList.toggle('lit',reached); }
+
+    // --- frise ---
+    HIST.push({t:now,c:charge,voiced:voiced,warn:warnActive});
+    while(HIST.length && now-HIST[0].t>HIST_MS) HIST.shift();
+    drawTimeline(now);
+
+    requestAnimationFrame(frame);
+  }
+
+  syncKnobs();
+  renderTrials();
+  requestAnimationFrame(frame);
+})();
+</script>
