@@ -67,6 +67,45 @@ par l'hôte.
 L'utilisateur a explicitement écarté l'échelle de deux secondes pour l'avertissement — *« deux
 secondes, c'est beaucoup trop long »* — et a laissé le choix des délais au métier.
 
+> ### ✅ Premier essai au banc — 2026-09-08
+>
+> Ces valeurs ont été **éprouvées à la main** dans `prototypes/charge-vocale/`, et retenues
+> telles quelles : *« j'aime bien ces réglages, dans l'ensemble ça fonctionne plutôt bien »*.
+>
+> **Un tour de correction en est sorti.** La ligne « sous ~400 ms l'avertissement n'est pas
+> actionnable » reste vraie, mais elle ne porte pas sur le délai d'avertissement — elle porte
+> sur **l'écart entre le signal et le moment où le poids devient conséquent**. Aux valeurs
+> ci-dessous, l'avertissement arrive à 200 ms et le mi-poids à **740 ms** : le temps pour
+> réagir est donc de **540 ms**, et non de 200. Le banc affichait la mauvaise grandeur et
+> alertait à tort.
+>
+> **Portée de ce résultat** : un seul testeur, qui est le concepteur. Cela vaut « aucune
+> contradiction trouvée », pas « optimum localisé ». Des joueurs naïfs restent nécessaires
+> avant de figer.
+>
+> ### La fenêtre de réaction est peut-être la seule vraie constante
+>
+> Un **second** jeu de réglages a été retenu dans la même session, plus nerveux sur les
+> quatre axes : remplissage 1,20 s, vidange 1,00 s, avertissement 100 ms, amorçage 10 %.
+>
+> | Réglages | Mi-poids | **Temps pour réagir** |
+> |---|---|---|
+> | 1,50 s · 1,50 s · 200 ms · 15 % | 740 ms | **540 ms** |
+> | 1,20 s · 1,00 s · 100 ms · 10 % | 590 ms | **490 ms** |
+>
+> Tout a changé sauf **la fenêtre de réaction**. Et le testeur ne la voyait pas : le relevé
+> affichait encore la mauvaise grandeur, et aucun curseur ne la pilote directement. Il a
+> convergé deux fois vers la même demi-seconde **sans la viser**.
+>
+> **Hypothèse de travail** : ce que le joueur règle réellement n'est aucun des quatre
+> curseurs, c'est **le temps dont il dispose pour se taire — environ 500 ms**. Les
+> constantes individuelles seraient alors du tempo, libres tant que leur *écart* tient cette
+> valeur. Cela corrobore par un autre chemin le plancher de ~400 ms tiré des temps de
+> réaction humains — les deux réglages se posant juste au-dessus.
+>
+> **Ce n'est pas encore un résultat** : deux points, un testeur. La mesure qui trancherait
+> est de descendre la fenêtre sous 400 ms en gardant le reste, et de vérifier que ça casse.
+
 | Phase | Provisoire | Ce qui se passe |
 |---|---|---|
 | **Amorçage** | **~200 ms** | Le signal d'avertissement apparaît. Le poids a commencé à bouger, **imperceptiblement** — le joueur est très légèrement ralenti, et ce ralentissement **fait partie de l'avertissement** |

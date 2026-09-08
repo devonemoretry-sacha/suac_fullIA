@@ -1,6 +1,7 @@
 # Prototype — Charge vocale
 
-**Statut : en cours.** Aucun résultat consigné à ce jour.
+**Statut : en cours — premier essai concluant le 2026-09-08.** Les valeurs par défaut n'ont
+pas été contredites. Il faut d'autres testeurs avant de figer quoi que ce soit.
 
 ## L'hypothèse testée
 
@@ -72,10 +73,67 @@ sur l'objet, et les charges de plusieurs porteurs s'additionnent-elles ?
 
 ## Résultats
 
-*(À remplir quand le prototype conclura. Les réglages retenus alimenteront le GDD du
-système 11, qui n'est volontairement pas ouvert avant ça. Le code ne sera pas migré : il
-sera réécrit.)*
+Les réglages retenus alimenteront le GDD du système 11, qui n'est volontairement pas ouvert
+avant ça. Le code ne sera pas migré : il sera réécrit.
 
-| Date | Testeur | Réglages retenus | Verdict |
-|---|---|---|---|
-| — | — | — | — |
+| Date | Testeur | Réglages retenus | Mi-poids | **Réagir** | Verdict |
+|---|---|---|---|---|---|
+| 2026-09-08 | Sacha *(concepteur)* | 1,50 s · 1,50 s · 200 ms · 15 % | 740 ms | **540 ms** | *« J'aime bien ces réglages. Dans l'ensemble ça fonctionne plutôt bien. »* |
+| 2026-09-08 | Sacha *(concepteur)* | 1,20 s · 1,00 s · 100 ms · 10 % | 590 ms | **490 ms** | *« Celui-là est top aussi. »* |
+
+*(Colonnes : remplissage · vidange · avertissement · amorçage.)*
+
+### La trouvaille : c'est la fenêtre de réaction qui est réglée, pas les curseurs
+
+Le second jeu est **plus nerveux sur les quatre axes** — remplissage plus court, vidange
+plus rapide, avertissement deux fois plus tôt, amorçage plus discret. Et pourtant :
+
+> **540 ms et 490 ms.** La fenêtre de réaction ne bouge quasiment pas d'un réglage à
+> l'autre, alors que tout le reste a changé.
+
+Ce qui rend l'observation solide, c'est que **le testeur ne voyait pas cette grandeur** :
+le relevé affichait encore la mauvaise valeur au moment du premier essai, et elle n'est
+directement pilotée par aucun curseur. Il a réglé à l'oreille sur trois autres paramètres,
+et il a convergé deux fois vers la même demi-seconde **sans la viser**.
+
+**Hypothèse à tester, pas encore un résultat** : ce que le joueur ajuste réellement, c'est
+le temps dont il dispose pour se taire — environ **500 ms**. Les constantes individuelles
+seraient alors du tempo, réglable au goût, tant que leur *écart* tient cette valeur.
+
+Cela corrobore par un autre chemin le plancher de ~400 ms tiré des temps de réaction
+humains : les deux réglages retenus se posent **juste au-dessus**, ce qui est exactement où
+l'oreille d'un concepteur devrait atterrir si ce plancher est réel.
+
+> **Prochaine mesure, et elle est cheap** : faire varier remplissage et avertissement pour
+> tenir la fenêtre à 500 ms, et vérifier que tous ces réglages sont jugés bons. Puis
+> descendre la fenêtre sous 400 ms **en gardant le reste** — si la thèse tient, ça doit
+> casser. **Trouver où ça casse vaut mieux que collectionner des réglages qui marchent.**
+
+### Ce que ce premier essai vaut, et ce qu'il ne vaut pas
+
+**Ce qu'il établit** : la mécanique n'est pas absurde au contact. C'est plus que rien —
+c'était précisément l'inconnue que la revue technique reprochait au projet, et il existe
+désormais une personne qui a *senti* un meuble s'alourdir parce qu'elle parlait.
+
+**Ce qu'il n'établit pas**, et il faut le dire :
+
+- **Un seul testeur, et c'est le concepteur.** Il sait ce qu'il cherche à ressentir, ce qui
+  est exactement le biais que le playtest existe pour écarter.
+- **Les valeurs par défaut n'ont pas bougé.** Le résultat est donc « aucune contradiction
+  trouvée », pas « optimum localisé ». Un balayage volontaire vers les extrêmes dirait
+  beaucoup plus — à quel réglage ça casse est plus informatif que le réglage qui va.
+- **Rien n'est mesuré sur un joueur naïf**, ni sur quelqu'un qui découvre la mécanique sans
+  savoir qu'il doit se taire.
+
+### Un défaut de l'instrument, corrigé le même jour
+
+Le relevé « fenêtre utile » affichait le **délai d'avertissement** (200 ms) et passait donc
+en rouge, puisque la note de cadrage pose que sous 400 ms un avertissement n'est plus
+actionnable. **Il mesurait la mauvaise grandeur.**
+
+La fenêtre qui compte est l'écart entre l'apparition du signal et le moment où le poids
+devient conséquent — soit ici **540 ms**, le mi-poids arrivant à 740 ms. Confortablement
+au-dessus du seuil.
+
+> **Le ressenti du testeur était juste, c'est le compteur qui avait tort.** Renommé « temps
+> pour réagir », il calcule désormais `mi-poids − avertissement`.

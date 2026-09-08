@@ -219,8 +219,8 @@
       <section class="panel">
         <h2>Dérivé</h2>
         <div class="derived">
-          <div><div class="k">Fenêtre utile</div><div class="v" id="dWindow">200 ms</div></div>
-          <div><div class="k">Mi-poids à</div><div class="v" id="dHalf">850 ms</div></div>
+          <div><div class="k">Temps pour réagir</div><div class="v" id="dWindow">535 ms</div></div>
+          <div><div class="k">Mi-poids à</div><div class="v" id="dHalf">735 ms</div></div>
         </div>
       </section>
 
@@ -456,10 +456,15 @@
     el('tMark').style.left = pctFromDb(K.thresh)+'%';
 
     // dérivés
-    el('dWindow').textContent = K.warnMs+' ms';
+    // La fenêtre utile n'est PAS le délai d'avertissement : c'est le temps entre
+    // l'apparition du signal et le moment où le poids devient consequent.
+    // (Corrigé le 2026-09-08 — le relevé affichait warnMs et passait en rouge à
+    //  tort sur des réglages jugés bons à l'usage.)
     var halfMs = Math.round(halfWeightTime()*1000);
-    el('dHalf').textContent = halfMs+' ms';
-    el('dWindow').style.color = K.warnMs>0 && K.warnMs<400 ? 'var(--max)' : 'var(--ink)';
+    var windowMs = Math.max(0, halfMs - K.warnMs);
+    el('dHalf').textContent   = halfMs+' ms';
+    el('dWindow').textContent = windowMs+' ms';
+    el('dWindow').style.color = windowMs<400 ? 'var(--max)' : 'var(--calm)';
   }
 
   // instant où la lourdeur atteint 50 %
