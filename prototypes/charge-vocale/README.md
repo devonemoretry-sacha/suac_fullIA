@@ -62,8 +62,47 @@ Puis ouvrir **http://localhost:4321**.
 | Délai d'avertissement | 200 ms | Quand le canapé s'excite |
 | Ralentissement d'amorçage | 15 % | Le poids bouge déjà, imperceptiblement |
 
-Le relevé **« fenêtre utile » passe en rouge sous 400 ms** : en dessous, l'avertissement est
-perçu en même temps que la sanction, donc ce n'est plus un avertissement.
+Le relevé **« temps pour réagir » passe en rouge sous 400 ms** : en dessous, l'avertissement
+est perçu en même temps que la sanction, donc ce n'est plus un avertissement.
+
+## Le mode « fenêtre verrouillée »
+
+Coché, il **asservit l'avertissement** au remplissage et à l'amorçage pour tenir une fenêtre
+visée. On fait alors varier le tempo sans que le temps de réaction bouge — c'est le test qui
+départage les deux hypothèses laissées ouvertes par les premiers essais.
+
+En verrouillant, la cible reprend la fenêtre courante : on fige ce qu'on a, puis on bouge
+autour.
+
+### La fenêtre a une forme fermée
+
+En cherchant comment asservir un curseur à l'autre, la relation s'est révélée **analytique**
+et non empirique :
+
+```
+fenêtre = r · (remplissage − avertissement)      r = (0,5 − amorçage) / (1 − amorçage)
+```
+
+| Réglage retenu | Calcul | Mesuré |
+|---|---|---|
+| 1,50 s · 200 ms · 15 % | 0,4118 × 1,30 = **535 ms** | 540 ms |
+| 1,20 s · 100 ms · 10 % | 0,4444 × 1,10 = **489 ms** | 490 ms |
+
+L'écart n'était que le pas d'itération de l'ancienne recherche numérique, désormais
+remplacée par la formule. **Le verrou est donc exact, pas approché.**
+
+### Une contrainte que la formule fait apparaître
+
+L'avertissement est borné à 0–900 ms, donc pour une fenêtre visée `W` le remplissage doit
+tenir dans un **couloir de 900 ms de large** :
+
+```
+W/r  ≤  remplissage  ≤  W/r + 0,9
+```
+
+À 490 ms de fenêtre et 10 % d'amorçage, cela donne **1,10 s à 2,00 s** — et rien en dehors.
+Hors couloir, le banc le dit et nomme le remplissage minimal requis. C'est une contrainte
+qu'on n'aurait pas trouvée à la main, et elle borne d'emblée le domaine de réglage utile.
 
 ## Ce qu'il ne teste pas
 

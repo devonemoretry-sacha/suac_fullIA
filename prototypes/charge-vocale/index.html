@@ -74,6 +74,16 @@
   .knob .hint{font-size:11.5px;color:var(--dim);line-height:1.45}
   input[type=range]{width:100%;accent-color:var(--heavy);height:20px;cursor:pointer}
   input[type=range]:focus-visible{outline:2px solid var(--warn);outline-offset:3px}
+  input[type=range]:disabled{accent-color:var(--dim);cursor:not-allowed}
+  .knob.driven label,.knob.driven .hint{color:var(--dim)}
+  .knob.driven .val{color:var(--dim)}
+  .knob.driven .val::after{content:' · asservi';font-size:11px;letter-spacing:.04em}
+
+  .lockbox{border:1px solid var(--line);background:var(--surface-2);padding:12px;
+           display:flex;flex-direction:column;gap:12px}
+  .lockrow{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600}
+  .lockrow input{accent-color:var(--warn);width:15px;height:15px;cursor:pointer;margin:0}
+  .lockrow input:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
 
   /* ---- stage ---- */
   .stagewrap{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);background:var(--surface)}
@@ -201,10 +211,23 @@
             <div class="hint">Retour au transportable, une fois le silence revenu.</div>
           </div>
 
-          <div class="knob">
+          <div class="lockbox">
+            <label class="lockrow" for="kLock">
+              <input type="checkbox" id="kLock">
+              <span>Verrouiller la fenêtre</span>
+            </label>
+            <div class="knob" id="lockKnob" hidden>
+              <div class="row"><label for="kTarget">Fenêtre visée</label><span class="val" id="vTarget">500 ms</span></div>
+              <input type="range" id="kTarget" min="150" max="900" step="10" value="500">
+              <div class="hint">L'avertissement s'asservit au remplissage et à l'amorçage pour tenir cette valeur. Bougez le tempo, la fenêtre ne bouge pas.</div>
+              <div class="hint" id="lockWarnMsg" style="color:var(--max)" hidden></div>
+            </div>
+          </div>
+
+          <div class="knob" id="warnKnob">
             <div class="row"><label for="kWarn">Délai d'avertissement</label><span class="val" id="vWarn">200 ms</span></div>
             <input type="range" id="kWarn" min="0" max="900" step="10" value="200">
-            <div class="hint">Quand le canapé « s'excite ». Sous 400 ms de fenêtre utile, l'avertissement cesse d'être actionnable.</div>
+            <div class="hint">Quand le canapé « s'excite ».</div>
           </div>
 
           <div class="knob">
@@ -446,6 +469,35 @@
     K.warnMs = +el('kWarn').value;
     K.bite   = +el('kBite').value/100;
 
+    // --- verrou de fenêtre : l'avertissement est asservi ---
+    var locked = el('kLock').checked;
+    el('lockKnob').hidden = !locked;
+    el('kWarn').disabled  = locked;
+    el('warnKnob').classList.toggle('driven', locked);
+
+    if(locked){
+      var target = +el('kTarget').value/1000;
+      el('vTarget').textContent = Math.round(target*1000)+' ms';
+
+      var wantSec = warnForWindow(K.fill, K.bite, target);
+      var msg = '';
+      if(wantSec < 0){
+        // fenêtre inatteignable : il faudrait un avertissement négatif
+        var minFill = target/slope(K.bite);
+        msg = 'Fenêtre inatteignable ici : il faudrait un remplissage d\'au moins '
+              + fmt(minFill,2) + ' s, ou un amorçage plus faible.';
+        wantSec = 0;
+      }else if(wantSec > 0.9){
+        msg = 'Avertissement plafonné à 900 ms — la fenêtre réelle sera plus large que visée.';
+        wantSec = 0.9;
+      }
+      el('lockWarnMsg').hidden = !msg;
+      el('lockWarnMsg').textContent = msg;
+
+      K.warnMs = Math.round(wantSec*1000/10)*10;
+      el('kWarn').value = K.warnMs;
+    }
+
     el('vThresh').textContent = '−'+Math.abs(K.thresh)+' dB';
     el('vFill').textContent   = fmt(K.fill,2)+' s';
     el('vDrain').textContent  = fmt(K.drain,2)+' s';
@@ -467,14 +519,25 @@
     el('dWindow').style.color = windowMs<400 ? 'var(--max)' : 'var(--calm)';
   }
 
-  // instant où la lourdeur atteint 50 %
+  /* ---- forme fermée de la fenêtre de réaction ----------------------------
+     heaviness = bite + ((c-warnAt)/(1-warnAt))·(1-bite),  warnAt = warnSec/fill
+     À heaviness = 0,5 :   c = warnAt + (1-warnAt)·r   avec r = (0,5-bite)/(1-bite)
+     t_half = c·fill  ⇒  fenêtre = t_half - warnSec = r·(fill - warnSec)
+
+     Vérifié contre les deux réglages retenus le 2026-09-08 :
+       1,50 · 0,20 · 15 %  →  0,4118·1,30 = 535 ms   (mesuré 540, pas d'itération)
+       1,20 · 0,10 · 10 %  →  0,4444·1,10 = 489 ms   (mesuré 490)
+     La relation est analytique, pas empirique — c'est ce qui rend le verrou exact.
+     ---------------------------------------------------------------------- */
+  function slope(bite){ return (0.5-bite)/(1-bite); }          // r
+  function windowSec(fill, warnSec, bite){
+    return Math.max(0, slope(bite)*(fill-warnSec));
+  }
+  function warnForWindow(fill, bite, targetSec){               // inversion
+    return fill - targetSec/slope(bite);
+  }
   function halfWeightTime(){
-    var warnAt = Math.min(0.95, (K.warnMs/1000)/K.fill);
-    for(var t=0;t<=K.fill*1.2;t+=0.01){
-      var c=Math.min(1,t/K.fill);
-      if(heaviness(c,warnAt)>=0.5) return t;
-    }
-    return K.fill;
+    return windowSec(K.fill, K.warnMs/1000, K.bite) + K.warnMs/1000;
   }
 
   function heaviness(c, warnAt){
@@ -488,8 +551,18 @@
     return Math.max(0, Math.min(100, ((db+70)/70)*100));
   }
 
-  ['kThresh','kFill','kDrain','kWarn','kBite'].forEach(function(id){
+  ['kThresh','kFill','kDrain','kWarn','kBite','kTarget'].forEach(function(id){
     el(id).addEventListener('input', syncKnobs);
+  });
+
+  // Au verrouillage, la cible part de la fenêtre courante : on fige ce qu'on a,
+  // puis on fait bouger le tempo autour.
+  el('kLock').addEventListener('change', function(){
+    if(el('kLock').checked){
+      var cur = windowSec(K.fill, K.warnMs/1000, K.bite)*1000;
+      el('kTarget').value = Math.max(150, Math.min(900, Math.round(cur/10)*10));
+    }
+    syncKnobs();
   });
 
   /* ---------------- essais ---------------- */
