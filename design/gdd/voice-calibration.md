@@ -1164,7 +1164,158 @@ pendant la calibration.
 
 ## Acceptance Criteria
 
-[À écrire]
+### Ce qu'un critère doit valoir ici
+
+Même exigence qu'au système 1 : **un testeur doit pouvoir le vérifier sans avoir lu ce
+document**. Étiquettes identiques — `[UNIT]` automatisable hors Unity et bloquant,
+`[INTEG]` plusieurs systèmes ou persistance et bloquant, `[HUMAIN]` mesure ou playtest et
+consultatif sauf mention.
+
+Le découpage d'ADR-0006 paie ici comme ailleurs : **toute la logique qui peut produire un
+profil faux est en `[UNIT]`.** La couche Unity ne décide rien, donc elle n'a presque rien à
+prouver.
+
+> **Les valeurs attendues se dérivent, elles ne se recopient pas.** Quatorze valeurs de ce
+> document sont provisoires. Les critères ci-dessous citent des nombres comme repères de
+> lecture ; **le test lit la constante nommée**. Quand la mesure les déplacera, ces critères
+> suivront sans être réécrits.
+
+---
+
+### A — Étape 1, le silence
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-01 | GIVEN une étape sans trame voisée THEN `Floor_dB = P95(Rms_dB) + FloorMargin_dB` | `[UNIT]` |
+| CAL-02 | GIVEN un creux instantané isolé sous le bruit réel THEN il **n'abaisse pas** `Floor_dB` — propriété attendue du centile haut | `[UNIT]` |
+| CAL-03 | GIVEN des trames voisées pendant l'étape THEN l'étape est **rejetée et rejouée**, aucun `Floor_dB` n'est écrit | `[UNIT]` |
+| CAL-04 | GIVEN un écart `P95 − P50` au-delà du toléré THEN l'étape est rejetée | `[UNIT]` — **non exécutable, voir trous** |
+| CAL-05 | GIVEN l'étape affichée THEN **aucun indicateur de niveau et aucun son** ne sont perceptibles | `[HUMAIN]` |
+
+### B — Étape 2, la parole posée
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-06 | GIVEN `Floor_dB` connu THEN seules les trames franchissant `Rms_dB > Floor_dB + Margin_dB` entrent dans `V` | `[UNIT]` |
+| CAL-07 | GIVEN `\|V\| < VoicedMin` THEN l'étape est rejouée **sans écrire** `Rest_dB` ni `F0_habituel` | `[UNIT]` |
+| CAL-08 | GIVEN une série voisée à laquelle on **injecte une seule erreur d'octave** THEN `F0_habituel` est **inchangé** | `[UNIT]` |
+| CAL-09 | GIVEN une tentative d'exécuter l'étape 2 **sans `Floor_dB` au tampon** THEN un état invalide est levé — la dépendance d'ordre est une garde, pas une convention | `[UNIT]` |
+| CAL-10 | GIVEN un chuchotement simulé, apériodique THEN aucune trame n'est voisée et `\|V\|` reste sous le seuil | `[UNIT]` |
+
+### C — Étape 3, la montée
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-11 | GIVEN une stagnation qualifiante MAIS `M(t) − Floor_dB < HardFloor_dB` THEN **aucun plateau n'est déclaré**, l'étape continue | `[UNIT]` |
+| CAL-12 | GIVEN la même stagnation avec `M(t) − Floor_dB ≥ HardFloor_dB` THEN le plateau est déclaré et `Scream_dB = M(t)` | `[UNIT]` |
+| CAL-13 | GIVEN aucune stagnation avant `PeakTimeout_s` THEN l'étape se termine sur `Scream_dB = M(t_fin)` | `[UNIT]` |
+| CAL-14 | GIVEN un écrêtage détecté pendant l'étape — **même condition qu'au système 1**, `Peak` saturé sur plusieurs échantillons consécutifs THEN le profil reste committable **et le joueur est averti** de baisser son gain d'entrée | `[UNIT]` + `[HUMAIN]` |
+
+### D — Les quatre validations
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-15 | GIVEN `Floor_dB ≥ Rest_dB` ou `Rest_dB ≥ Scream_dB` THEN **REFUS** (V1) | `[UNIT]` |
+| CAL-16 | GIVEN `Δ < HardFloor_dB` THEN REFUS ; GIVEN `HardFloor ≤ Δ < QualityBand` THEN ACCEPTÉ avec `LowRange = true` ; GIVEN `Δ ≥ QualityBand` THEN ACCEPTÉ avec `LowRange = false` (V2) | `[UNIT]` |
+| CAL-17 | GIVEN `Floor −70 · Rest −25 · Scream −22` — soit `Δ = 48`, excellent — THEN **REFUS par V3**, `r = 0,94` | `[UNIT]` |
+| CAL-18 | GIVEN `Floor −50 · Rest −48 · Scream −25` — soit `Δ = 25`, correct — THEN **REFUS par V3**, `r = 0,08` | `[UNIT]` |
+| CAL-19 | GIVEN `r` dans les bornes THEN V3 ne refuse pas sur ce seul critère | `[UNIT]` |
+| CAL-20 | GIVEN `F0_habituel` hors `[F0Min ; F0Max]` THEN REFUS (V4) | `[UNIT]` |
+| CAL-21 | GIVEN un même quadruplet évalué dans un ordre d'exécution différent THEN **le verdict est identique** — accepté, refusé, `LowRange` | `[UNIT]` |
+| CAL-22 | GIVEN un profil accepté THEN **`Rest_dB` n'intervient dans aucune formule de sortie** : il sert à valider, jamais à normaliser. Un `Rest_dB` modifié sur un profil déjà validé ne change **aucune** `VoiceFrame` | `[UNIT]` |
+
+### E — Tampon, atomicité, `LowRange`
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-23 | GIVEN une coupure micro pendant une étape THEN le tampon est jeté **intégralement** et le profil actif reste identique **bit à bit** | `[UNIT]` |
+| CAL-24 | GIVEN un commit en cours THEN **aucune lecture** ne peut observer un `Floor_dB` neuf combiné à un `Scream_dB` ancien | `[UNIT]` |
+| CAL-25 | GIVEN une seule étape rejouée THEN **les quatre validations** sont réévaluées sur l'ensemble ancien + neuf avant tout commit | `[UNIT]` |
+| CAL-26 | GIVEN une annulation en cours de parcours THEN **aucun fichier de profil n'est écrit** | `[INTEG]` |
+| CAL-27 | GIVEN `LowRange = true` THEN les constantes d'attaque et de relâchement de l'`EnvelopeFollower` sont multipliées par le facteur déclaré, face à un profil identique en `LowRange = false` | `[UNIT]` |
+| CAL-28 | GIVEN une décimation décidée par le profil THEN `F0_habituel × 2 > 600 Hz` donne **12 kHz** pour ce joueur, sinon 8 kHz ; et le `Decimator` comme le `PitchDetector` sont **reconstruits à la réception du profil**, pas à la construction de l'analyseur | `[UNIT]` |
+
+### F — Persistance
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-29 | GIVEN un fichier corrompu ou incomplet THEN le profil est traité comme **absent** — jamais de chargement partiel | `[UNIT]` |
+| CAL-30 | GIVEN un profil valide sous une configuration de seuils **A**, revalidé sous une configuration **B** différente THEN il peut être rejeté — **et le test ne cite aucune valeur de production** | `[UNIT]` |
+| CAL-31 | GIVEN un numéro de version de schéma absent ou inconnu THEN le profil est traité comme absent | `[UNIT]` |
+| CAL-32 | GIVEN un profil rejeté au chargement WHEN le joueur tente de rejoindre THEN le système 8 **bloque l'entrée** | `[INTEG]` |
+
+### G — Parcours, réseau, confidentialité
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-33 | GIVEN une calibration en cours THEN la sortie du joueur vers le jeu reste `Silence` jusqu'à `Committed` ou `Rejected` | `[INTEG]` |
+| CAL-34 | GIVEN une session active WHEN un profil est committé THEN **aucun paquet sortant ne contient un champ du `VoiceProfile`** | `[INTEG]` |
+| CAL-35 | GIVEN les six causes de refus déclenchées une à une par des profils synthétiques THEN **six identifiants de message distincts** sont renvoyés, et l'étape à rejouer désignée est la bonne pour chacun | `[UNIT]` |
+| CAL-36 | GIVEN un refus sur une seule étape THEN le parcours reprend **sur cette étape**, jamais au début | `[INTEG]` |
+| CAL-37 | GIVEN le mode réparation THEN aucun contenu pédagogique n'apparaît | `[HUMAIN]` |
+| CAL-38 | GIVEN l'étape 3 affichée THEN **aucune cible, aucun plafond, aucun score** n'est visible | `[HUMAIN]` — voir cas difficile 3 |
+| CAL-39 | GIVEN une valeur provisoire de ce document THEN elle apparaît **en un seul endroit** comme constante nommée, et aucun document ne la cite comme acquise avant que les protocoles aient tourné | `[UNIT]` par inspection statique + `[HUMAIN]` |
+
+---
+
+### Ce que ces critères ne couvrent pas
+
+**1. L'écart `P95 − P50` toléré n'a pas de valeur.** CAL-04 est écrit et **non exécutable**.
+C'est la seule valeur *à définir* de ce document, déjà signalée en *Tuning Knobs* — et donc
+le seul report qui échoue au test des trois critères. Elle rejoint le TTL de l'anneau du
+système 1.
+
+**2. La distance au micro entre étapes** reste partiellement indétectable. Seul un critère
+d'interface est possible — la consigne est affichée — pas un critère de détection.
+
+**3. L'hystérésis autour de `F0 × 2 ≈ 600 Hz`** n'est pas un comportement figé mais une
+réserve conditionnelle, donc pas encore un critère.
+
+**4. La durée ressentie du parcours complet** n'a aucun critère, alors que *Player Fantasy*
+en fait un enjeu du mode réparation. À combler.
+
+> **Un cinquième trou a été signalé puis refermé.** Le `qa-lead` relevait qu'aucun détecteur
+> d'écrêtage n'était spécifié, rendant CAL-14 intestable. **Il n'y avait rien à inventer :**
+> le système 1 définit déjà la condition — `Peak` saturé sur plusieurs échantillons
+> consécutifs — pour geler sa `Continuity`. La calibration lit le même signal et réutilise
+> le même détecteur. CAL-14 est exécutable, à condition que ce détecteur soit exposé et non
+> enfoui dans la logique de gel.
+
+### Les trois cas difficiles
+
+**« Aucun audio n'est conservé. »** C'est une promesse de confiance, et une relecture de
+code ne la vaut pas. La méthode proposée tient : instrumenter le pipeline avec des
+`WeakReference` sur chaque tampon audio traversant la calibration, puis vérifier qu'après
+`Committed`, `Rejected` ou `Idle` et un `GC.Collect()` forcé, **toutes sont mortes**. Ce
+n'est pas un test unitaire pur — il exige le vrai graphe d'objets — mais c'est une
+vérification réelle, et bien meilleure qu'une inspection à l'œil.
+
+**La revalidation au chargement.** La difficulté était de tester qu'un profil enregistré
+sous d'anciens seuils est rejeté quand ils bougent, **sans figer les seuils dans le test**.
+La réponse est propre et elle impose une contrainte d'implémentation utile : **la fonction
+de validation prend sa configuration en argument** au lieu de lire des constantes
+compilées. Le test construit alors un profil sous une configuration A arbitraire, revalide
+sous une B différente, et vérifie le rejet **sans jamais citer une valeur de production**.
+C'est aussi ce que la norme « valeurs pilotées par la donnée » du projet exige déjà.
+
+**« La jauge n'a pas de cible. »** **Non testable, et il faut le dire.** C'est l'absence
+d'une fonctionnalité, pas un comportement observable. Les seules vérifications honnêtes
+sont une relecture de code — aucun chemin de rendu de cible, de score ou de plafond dans le
+composant — et un playtest qui confirme que le joueur ne perçoit pas un test. Aucun critère
+automatisé n'existe pour cette propriété, et prétendre le contraire donnerait une fausse
+assurance sur **l'exigence la plus contre-intuitive de tout le document**.
+
+### Ce qui reste hors de portée d'une machine
+
+- La gêne sociale, l'impression de passer un test, la lecture d'un refus comme non
+  jugeant. Playtest qualitatif, et rien d'autre.
+- Le réalisme des environnements bruyants réels — télévision, salon partagé. Non simulable
+  en intégration continue.
+- **La validité de `F0Max` face à de vraies voix d'enfant.** Sujets réels obligatoires ; ce
+  point est le seul de cette liste qui puisse produire une **exclusion injuste** s'il est
+  laissé au raisonnement.
+- Le confort et la fatigue induits par `PlateauHold_s` et `PeakTimeout_s`.
+- La fluidité perçue de la jauge en temps réel.
 
 ## Open Questions
 

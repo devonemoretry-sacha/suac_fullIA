@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Calibration vocale — 9 sections ecrites, restent Acceptance Criteria et Open Questions
+Task: GDD Calibration vocale — 10 sections, reste Open Questions
 <!-- /STATUS -->
 
 ---
