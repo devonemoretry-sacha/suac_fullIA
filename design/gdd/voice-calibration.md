@@ -652,7 +652,110 @@ C'est la famille de cas la plus insidieuse, parce qu'aucune erreur ne se produit
 
 ## Dependencies
 
-[À écrire]
+Ce document reprend la distinction posée par `voice-analysis.md`, qui a fait ses preuves :
+une **dépendance de conception** empêche de *spécifier* tant que l'autre ne l'est pas ; une
+**dépendance d'exécution** empêche de *fonctionner* une fois en marche. Les confondre
+fabrique des cycles fantômes.
+
+### Le tableau
+
+| Système | Nature | Sens | Interface |
+|---|---|---|---|
+| **1. Analyse vocale** | **DURE — conception** | mutuelle | **Chaque champ du profil existe parce qu'une de ses formules le réclame.** On ne pouvait pas spécifier ce système avant lui — et c'est fait, il est `Designed` |
+| **2. Audio d'entrée** | **DURE — exécution** | il nous pousse | Les échantillons, **à la même cadence et par le même trajet qu'en jeu**. Plus les événements de périphérique |
+| 8. Session / lobby | consommateur | il lit | Le verdict « ce joueur a un profil valide », et la porte d'entrée qui en découle |
+| 14. Chat vocal | contraint | il se tait | **Aucune diffusion pendant la calibration** — et davantage, voir plus bas |
+| 19. UI diégétique | consommateur | il lit | La jauge temps réel de l'étape 3 |
+| 5. Réseau | **aucune** | — | **Le profil ne traverse jamais le réseau.** Décidé en *Detailed Rules* |
+
+**Une seule dépendance de conception, et elle est déjà satisfaite.** C'est ce qui rend ce
+document écrivable maintenant.
+
+### Le cycle apparent 1 ↔ 6, et pourquoi ce n'en est pas un
+
+L'index déclare que 6 dépend de 1 et 2 ; le système 1, lui, ne produit rien sans notre
+profil. Cela ressemble à un cycle et n'en est pas un : **les deux vivent dans la même
+assembly** (ADR-0006) et partagent les mêmes primitives internes. Ce n'est pas une
+dépendance entre modules, c'est une collaboration interne. `voice-analysis.md` le
+démontre en détail ; ce document s'y range.
+
+### La calibration vit dans deux assemblies, et la ligne compte
+
+| Ce qui vit où | Assembly | Testable sans Unity |
+|---|---|---|
+| Mesures, médianes, détection de plateau, **les quatre validations** | `SUAC.Voice.Core` — `noEngineReferences` | **Oui** |
+| Parcours, écrans, jauge, persistance sur disque | Couche Unity | Non |
+
+**Tout ce qui peut produire un profil faux est du côté testable.** C'est la conséquence
+directe d'ADR-0006, et elle n'est pas un hasard : les quatre contrôles de validation sont
+précisément ce qu'on veut pouvoir exercer en millisecondes, sans micro et sans scène, avec
+des profils synthétiques dégénérés.
+
+La couche Unity, elle, ne décide rien — elle collecte, affiche et range.
+
+---
+
+### Ce que les GDD voisins devront porter
+
+Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces systèmes n'a
+encore de GDD.
+
+**Système 2 — Audio d'entrée**
+- Livrer les échantillons **par le même trajet qu'en jeu** : post-AEC, sans VAD, sans AGC,
+  sans suppression de bruit. **Un AGC actif pendant la calibration rendrait la mesure
+  absurde** — il égaliserait justement l'écart qu'on cherche à mesurer.
+- Même **cadence fixe** qu'en jeu. Calibrer sur un trajet et jouer sur un autre invaliderait
+  la mesure sans que rien ne le signale.
+- Être **déjà en marche** avant le lancement de la calibration.
+- Signaler coupure et changement de périphérique, pour l'annulation d'étape.
+
+**Système 8 — Session / lobby**
+- Porter la **porte d'entrée** : un joueur sans profil valide ne rejoint pas.
+- Rendre l'attente lisible pour les autres — « X termine sa configuration » — plutôt qu'un
+  silence qui se lit comme un plantage.
+
+**Système 14 — Chat vocal**
+- **Ne rien diffuser** de ce que le joueur produit pendant sa calibration. C'est un moment
+  privé, même en multijoueur.
+
+**Système 19 — UI diégétique**
+- La jauge de l'étape 3, en temps réel, et **distincte du sonomètre de jeu** : le contexte
+  n'est pas le même, et confondre les deux affichages reviendrait à dire au joueur qu'il
+  joue alors qu'il se règle.
+
+**Systèmes 7 et 9 — 3C et Portage : rien à ajouter, mais une confirmation à obtenir**
+- La décision du 2026-09-08 fait reposer la recalibration en jeu sur un comportement
+  générique : ouvrir le menu immobilise le personnage, et un personnage immobilisé **pose
+  ce qu'il porte**. **Nous ne demandons donc aucun comportement spécial** — nous empruntons
+  un chemin que le portage doit gérer de toute façon, celui d'un porteur qui lâche.
+- La seule chose à vérifier au moment d'écrire ces GDD est que ce chemin **existe bien**.
+  Si le portage ne prévoyait pas qu'un porteur puisse lâcher en cours de transport, notre
+  élégance s'effondrerait et il faudrait rouvrir OQ-11.
+
+---
+
+### Une interaction que personne n'avait vue : la calibration en jeu écoute le salon
+
+Un joueur qui recalibre **en cours de partie** a les voix de ses coéquipiers dans les
+oreilles. S'il joue sur haut-parleurs, ces voix rentrent dans son micro — et pendant
+l'étape 1, elles sont mesurées comme **bruit ambiant**.
+
+La conséquence est le pire mode d'échec du système : **`Floor_dB` gonflé**. Un plancher
+placé au niveau de la conversation de ses amis écrase ensuite toute sa parole normale à
+`Loudness = 0`. Il ne réagirait plus qu'aux cris, sans qu'aucune validation ne s'en
+aperçoive — les quatre contrôles vérifieraient un profil parfaitement cohérent.
+
+**L'AEC couvre ce cas en principe**, puisqu'elle est en amont de la fourche (ADR-0003) et
+retire du signal ce que les haut-parleurs émettent. Mais s'en remettre à elle seule, sur
+l'étape la plus sensible du parcours, est un pari inutile :
+
+> **Exigence : pendant l'étape 1 au minimum, la restitution du chat vocal est coupée.**
+> Trois secondes de silence complet coûtent moins qu'un profil définitivement faux, et
+> cette coupure ne dépend d'aucune qualité d'implémentation de l'AEC.
+>
+> C'est une contrainte de plus pour le système 14, et elle est plus forte que la précédente :
+> il ne s'agit plus seulement de **ne pas émettre** ce que dit le joueur, mais de **ne pas
+> lui faire entendre** les autres pendant qu'on mesure sa pièce.
 
 ## Tuning Knobs
 
