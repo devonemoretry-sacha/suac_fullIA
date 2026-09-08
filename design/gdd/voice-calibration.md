@@ -281,10 +281,22 @@ monde — le joueur mesurerait son registre en projetant les meubles à travers 
 système 1 nomme déjà `VoiceFrame.Silence` comme sortie d'un état non exploitable ; c'est le
 même mécanisme.
 
-> **Cette règle a un coût, et il appartient à quelqu'un d'autre.** Un joueur qui recalibre
-> en portant un meuble à plusieurs cesse d'y contribuer pendant plusieurs secondes. Ce que
-> subit l'objet — il s'alourdit, il se verrouille, ou rien — est une décision de gameplay
-> traitée en **OQ-11**, partagée avec les systèmes 9 et 12.
+> ### ✅ Le coût de cette règle est tranché — décision du 2026-09-08
+>
+> On craignait qu'un joueur recalibrant en portant un meuble à plusieurs devienne une charge
+> muette accrochée à l'objet. **Ce cas n'existe pas.** La recalibration se lance depuis le
+> menu ; ouvrir le menu immobilise le personnage, et **un personnage immobilisé pose ce
+> qu'il porte**.
+>
+> La force de cette réponse est qu'elle **n'invente aucun cas particulier**. La calibration
+> ne demande pas au portage un comportement spécial : elle emprunte un chemin que le
+> système 9 doit gérer de toute façon — celui d'un porteur qui lâche, volontairement ou non.
+> Ce qui advient de l'objet est donc une question de portage, pas de calibration.
+>
+> Il reste une conséquence sociale, et elle est acceptable : les coéquipiers voient un
+> joueur poser sa moitié de canapé et se figer. C'est visible, lisible, et sans ambiguïté —
+> à condition que l'UI dise **pourquoi**, ce qui est déjà une exigence de la section *UI
+> Requirements*.
 
 ---
 
@@ -323,7 +335,191 @@ silencieux que le système 1 traque.
 
 ## Formulas
 
-[À écrire]
+Toutes les valeurs chiffrées de cette section sont **PROVISOIRES**. Elles sont des paris
+explicites, réglables et testables — pas des mesures. Elles rejoignent la porte de mesure
+du système 1 : rien ailleurs ne doit les citer comme acquises.
+
+### 1. `Floor_dB` — le plancher de bruit, avec sa marge
+
+```
+Bruit     = P95( Rms_dB(t) )   sur l'étape 1, joueur muet
+Floor_dB  = Bruit + FloorMargin_dB          FloorMargin_dB PROVISOIRE 3
+```
+
+| Variable | Description |
+|---|---|
+| `P95` | 95ᵉ centile des niveaux observés pendant l'étape de silence |
+| `FloorMargin_dB` | Marge au-dessus du bruit mesuré, exigée par le contrat du système 1 |
+
+**Pourquoi un centile haut et pas le minimum.** Le minimum attrape un creux instantané, en
+dessous du bruit réel de la pièce : le plancher se poserait trop bas et le bruit ambiant
+produirait ensuite une `Loudness` non nulle. Le maximum, lui, attrape une porte qui claque.
+Le P95 dit « le bruit est presque toujours sous cette valeur », ce qui est exactement la
+propriété recherchée.
+
+**Pourquoi une marge au-dessus.** Sans elle, `Floor_dB` tombe *dans* le bruit : les
+fluctuations le franchissent une fois sur vingt et produisent de l'entrée fantôme. Avec
+elle, le bruit ambiant est écrasé à zéro par le `clamp` de `Loudness`. C'est la garantie
+que *Player Fantasy* du système 1 formule ainsi : **« quand je me tais, mon objet cesse de
+réagir. »**
+
+> **C'est cette marge, et non le seuil d'écart dynamique, qui empêche une oscillation de
+> 2 dB de faire doubler `Loudness`.** Le système 1 l'a établi en revue ; c'est ici que
+> l'exigence se réalise.
+
+**Exemple** : pièce calme, `P95 = −58 dB` → `Floor_dB = −55 dB`.
+
+### 2. `Rest_dB` et `F0_habituel` — la parole posée
+
+```
+V         = { trames de l'étape 2 telles que Voiced = true }
+Rest_dB   = médiane( Rms_dB )  sur V
+F0_habituel = médiane( F0 )    sur V
+
+garde obligatoire : |V| ≥ VoicedMin      VoicedMin PROVISOIRE 100 trames
+```
+
+**Médiane, jamais moyenne.** Pour `F0`, une seule erreur d'octave de YIN déplacerait une
+moyenne d'une demi-octave ; elle ne déplace pas une médiane. Pour `Rest_dB`, une toux ou un
+raclement de gorge ferait le même dégât.
+
+**Sur les trames voisées seulement.** Inclure les silences entre les mots tirerait
+`Rest_dB` vers le plancher et décrirait les pauses du joueur plutôt que sa voix.
+
+> **Cette formule crée une dépendance d'ordre entre les étapes.** Savoir quelles trames
+> sont voisées exige `Floor_dB`, puisque la porte de voisement du système 1 s'écrit
+> `Rms_dB > Floor_dB + Margin_dB`. **L'étape 1 doit donc précéder l'étape 2 pour une raison
+> arithmétique**, en plus de la raison sociale déjà donnée. Les deux justifications
+> pointent dans le même sens, ce qui est rassurant.
+
+À `~50 Hz`, `VoicedMin = 100` représente **2 secondes de parole effectivement voisée** —
+soit environ 3 secondes de parole réelle, les pauses comprises. Sous ce seuil, l'étape
+n'a pas abouti et se rejoue.
+
+### 3. `Scream_dB` — la montée et son plateau
+
+```
+M(t)      = max( Rms_dB )  sur [début , t]
+
+Plateau   ⟺  M(t) − M(t − PlateauHold_s) < PlateauDelta_dB
+          ET  M(t) − Floor_dB ≥ HardFloor_dB          ← le calage, obligatoire
+
+Scream_dB = M(t_fin)
+```
+
+| Variable | Provisoire | Rôle |
+|---|---|---|
+| `PlateauDelta_dB` | **1,5** | Progression en deçà de laquelle on considère que ça ne monte plus |
+| `PlateauHold_s` | **1,2** | Durée sur laquelle cette stagnation doit tenir |
+| `PeakTimeout_s` | **10** | Au-delà, l'étape se termine sur le maximum atteint |
+
+**La seconde condition est la plus importante des deux.** Tant que le maximum n'a pas
+franchi le plancher dur, **aucun plateau n'est reconnu** : l'étape continue. Sans ce
+calage, un joueur qui monte lentement verrait son plateau détecté trop tôt, puis son profil
+refusé — **alors qu'il a coopéré**. C'est le défaut nommé par le système 1, et cette ligne
+est sa correction.
+
+Au-dessus du plancher dur mais sous la bande de qualité, le plateau **est** reconnu : le
+profil part en `LowRange` plutôt qu'au rebut.
+
+### 4. La validation — quatre contrôles, dans cet ordre
+
+#### V1 — l'ordre strict
+
+```
+Floor_dB < Rest_dB < Scream_dB          sinon REFUS
+```
+
+Absorbe le contrôle `Floor_dB > Scream_dB` du système 1 et le renforce : c'est le
+retournement silencieux du dénominateur, celui qui fait *baisser* `Loudness` quand on parle
+plus fort.
+
+#### V2 — l'écart dynamique, en deux paliers
+
+```
+Δ = Scream_dB − Floor_dB
+
+Δ <  HardFloor_dB                    → REFUS
+HardFloor_dB ≤ Δ < QualityBand_dB    → ACCEPTÉ, LowRange = true
+Δ ≥ QualityBand_dB                   → ACCEPTÉ, LowRange = false
+
+HardFloor_dB PROVISOIRE 13 · QualityBand_dB PROVISOIRE 20
+```
+
+#### V3 — la plausibilité, par l'ancrage `Rest_dB`
+
+**C'est le contrôle qui justifie l'existence du troisième champ.**
+
+```
+r = (Rest_dB − Floor_dB) / (Scream_dB − Floor_dB)      r ∈ ]0,1[ garanti par V1
+
+RestMin ≤ r ≤ RestMax                 sinon REFUS
+RestMin PROVISOIRE 0,15 · RestMax PROVISOIRE 0,70
+```
+
+`r` situe la voix posée dans le registre mesuré. Une calibration honnête la place
+franchement au-dessus du bruit et franchement en dessous du cri.
+
+**Ce que ce contrôle attrape et que V2 laisse passer** — deux cas réels :
+
+| Cas | Mesures | Δ | `r` | Verdict |
+|---|---|---|---|---|
+| Pièce très calme, faux cri | Floor −70 · Rest −25 · Scream −22 | **48 dB, excellent** | **0,94** | **REFUS** — le « cri » est à peine au-dessus de la conversation ; le grand écart vient du silence de la pièce, pas de l'amplitude vocale |
+| Étape 2 ratée | Floor −50 · Rest −48 · Scream −25 | **25 dB, correct** | **0,08** | **REFUS** — la voix posée colle au plancher : le joueur n'a pas parlé, ou a parlé hors axe du micro |
+
+Dans les deux cas, l'écart dynamique paraît sain et la calibration est inexploitable.
+**Deux points ne mesurent que l'étendue ; trois points mesurent la vraisemblance.**
+
+#### V4 — la hauteur de référence
+
+```
+F0Min ≤ F0_habituel ≤ F0Max           sinon REFUS
+F0Min = 20 Hz · F0Max PROVISOIRE 500 Hz
+```
+
+La borne basse reprend celle du système 1 : à 0,01 Hz, `Pitch` vaudrait +162 demi-tons sans
+jamais diverger. La borne haute attrape une accroche d'harmonique ou une source qui n'est
+pas une voix.
+
+> **⚠️ `F0Max` est une valeur sensible à l'équité, et elle n'est pas mesurée.** Les voix
+> d'enfant montent couramment à 300–400 Hz de médiane. Une borne mal placée les refuserait
+> — dans un jeu dont la mécanique est de crier, et dont le système 1 a déjà dû corriger un
+> défaut d'équité visant exactement cette population. **Cette valeur ne doit pas être figée
+> sans avoir été confrontée à de vraies voix d'enfant.**
+
+### 5. La cadence de décimation, décidée par le profil
+
+```
+DecimationHz = ( F0_habituel × 2 > 600 )  ?  12000  :  8000
+
+Plage de recherche = [ max(70 , F0_habituel / 2) ,  min(PlafondHz , F0_habituel × 2) ]
+   PlafondHz = 600 à 8 kHz · 900 à 12 kHz
+```
+
+Ces règles ne sont pas décidées ici : elles reprennent les *Edge Cases* du système 1, qui
+les tient d'ADR-0004. Ce document se contente d'être **l'endroit où la décision est prise**,
+puisque c'est le profil qui la détermine.
+
+**Conséquence d'implémentation.** La cadence dépendant du profil, le `Decimator` et le
+`PitchDetector` du système 1 sont **reconstruits à la réception du profil**, jamais à la
+construction de l'analyseur.
+
+### Récapitulatif des valeurs provisoires
+
+Dix valeurs, aucune mesurée. Elles s'ajoutent aux dix du système 1.
+
+| Valeur | Provisoire | Se règle par |
+|---|---|---|
+| `FloorMargin_dB` | 3 | Mesure d'entrée fantôme en pièce réelle |
+| `VoicedMin` | 100 trames | Essai : combien de parole avant que la médiane se stabilise |
+| `PlateauDelta_dB` | 1,5 | Essai sur montées réelles |
+| `PlateauHold_s` | 1,2 | Essai — trop court coupe la montée, trop long fatigue |
+| `PeakTimeout_s` | 10 | Essai |
+| `HardFloor_dB` | 13 | Protocole A du système 1 |
+| `QualityBand_dB` | 20 | Protocole A du système 1 |
+| `RestMin` | 0,15 | Statistiques sur calibrations réelles |
+| `RestMax` | 0,70 | Statistiques sur calibrations réelles |
+| `F0Max` | 500 Hz | **Doit passer par de vraies voix d'enfant** |
 
 ## Edge Cases
 

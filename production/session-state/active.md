@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Calibration vocale — 3 sections ecrites (Overview, Player Fantasy, Detailed Rules), 8 restantes
+Task: GDD Calibration vocale — 4 sections ecrites (jusqu-a Formulas), 7 restantes
 <!-- /STATUS -->
 
 ---
