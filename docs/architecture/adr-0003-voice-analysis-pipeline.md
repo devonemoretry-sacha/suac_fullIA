@@ -2,7 +2,70 @@
 
 ## Status
 
-Accepted
+**Accepted — mais l'amendement AEC du 2026-09-03 est contredit par les faits.
+DÉCISION REQUISE.**
+
+> ### ⚠️ Recherche du 2026-09-08 — l'AEC de Dissonance ne peut pas remplir notre contrat
+>
+> L'amendement du 2026-09-03 a reclassé l'AEC de « confort d'écoute » en **correction de
+> gameplay**, et exigé qu'elle soit placée **en amont de la fourche** pour protéger les deux
+> voies. La revue de chaîne du 2026-09-08 a relevé que **personne ne l'implémente**.
+> Vérification faite sur la documentation de l'éditeur, le problème est plus profond qu'un
+> propriétaire manquant.
+>
+> #### Ce que la documentation dit, textuellement
+>
+> - *« The AEC filter is attached to the audio mixer on the output, this filter knows what
+>   sounds are leaving the speakers. »*
+> - *« The filter will only process audio which passes through the mixer it is attached to. »*
+> - Le trajet documenté est : **Audio Output → Audio Postprocessor → Speakers → Echo →
+>   Microphone → Audio Preprocessor.**
+> - L'AEC y est décrite comme *« a system to automatically remove these echoes from the
+>   **transmitted** voice signal »*.
+> - La calibration du délai **prend plusieurs secondes** et se **perd pendant les silences
+>   prolongés** ; la documentation recommande d'ajouter des sons pour l'entretenir.
+>
+> #### Trois conséquences, par ordre de gravité
+>
+> **1. L'AEC de Dissonance est en aval, sur sa propre branche — pas en amont de la fourche.**
+> Le trajet documenté le dit : elle s'applique au **préprocesseur**, sur le signal
+> **transmis**. Si nous fournissons le PCM par `IMicrophoneCapture`, Dissonance applique son
+> AEC *après* nous, pour son propre usage. **La branche d'analyse n'en reçoit aucune.** La
+> supposition de la revue est confirmée par la documentation.
+>
+> **2. Son signal de référence exige le mixeur Unity — que notre plan FMOD contourne.**
+> ADR-0003 et le système 4 prévoient FMOD pour la spatialisation. Le pont *Dissonance For
+> FMOD (Playback)*, budgété à 55 $, remplace l'`AudioSource` Unity par FMOD — donc le son ne
+> passe plus par le mixeur auquel le filtre AEC doit être attaché. **Nous paierions 55 $
+> pour le pont qui prive l'AEC de sa référence.** *(Déduit de deux sources concordantes ; la
+> page AEC officielle ne mentionne pas FMOD du tout, ce qui est en soi un signal.)*
+>
+> **3. Le mécanisme est mal adapté à ce jeu.** Une AEC qui met plusieurs secondes à se caler
+> et qui **oublie son délai pendant les silences** convient mal à un jeu d'horreur bâti sur
+> le silence et l'écoute.
+>
+> #### La voie qu'on pourrait croire ouverte, et pourquoi elle ne l'est pas
+>
+> Laisser Dissonance posséder la capture et lui **reprendre** le signal post-AEC
+> satisferait les deux branches. Mais son préprocesseur applique aussi VAD, suppression de
+> bruit et AGC — que le GDD interdit nommément sur le trajet d'analyse — et rien n'indique
+> qu'un point de sortie *post-AEC mais pré-reste* soit exposé. Cette voie inverserait en
+> outre la prémisse d'ADR-0008.
+>
+> #### Les deux issues réelles
+>
+> | | Ce que ça coûte |
+> |---|---|
+> | **A — assumer l'absence d'AEC sur la branche d'analyse** | Le **casque devient l'unique mitigation**. Il faut alors **rétrograder par écrit** l'amendement du 2026-09-03 : l'AEC redevient un confort pour le chat, elle cesse d'être une correction de gameplay |
+> | **B — intégrer notre propre AEC en amont** (WebRTC-APM en plugin natif) | Une dépendance native de plus, un pont à écrire. `Voice.Core` n'y touche pas et reste `noEngineReferences` |
+>
+> **Recommandation : A.** La décision du 2026-09-08 fait déjà du casque un prérequis du jeu,
+> et non un repli. Ce qui était alors une facilité devient la mitigation porteuse — il faut
+> l'écrire comme telle. B reste ouvert si le playtest montre que la fuite d'un casque ouvert
+> suffit à polluer la mesure.
+>
+> **Sources** : [Acoustic Echo Cancellation](https://placeholder-software.co.uk/dissonance/docs/Tutorials/Acoustic-Echo-Cancellation.html) ·
+> [Dissonance For FMOD (Playback)](https://assetstore.unity.com/packages/tools/integration/dissonance-for-fmod-playback-213415)
 
 ## Date
 

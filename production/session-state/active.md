@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Corrections de la chaine vocale — 8 defauts sur 9 traites ; reste la propriete de l-AEC
+Task: AEC — recherche faite, ADR-0003 contredit par les faits, DECISION REQUISE (A ou B)
 <!-- /STATUS -->
 
 ---
