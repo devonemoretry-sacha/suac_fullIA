@@ -717,6 +717,8 @@ encore de GDD.
 **Système 14 — Chat vocal**
 - **Ne rien diffuser** de ce que le joueur produit pendant sa calibration. C'est un moment
   privé, même en multijoueur.
+- *(La réciproque — ne pas lui faire entendre les autres — n'a pas besoin d'être demandée :
+  elle découle de l'état de pause. Voir la décision du 2026-09-08 plus bas.)*
 
 **Système 19 — UI diégétique**
 - La jauge de l'étape 3, en temps réel, et **distincte du sonomètre de jeu** : le contexte
@@ -747,19 +749,127 @@ aperçoive — les quatre contrôles vérifieraient un profil parfaitement cohé
 
 **L'AEC couvre ce cas en principe**, puisqu'elle est en amont de la fourche (ADR-0003) et
 retire du signal ce que les haut-parleurs émettent. Mais s'en remettre à elle seule, sur
-l'étape la plus sensible du parcours, est un pari inutile :
+l'étape la plus sensible du parcours, serait un pari inutile — d'autant que la réponse
+tient en une ligne.
 
-> **Exigence : pendant l'étape 1 au minimum, la restitution du chat vocal est coupée.**
-> Trois secondes de silence complet coûtent moins qu'un profil définitivement faux, et
-> cette coupure ne dépend d'aucune qualité d'implémentation de l'AEC.
+> ### ✅ Tranché le 2026-09-08 — **le casque est un prérequis du jeu**
 >
-> C'est une contrainte de plus pour le système 14, et elle est plus forte que la précédente :
-> il ne s'agit plus seulement de **ne pas émettre** ce que dit le joueur, mais de **ne pas
-> lui faire entendre** les autres pendant qu'on mesure sa pièce.
+> *Shut Up & Carry !* est un jeu bâti sur le son et le micro. **Jouer au casque avec un
+> micro est une condition d'entrée, pas une recommandation de confort.** Les joueurs sur
+> haut-parleurs sont pénalisés d'office, et c'est assumé : on n'investit pas d'énergie à
+> rattraper ce cas.
+>
+> ADR-0003 posait déjà le casque comme repli — « sans AEC → casque obligatoire ». Cette
+> décision l'en sort : **le casque n'est plus un repli, c'est la ligne de base.** Ce qui ne
+> retire rien à l'AEC, un casque ouvert fuyant largement assez pour la justifier ; cela
+> borne simplement le pire cas.
+>
+> **La solution facile est prise quand même**, parce qu'elle ne coûte rien : la
+> recalibration se fait depuis le menu, donc **en pause — le son du jeu est coupé de toute
+> façon**, chat vocal compris. Il n'y a pas de règle spéciale à écrire pour le système 14 :
+> le silence pendant la mesure découle de l'état de pause, pas d'une exception.
+>
+> C'est la deuxième fois que le passage par le menu résout gratuitement un problème de ce
+> document — après la question de l'objet porté. Ce n'est probablement pas un hasard : **la
+> calibration a besoin que le monde s'arrête, et le menu est exactement ça.**
 
 ## Tuning Knobs
 
-[À écrire]
+### L'arbitrage à exposer avant tous les autres
+
+> **L'inclusion contre la qualité de mesure.**
+
+C'est l'axe unique de ce système. **Chaque seuil qu'on desserre pour accepter un joueur de
+plus accepte aussi un profil un peu plus mauvais**, et chaque seuil qu'on resserre pour
+garantir la mesure exclut quelqu'un qui aurait pu jouer.
+
+Il n'y a pas de réglage qui fasse gagner sur les deux. Ce que ces curseurs doivent faire,
+c'est **rendre l'arbitrage visible** plutôt que le figer implicitement — même discipline
+qu'au système 1, et même raison.
+
+Le drapeau `LowRange` est ce qui rend cet axe supportable : il transforme un choix binaire
+— j'accepte ou j'exclus — en **gradation**. Sans lui, chaque desserrage serait une
+concession sèche sur la qualité.
+
+### Les curseurs
+
+| Curseur | Provisoire | Plage sûre | Trop haut | Trop bas |
+|---|---|---|---|---|
+| `FloorMargin_dB` | **3** | 1 – 6 | le plancher monte, l'écart dynamique se resserre, des profils légitimes deviennent `LowRange` ou refusés | le bruit ambiant franchit la porte : entrée fantôme, l'objet réagit quand le joueur se tait |
+| Durée de l'étape 1 | **3 s** | 2 – 5 s | le joueur attend en silence, ce qui est plus inconfortable qu'il n'y paraît | le `P95` porte sur trop peu d'échantillons, un seul transitoire le déplace |
+| Centile du plancher | **P95** | P90 – P98 | on capture les transitoires et le plancher monte | on descend sous le bruit réel de la pièce |
+| Écart `P95 − P50` toléré | *à définir* | — | on ne détecte plus qu'un joueur a parlé pendant l'étape de silence | on rejoue l'étape pour une pièce simplement vivante |
+| `VoicedMin` | **100 trames** | 60 – 200 | l'étape 2 s'éternise — insupportable en mode réparation | la médiane est instable, une erreur d'octave pèse trop lourd |
+| `PlateauDelta_dB` | **1,5** | 1 – 3 | le plateau se déclare pendant que le joueur monte encore : `Scream_dB` sous-estimé | le plateau ne se déclare jamais et le délai devient le vrai terminateur |
+| `PlateauHold_s` | **1,2** | 0,8 – 2 | le joueur doit tenir son cri longtemps : fatigant, et désagréable à faire | une inspiration suffit à déclencher un faux plateau |
+| `PeakTimeout_s` | **10** | 8 – 15 | on laisse pousser trop longtemps, ce qui n'est bon pour aucune voix | on coupe la montée d'un joueur qui monte lentement |
+| `HardFloor_dB` | **13** | 10 – 16 | exclut des joueurs légitimes, discrets ou mal équipés | des profils inexploitables passent la validation |
+| `QualityBand_dB` | **20** | 16 – 24 | trop de joueurs marqués `LowRange` et lissés sans nécessité | des profils instables jouent sans lissage renforcé |
+| `RestMin` | **0,15** | 0,08 – 0,25 | refuse des joueurs dont la voix posée est naturellement basse | laisse passer une étape 2 ratée, voix hors axe du micro |
+| `RestMax` | **0,70** | 0,60 – 0,85 | laisse passer un faux cri à peine au-dessus de la conversation | refuse un joueur qui parle fort naturellement |
+| `F0Max` | **500 Hz** | **à mesurer** | accepte une accroche d'harmonique ou une source qui n'est pas une voix | **refuse des voix d'enfant** |
+| Renforcement `LowRange` | **×1,5** | 1,2 – 2,5 | la voix des joueurs concernés devient molle : on les inclut pour leur donner un jeu terne | le lissage ne compense pas leur registre étroit, `Loudness` sautille |
+
+### Le curseur qui n'agit pas ici — et le contrat qu'il crée
+
+**`LowRange` est décidé par ce système et appliqué par le système 1.** Le drapeau ne fait
+rien en lui-même : il demande à l'`EnvelopeFollower` d'allonger ses constantes de temps
+pour ce joueur.
+
+> **Contrat à reporter dans `voice-analysis.md` :** le système 1 doit **lire `LowRange` et
+> multiplier ses constantes d'attaque et de relâchement** par le facteur ci-dessus. Sans
+> cela, le drapeau est décoratif — un profil marqué, un lissage inchangé, et l'inclusion
+> qu'on croyait avoir gagnée reste sur le papier.
+
+### Les interactions — tourner un curseur peut en annuler un autre
+
+**`FloorMargin_dB` contre `HardFloor_dB`.** Ils agissent sur la **même grandeur par les
+deux bouts** : monter la marge relève `Floor_dB`, donc rétrécit `Δ = Scream_dB − Floor_dB`,
+donc rapproche le profil du refus. Durcir la protection contre l'entrée fantôme **exclut
+mécaniquement des joueurs**, sans qu'on ait touché au seuil d'exclusion.
+
+**`RestMax` contre `HardFloor_dB`.** Ce sont deux chemins vers la même défense — le faux
+cri. Un `HardFloor_dB` élevé le refuse par l'écart ; un `RestMax` bas le refuse par la
+position. **Baisser les deux ensemble ouvre la porte en grand**, et c'est tentant, puisque
+baisser chacun se justifie séparément au nom de l'inclusion.
+
+**Le trio du plateau — `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s`.** Si le plateau
+devient difficile à déclencher, **le délai devient le vrai terminateur de l'étape** : la
+mesure ne dépend plus de l'endroit où le joueur a plafonné, mais de sa patience. Le
+plateau est alors décoratif. **Ces trois-là se règlent ensemble ou pas du tout.**
+
+**`VoicedMin` contre le mode réparation.** Plus de trames donnent une meilleure médiane et
+une étape plus longue. Or *Player Fantasy* pose qu'une relance doit être **rapide** : le
+joueur qui recalibre a un problème et veut le régler, pas passer un examen. Régler
+`VoicedMin` sur la qualité seule dégrade le parcours qui compte le plus.
+
+**Le renforcement `LowRange` contre la réactivité.** C'est la tension centrale du système 1
+— l'attribution veut de la stabilité, le contrôle veut de la réactivité — appliquée à une
+sous-population. On lisse pour que leur mesure ne sautille pas, et on leur donne un jeu
+plus mou qu'aux autres. **Inclure quelqu'un dans un jeu terne n'est pas l'inclure.**
+
+### Ce qui n'est pas un curseur
+
+Cinq choses ressemblent à des réglages et n'en sont pas :
+
+- **L'ordre des trois étapes.** Silence, puis parole, puis montée. C'est un **contrat**,
+  doublement : l'étape 2 a besoin de `Floor_dB` pour savoir quelles trames sont voisées, et
+  commencer par le geste le moins exposant est ce qui rend la suite acceptable.
+- **Le calage du plateau sur `HardFloor_dB`.** On peut déplacer `HardFloor_dB` ; on ne peut
+  pas **découpler** la détection de plateau de la validation. Les découpler ramène le
+  défaut que ce calage corrige : refuser un joueur qui a coopéré.
+- **V1, l'ordre strict `Floor < Rest < Scream`.** Ce n'est pas un seuil, c'est une garde de
+  correction. Il n'y a pas de valeur à choisir.
+- **Médiane et non moyenne.** C'est une méthode, choisie pour la robustesse aux erreurs
+  d'octave. La changer ne règle rien, elle casse.
+- **La revalidation au chargement.** Elle n'est pas négociable tant qu'une seule valeur de
+  ce document reste provisoire — c'est-à-dire aujourd'hui, pour les quatorze.
+
+> **Sur les valeurs marquées *à définir*.** Il n'en reste qu'une, l'écart `P95 − P50`
+> toléré à l'étape 1. Elle échoue au test des trois critères posé par le système 1 — pas de
+> valeur provisoire, pas de déclencheur nommé — et elle rejoint le TTL de l'anneau comme
+> seul manquement de cette catégorie dans les deux documents. À combler par la mesure, en
+> même temps que le reste.
 
 ## Visual/Audio Requirements
 

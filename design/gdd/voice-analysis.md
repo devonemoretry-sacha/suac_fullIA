@@ -730,6 +730,17 @@ Trois valeurs ressemblent à des réglages et n'en sont pas :
 > réglables et testables. Elles gouvernent le ressenti « ma voix est un geste » et se
 > règlent à l'oreille : le POC audio les tranchera en une session.
 
+> **Contrat entrant du système 6 — ajouté le 2026-09-08.** Le `VoiceProfile` porte un
+> drapeau **`LowRange`**, levé quand l'écart dynamique du joueur passe le plancher dur sans
+> atteindre la bande de qualité. **L'`EnvelopeFollower` doit alors multiplier ses constantes
+> d'attaque et de relâchement** par un facteur PROVISOIRE **×1,5**, borné 1,2 – 2,5.
+>
+> Sans cela le drapeau est décoratif : un profil marqué, un lissage inchangé, et l'inclusion
+> qu'on croyait avoir gagnée reste sur le papier. C'est le seul cas où une valeur de ce
+> document dépend du profil du joueur plutôt que d'un réglage global — et c'est la
+> contrepartie assumée d'accepter les registres étroits au lieu de les refuser. Voir
+> `voice-calibration.md`, *Tuning Knobs*.
+
 > **Règle générale de report.** Ce document diffère plusieurs décisions, et c'est
 > légitime — mais un report n'est acceptable que s'il porte **une valeur provisoire, un
 > déclencheur nommé, et un propriétaire**. Sans les trois, ce n'est pas un report, c'est
