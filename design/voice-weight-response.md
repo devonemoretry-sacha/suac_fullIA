@@ -110,9 +110,23 @@ secondes, c'est beaucoup trop long »* — et a laissé le choix des délais au 
 > Le tableau des phases plus bas est donc à relire avec cette correction : c'est
 > l'**amorçage à ~200 ms** qui portait la valeur, pas la fenêtre utile.
 >
-> Reste ambigu : délai **absolu** ou **fraction** `avertissement/remplissage` — les deux
-> séparent aussi bien, les deux mauvais partageant le même remplissage. L'essai qui
-> trancherait est consigné dans le `README` du prototype.
+> **Tranché le même jour : c'est le délai ABSOLU.** L'essai discriminant — remplissage
+> 3,50 s, avertissement 430 ms — donne une fraction de **0,123**, en plein dans la plage des
+> bons (0,030 à 0,133). Il a déplu. Puis, à remplissage constant, **une seule variable a
+> bougé** — 430 → 300 ms — et le jugement s'est amélioré. C'est la comparaison la plus propre
+> de la série.
+>
+> **La frontière est entre 300 et 430 ms** : bons à 30, 40, 100, 200, 300 ; mauvais à 430
+> et 550.
+>
+> *(Ces deux essais avaient des fenêtres de 1,26 et 1,32 s — bien plus larges que tout le
+> reste, et l'un était mauvais. Une fenêtre généreuse ne sauve rien : la fenêtre est
+> définitivement hors de cause.)*
+>
+> **Une seconde variable, indépendante** : le testeur n'a pas aimé 3,50 s de remplissage même
+> après correction du délai, alors que tous ses verdicts enthousiastes sont entre 1,00 et
+> 1,50 s. Le tempo compte pour lui-même. **Il reste donc au moins deux paramètres à régler**,
+> pas un.
 
 > ### ~~La fenêtre de réaction est peut-être la seule vraie constante~~ *(réfuté, voir ci-dessus)*
 >

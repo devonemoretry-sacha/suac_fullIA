@@ -195,7 +195,45 @@ La note de cadrage avait vu le phénomène mais placé la frontière au mauvais 
 disait « au-delà de ~1 s, le signal se décroche de sa cause ». **Le décrochage arrive bien
 plus tôt — entre 200 et 430 ms.**
 
-### La mesure qui reste ambiguë
+### ✅ Tranché le 2026-09-08 — c'est le délai **absolu**
+
+L'essai discriminant a été mené, et il élimine la fraction.
+
+| Remplissage | Avertissement | **Fraction** | Fenêtre | Verdict |
+|---|---|---|---|---|
+| 3,50 s | **430 ms** | **0,123** | 1 264 ms | *pas aimé* |
+| 3,50 s | **300 ms** | 0,086 | 1 318 ms | *mieux* |
+
+**La fraction 0,123 est en plein dans la plage des bons** — ils allaient de 0,030 à 0,133.
+Si la fraction gouvernait, ce réglage aurait dû plaire. Il n'a pas plu. Le délai absolu, lui,
+valait 430 ms, exactement celui d'un point déjà rejeté.
+
+**Et la seconde ligne est la comparaison la plus propre de toute la série** : à remplissage
+constant, **une seule variable a bougé** — 430 → 300 ms — et le jugement s'améliore. Aucun
+confondant.
+
+> **Ce que cela ferme aussi** : ces deux réglages ont des fenêtres de 1,26 et 1,32 s, bien
+> plus larges que tout ce qui a été essayé, et l'un est mauvais. Une fenêtre généreuse ne
+> sauve rien. La fenêtre est définitivement hors de cause.
+
+**La frontière se resserre** : bons à 30, 40, 100, 200 et 300 ms ; mauvais à 430 et 550.
+Elle se situe donc **entre 300 et 430 ms**.
+
+### Une seconde variable, indépendante
+
+Le testeur n'a « pas trop aimé » 3,50 s même après correction du délai — *« c'est mieux »*,
+pas *« c'est bon »*. Or **tous ses verdicts enthousiastes sont à des remplissages de 1,00 à
+1,50 s**.
+
+Le remplissage semble donc compter pour lui-même, sur un axe distinct de l'attribution du
+signal. Cela n'affaiblit pas la conclusion ci-dessus — celle-ci repose sur une comparaison à
+remplissage constant — mais cela signifie qu'**il reste au moins deux paramètres à régler**,
+pas un.
+
+> **Prochain essai, court** : à un remplissage aimé (1,50 s), balayer l'avertissement à 300,
+> 350 et 400 ms pour situer la bascule. Trois points, et la frontière est nommée.
+
+### ~~La mesure qui reste ambiguë~~ *(close, voir ci-dessus)*
 
 Avec ces six points, on ne peut pas distinguer deux explications, car les deux mauvais
 partagent le même remplissage :
