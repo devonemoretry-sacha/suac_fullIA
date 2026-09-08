@@ -523,7 +523,132 @@ Dix valeurs, aucune mesurée. Elles s'ajoutent aux dix du système 1.
 
 ## Edge Cases
 
-[À écrire]
+Chaque entrée nomme la **condition exacte**, la **résolution exacte**, et sa sévérité :
+**bloquant** (le système produit un profil faux sans le signaler), **dégradant** (profil
+médiocre mais honnête) ou **cosmétique**.
+
+### Pendant la mesure
+
+- **Si le micro coupe ou change pendant une étape** : l'étape est annulée, **le tampon est
+  jeté en entier**, retour à `Idle`, profil actif intact. **Bloquant si non traité** —
+  conserver « le `Scream_dB` atteint jusque-là » fabrique exactement les profils dégénérés
+  que la validation existe pour refuser.
+
+- **Si le joueur parle pendant l'étape de silence** : `P95` remonte au niveau de sa voix,
+  `Floor_dB` se pose beaucoup trop haut, et **toute parole normale donnera ensuite
+  `Loudness = 0`** — le jeu ne réagirait plus qu'aux cris. **Bloquant.** Détection : si
+  l'étape 1 contient des trames voisées, ou si l'écart `P95 − P50` dépasse un seuil, l'étape
+  n'a pas été respectée et se rejoue.
+
+- **Si un bruit transitoire survient pendant l'étape de silence** — porte, chien,
+  notification : le `P95` y est robuste par construction, un transitoire court ne déplace
+  pas un centile haut. **Cosmétique.** En revanche un bruit *soutenu* — aspirateur,
+  circulation — élève légitimement le plancher : ce n'est pas une erreur de mesure, c'est
+  l'environnement réel du joueur, et `Floor_dB` doit le refléter.
+
+- **Si le joueur ne parle pas assez à l'étape 2** : `|V| < VoicedMin`, l'étape n'a pas
+  abouti et se rejoue. **Dégradant.**
+
+- **Si le joueur chuchote à l'étape 2** : le chuchotement phonétique est **structurellement
+  apériodique**, YIN le déclare non voisé, `|V|` reste sous le seuil et on retombe sur le
+  cas précédent. **Le système se protège tout seul**, mais le message au joueur doit le
+  dire — « on ne t'entend pas assez » — et non le laisser recommencer à l'identique.
+
+- **Si le signal écrête pendant l'étape 3** : `Scream_dB` mesure alors **le plafond du
+  micro, pas celui de la voix**. Le profil reste utilisable — le haut de l'échelle est le
+  haut de ce que le matériel sait porter — mais **tout ce que le joueur produit au-delà
+  devient indiscernable**, et son registre haut est aplati pour toute la partie.
+  **Dégradant, et à signaler** : c'est le seul cas où la bonne réponse est de demander au
+  joueur de **baisser le gain d'entrée** de son micro, puis de recommencer.
+
+- **Si le joueur monte très vite à l'étape 3** : le plateau est reconnu presque
+  immédiatement, la porte de calage étant franchie. Ce n'est pas un défaut — la mesure est
+  valide. **Cosmétique.**
+
+- **Si le joueur change de distance au micro entre les étapes** : la calibration mélange
+  deux référentiels. S'éloigner abaisse `Rest_dB` et `Scream_dB` sans toucher `Floor_dB`,
+  donc l'écart se resserre et V2 ou V3 attrapent les cas francs. **Mais les cas légers
+  passent.** **Dégradant, partiellement détectable** — l'UI doit demander de ne pas bouger,
+  ce qui est moins coûteux que de tenter de le mesurer.
+
+### À la validation
+
+- **Si l'écart tombe juste sous le plancher dur** : refus, et **le joueur a coopéré**. Le
+  message porte sur le micro et la pièce, jamais sur sa voix. **Bloquant, mais c'est le
+  comportement voulu** — ce que ce refus protège, c'est un dénominateur exploitable.
+
+- **Si la source n'est pas une voix humaine** — télévision, musique, une autre personne qui
+  parle à côté : **aucun contrôle ne l'attrape.** Les quatre validations vérifient la
+  cohérence des mesures, pas leur provenance. Un profil calibré sur la télé sera
+  parfaitement valide et parfaitement inutile. **Dégradant, non détectable, et il faut le
+  dire plutôt que prétendre l'inverse.**
+
+- **Si `F0_habituel × 2` tombe près de 600 Hz** : deux calibrations successives de la même
+  personne peuvent basculer entre 8 kHz et 12 kHz de décimation. Les deux chaînes
+  fonctionnent, mais le joueur n'a pas exactement le même pipeline d'une fois sur l'autre.
+  **Cosmétique** — à traiter par une hystérésis si le playtest montre une différence
+  perceptible.
+
+- **Si `F0_habituel × 2` dépasse 900 Hz même à 12 kHz** : la plage est clampée et la perte
+  documentée. **Dégradant, non résolu** — c'est le reliquat du défaut d'équité des voix
+  très aiguës, que le système 1 a corrigé jusqu'à 900 Hz et pas au-delà. Cas extrême, à
+  surveiller en playtest **avec de vraies voix d'enfant**.
+
+### Persistance et reprise
+
+- **Si le profil sur disque est illisible ou corrompu** : il est traité comme **absent**.
+  Calibration forcée. **Jamais de chargement partiel** — un profil à moitié lu est un
+  profil dégénéré qui a contourné la validation.
+
+- **Si le profil sur disque vient d'une version antérieure du format** : soit il se migre,
+  soit il est traité comme absent. **Le profil doit donc porter un numéro de version de
+  schéma** — sans quoi un ajout de champ transformerait tous les profils existants en
+  données silencieusement mal interprétées. **Bloquant si non prévu**, et c'est un besoin
+  de conception, pas un cas limite d'exécution.
+
+> ### ⚠️ Le cas que les valeurs provisoires nous préparent
+>
+> **Si un profil valide à l'écriture devient invalide parce que les seuils ont changé.**
+> Ce document porte dix valeurs provisoires, dont `HardFloor_dB`, `RestMin`, `RestMax` et
+> `F0Max` — toutes utilisées par la validation. Le jour où la mesure les déplace, **des
+> profils déjà enregistrés cesseront de passer les contrôles.**
+>
+> **Résolution : revalider à chaque chargement**, jamais seulement à l'écriture. Un profil
+> qui échoue redevient absent et déclenche une calibration, avec un message honnête —
+> « nos réglages ont changé, il faut refaire une mesure ». **Bloquant si non traité** :
+> sans revalidation au chargement, un profil devenu hors normes continuerait de piloter la
+> normalisation sans que rien ne le signale.
+>
+> C'est le prix, prévu et accepté, d'assumer des valeurs provisoires plutôt que de les
+> inventer définitives.
+
+- **Si une étape est rejouée seule** : le profil n'est recommité qu'après une **validation
+  complète sur les quatre contrôles**, valeurs anciennes et nouvelles mélangées. **Bloquant
+  si non traité** — un `Floor_dB` remesuré peut devenir incompatible avec un `Scream_dB`
+  ancien, et l'accepter sans revérifier rouvre la porte au retournement silencieux.
+
+### Le profil qui devient faux sans que rien ne casse
+
+C'est la famille de cas la plus insidieuse, parce qu'aucune erreur ne se produit nulle part.
+
+- **Si le joueur calibre dans un environnement et joue dans un autre** — calibré au calme le
+  matin, joue le soir avec la télévision allumée : `Floor_dB` est désormais **sous** le
+  bruit ambiant réel. Le bruit franchit la porte de voisement, et le joueur subit de
+  l'**entrée fantôme** — ses objets réagissent quand il se tait. **Dégradant.**
+
+- **Si le joueur change de micro** — casque le soir, micro du portable en déplacement : le
+  contrat du système 1 pose qu'**un changement de périphérique ne force jamais de
+  recalibration**. C'est un choix délibéré, parce que ces événements se déclenchent souvent
+  à tort et qu'éjecter un joueur en plein contrat serait le pire moment possible. **Mais le
+  prix est réel : le profil peut devenir faux en silence.**
+
+> **Ces deux cas ne se détectent pas de façon fiable, et c'est précisément pourquoi la
+> calibration doit être relançable à tout moment et rapidement.** L'exigence d'accessibilité
+> permanente n'est pas un confort d'ergonomie : c'est **la seule mitigation** d'une classe
+> de défauts que rien ne signale. Le joueur est le capteur.
+>
+> Cela redonne son poids au mode « réparation » de *Player Fantasy* : ce n'est pas un
+> parcours secondaire, c'est le filet de sécurité de tout le système.
 
 ## Dependencies
 
