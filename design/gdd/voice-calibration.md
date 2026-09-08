@@ -873,7 +873,120 @@ Cinq choses ressemblent à des réglages et n'en sont pas :
 
 ## Visual/Audio Requirements
 
-[À écrire]
+**Contrairement au système 1, celui-ci a bel et bien une image et un son.** Le système 1
+transforme un micro en quatre nombres et n'affiche rien ; la calibration est un écran qu'on
+regarde pendant deux minutes, et c'est le premier du jeu.
+
+Comme ailleurs dans ce projet, la section reste au niveau **exigence** — ce qui doit être
+communiqué, jamais à quoi cela ressemble. La direction visuelle évoluera quand un graphiste
+entrera dans l'équation.
+
+### Le principe qui gouverne toute la section
+
+> **Les canaux de retour de la calibration doivent être ceux du jeu.**
+
+Si la calibration donne au joueur un retour qu'il n'aura plus ensuite, elle ne l'entraîne
+pas : **elle lui apprend un mensonge**, et il devra désapprendre au premier contrat. Ce
+principe tranche à lui seul trois questions qu'on se poserait sinon une par une — le
+sidetone, l'exemple à imiter, la réécoute.
+
+### La jauge de l'étape 3
+
+C'est le seul élément visuel qui compte vraiment, et *Player Fantasy* explique pourquoi :
+**l'enseignement est la technique de mesure.** Un joueur qui voit sa voix agir pousse plus
+loin, donc se mesure mieux. Une jauge molle ne produit pas seulement un écran terne, elle
+produit **des profils au registre écrasé**.
+
+- **Réponse en temps réel**, sans lissage qui la découplerait de la voix. Le joueur doit
+  sentir le lien de cause à effet, c'est tout l'objet du moment.
+- **Aucune cible, aucun plafond, aucun score.** Ce point est le plus important de la
+  section, et il est contre-intuitif.
+
+> **Pourquoi une cible ruinerait la mesure.** Montrer une zone à atteindre transforme
+> l'étape en test — et *Player Fantasy* établit qu'un test appelle **l'effort minimal
+> suffisant pour le réussir**. Le joueur pousserait jusqu'à la ligne puis s'arrêterait, et
+> on mesurerait notre propre seuil au lieu de son amplitude.
+>
+> La jauge doit donc **toujours conserver de la marge** : quoi que produise le joueur, il
+> reste de la place au-dessus. On ne mesure pas s'il atteint quelque chose, on mesure où il
+> s'arrête tout seul.
+
+### Ce qu'on ne montre jamais
+
+- **Aucun indicateur de niveau pendant l'étape 1.** Un vumètre vivant pendant l'étape de
+  silence **invite à le faire bouger** — exactement le comportement qui ruine la mesure du
+  plancher. L'attente se signale par une progression neutre, qui ne réagit pas à la voix.
+- **Aucune valeur chiffrée.** Ni décibels, ni hertz, ni pourcentage de « qualité ». Le
+  joueur n'a rien à en faire et cela transformerait un réglage en bulletin de notes.
+- **Aucun exemple à imiter.** L'idée de faire écouter « voilà un cri correct » reviendra —
+  elle est doublement mauvaise : elle pose une cible, et elle transforme une mesure en
+  imitation, donc en performance jugée.
+- **Aucune réécoute.** Faire entendre au joueur ce qu'on a enregistré de lui est
+  désagréable pour beaucoup, et suppose de conserver de l'audio — voir plus bas.
+
+### Les trois étapes doivent se distinguer au premier regard
+
+Elles demandent trois choses différentes, et un joueur qui ne remarque pas le changement de
+consigne exécute la précédente. **La distinction se porte visuellement**, pas par un
+texte qu'on suppose lu.
+
+Corollaire : la transition entre étapes ne doit **pas** être signalée par un son — voir la
+règle suivante.
+
+### L'étape de silence doit être vraiment silencieuse
+
+> **Aucun son n'est émis pendant l'étape 1. Aucun.** Pas de clic d'interface, pas
+> d'ambiance, pas de musique, pas de bip de transition.
+
+Le jeu se joue au casque (décision du 2026-09-08), mais un casque fuit, et le pire mode
+d'échec de tout le système est un **`Floor_dB` gonflé** — un plancher posé au-dessus du
+bruit réel écrase ensuite toute parole normale à zéro. Trois secondes de silence complet
+coûtent moins qu'un profil définitivement faux.
+
+Le reste du parcours peut sonner normalement. Une confirmation à la fin est bienvenue : la
+mesure est terminée, plus rien ne peut être pollué.
+
+### Pas de sidetone, et c'est la même raison qu'au système 1
+
+Le jeu n'injecte pas de retour de la voix du joueur — ni en jeu, ni ici. La règle vient du
+système 1, mais elle se justifie doublement pendant la calibration : **un sidetone
+présent à la calibration et absent en jeu apprendrait au joueur à s'écouter, alors que le
+jeu lui demandera de regarder.**
+
+C'est le principe de tête de section, appliqué : la calibration doit se sentir comme le jeu
+se sentira.
+
+### `LowRange` — visible, actionnable, jamais un verdict
+
+Le drapeau change ce que le joueur vivra ensuite : sa mesure sera plus lissée. Le lui
+cacher serait malhonnête ; le lui annoncer comme un défaut serait pire.
+
+- **Toujours accompagné d'une action possible.** « Ta plage est un peu étroite, le jeu s'y
+  adapte — si tu peux rapprocher ton micro, tu gagneras en précision. »
+- **Jamais un badge, un score, ni une couleur d'alerte.** Ce n'est pas un échec : c'est le
+  système qui fait son travail d'inclusion.
+- **Jamais visible par les autres joueurs.** C'est une information sur le matériel et le
+  logement de quelqu'un.
+
+### Le langage visuel du refus
+
+Un refus est un **réglage à reprendre**, pas une erreur commise. Le vocabulaire visuel de
+l'erreur — rouge, croix, icône d'alerte — dirait au joueur qu'il a raté quelque chose,
+alors que la cause est presque toujours son micro ou sa pièce.
+
+*Player Fantasy* l'exige : le joueur ne doit jamais ressentir que **le jeu juge sa voix**.
+
+### Ce qu'on ne conserve pas
+
+> **La calibration ne garde aucun audio. Jamais.** Le profil est constitué de **quatre
+> nombres et un drapeau** — rien d'autre n'est écrit sur le disque, et rien ne part sur le
+> réseau (décidé en *Detailed Rules*).
+
+Ce n'est pas une exigence technique, c'est une exigence de confiance. Un jeu qui demande
+l'accès au micro dès le premier lancement et fait crier ses joueurs doit pouvoir dire, en
+clair et sans qu'on le lui demande, **ce qu'il garde et ce qu'il ne garde pas**. Le fait
+que ce soit déjà vrai par conception ne coûte rien à énoncer — et ne pas l'énoncer laisse
+la question ouverte dans la tête du joueur.
 
 ## UI Requirements
 
