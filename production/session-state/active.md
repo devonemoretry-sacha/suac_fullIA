@@ -1,11 +1,11 @@
 # Session State — Active
 
-**Dernière mise à jour**: 2026-09-07
+**Dernière mise à jour**: 2026-09-08
 
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: AEC — recherche faite, ADR-0003 contredit par les faits, DECISION REQUISE (A ou B)
+Task: Revue de chaine ENTIEREMENT traitee — 9 defauts sur 9, AEC retrogradee (option A)
 <!-- /STATUS -->
 
 ---
@@ -29,7 +29,7 @@ par les skills du template.
 - [x] **Relecture collaborative de `game-concept.md`** — arbitrages MDA/PENS/Bartle actés, 14 points différés avec déclencheur
 - [x] `/map-systems` — index écrit : 14 entrées de périmètre → 19 systèmes, 4 couches
 - [x] Revue directeurs de la décomposition (TD/PR/CD) — corrections appliquées
-- [x] ADR-0003 amendé — l'AEC remonte en amont de la fourche
+- [x] ADR-0003 amendé — l'AEC remonte en amont de la fourche *(**renversé le 2026-09-08** : irréalisable avec Dissonance, exigence retirée, casque = seule mitigation)*
 - [x] `/gate-check` Technical Setup → Pre-Production, passée en **inventaire** — FAIL attendu, rapport dans `production/gate-checks/`
 - [~] `/create-architecture` — **BLOQUÉ volontairement** : la skill exige une baseline TR extraite des GDD, or il n'y en a aucun. Reprise quand les premiers GDD existeront.
 - [x] **GDD Analyse vocale — COMPLET**, 11 sections, 1353 lignes
@@ -50,7 +50,7 @@ par les skills du template.
 - [ ] Réécrire les références des asmdef **par nom** — celles de l'amont sont par GUID et celles de Dissonance ne résoudront pas
 - [ ] Corriger le démarrage avant authentification (issue #12) — notre topologie Steam a un authenticator, on traversera ce chemin
 - [ ] Vérifier le canal non fiable et non ordonné exigé par Dissonance
-- [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation par l'AEC, cadence des features. **Conditionné à ADR-0008**
+- [ ] POC audio — lève 3 questions d'un coup : contention de périphérique, non-dégradation du signal, cadence des features. **Conditionné à ADR-0008**
 - [ ] Playtest « même pièce » (OQ-8) — **avant** d'écrire les GDD des systèmes 3 et 12, qui encoderont tous deux « une voix par `VoiceFrame` »
 - [ ] `/design-system` ×18
 - [ ] Reprendre `/create-architecture` une fois des GDD écrits
@@ -66,8 +66,8 @@ par les skills du template.
 | Physique | Autorité hôte + **couche de retour local non autoritaire** (décalage amorti). Prédire l'avertissement, jamais le verdict (ADR-0002) |
 | Analyse vocale | DSP maison en C# pur — **FMOD retiré du chemin d'analyse** (ADR-0003). Une seule instance par client : chaque client analyse son propre micro, les `VoiceFrame` des autres arrivent par le réseau |
 | Cadence d'analyse | **`deltaTime` explicite** (ADR-0007). Unity n'offre aucun rappel à 50 Hz fixe — `Update` suit l'affichage, `FixedUpdate` rattrape, `Microphone` est en polling, `OnAudioFilterRead` dépend d'un tampon modifiable. À appliquer **avant** d'écrire le `VoiceAnalyzer` |
-| Backend vocal | **L'ingestion de PCM externe est éliminatoire** (ADR-0008, `Accepted`). Si aucun backend acceptable n'existe : renoncer au chat intégré est préférable à renoncer à l'AEC en amont — le premier coûte du confort, le second coûte le Pilier 1 |
-| AEC | **En amont de la fourche**, protège analyse et communication. Reclassée de « confort » à **correction de gameplay** (ADR-0003 amendé le 2026-09-03). Sans AEC → **casque obligatoire**, prérequis de validité de la mesure |
+| Backend vocal | **L'ingestion de PCM externe est éliminatoire** (ADR-0008, `Accepted`). *(La hiérarchie « renoncer au chat plutôt qu'à l'AEC » qui figurait ici est **caduque** : l'AEC en amont s'est révélée irréalisable, et on y a renoncé le 2026-09-08 sans renoncer au chat. Le coût réel retombe sur les joueurs sans casque, pas sur le Pilier 1.)* |
+| AEC | **RÉTROGRADÉE le 2026-09-08 (option A).** Celle de Dissonance s'applique **en aval**, sur sa branche de transmission : elle ne peut pas remonter en amont de la fourche, et l'analyse n'en recevra aucune. L'exigence est retirée d'ADR-0003 ; l'AEC redevient un **confort pour le chat**. **Le casque est désormais la seule mitigation** — sur haut-parleurs, la voix des coéquipiers entre dans l'analyse et aucune de nos trois défenses ne peut l'écarter, puisque c'est une vraie voix humaine. Option B (AEC maison, plugin natif) reste ouverte si un casque ouvert s'avère fuir assez |
 | Chat vocal | **Interface maison, backend interchangeable** (ADR-0005). Backend retenu le 2026-09-07 : **Dissonance**, 175 $ **dès le départ**. L'implémentation A gratuite est morte — Steam Voice n'accepte pas de PCM externe et applique un VAD (ADR-0008). Intégration FishNet **vendorisée**, pas subie : 698 lignes MIT |
 | Licences | FMOD **gratuit** sous 200 k$ de revenu. Dissonance 120 $ + pont FMOD 55 $ : **engagés, et nécessaires au MVP** depuis ADR-0008 — l'alternative gratuite n'existe pas |
 | Périmètre MVP | « La boucle de contrat tient », 4 joueurs — 14 entrées dans `design/mvp-scope.md`, décomposées en **19 systèmes** dans `design/gdd/systems-index.md` |

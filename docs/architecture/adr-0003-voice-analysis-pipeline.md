@@ -2,8 +2,55 @@
 
 ## Status
 
-**Accepted — mais l'amendement AEC du 2026-09-03 est contredit par les faits.
-DÉCISION REQUISE.**
+**Accepted — l'amendement AEC du 2026-09-03 est RÉTROGRADÉ le 2026-09-08.**
+
+> ### ✅ Décision du 2026-09-08 — option A : le casque, et rien d'autre
+>
+> **L'AEC cesse d'être une correction de gameplay.** Elle redevient ce qu'elle était avant
+> le 2026-09-03 : un **confort d'écoute pour la branche chat vocal**, fourni par Dissonance
+> si le routage le permet, et **absent de la branche d'analyse**.
+>
+> L'exigence « AEC en amont de la fourche » est **retirée**. Elle n'était pas réalisable
+> avec le backend retenu, et la maintenir aurait laissé dans les ADR une garantie que rien
+> n'implémente — le plus dangereux des deux états.
+>
+> **Ce qui la remplace : le casque comme condition de fonctionnement.** Décidé le
+> 2026-09-08, et désormais **porteur** au lieu d'être une commodité. Un joueur sur
+> haut-parleurs aura un jeu dégradé, et c'est assumé.
+>
+> #### Ce à quoi ce joueur doit s'attendre, écrit franchement
+>
+> Les voix de ses coéquipiers sortent de ses haut-parleurs et rentrent dans son micro. **Nos
+> trois défenses les laissent toutes passer** : la porte de volume s'ouvre, YIN déclare
+> voisé — *c'est une vraie voix humaine* — et le test de jitter passe. La porte de voisement
+> a été conçue pour rejeter ce qui n'est **pas** une voix ; elle n'a aucun moyen d'écarter
+> une voix véritable qui n'est simplement pas la bonne.
+>
+> Conséquence : **il se tait, et son meuble s'alourdit**. Dans un jeu coopératif où il faut
+> se parler pour porter à deux, cela signifie que **le jeu punit sa propre boucle centrale**
+> pour ce joueur — et que la gêne déborde sur le coéquipier qui porte l'autre bout.
+>
+> Le pire cas est le **portable à micro et haut-parleurs intégrés**, quelques centimètres
+> d'écart, configuration très répandue.
+>
+> #### Le remède écarté, et pourquoi
+>
+> On pourrait **couper l'analyse pendant qu'on restitue une voix distante** — on sait quand
+> ça arrive, puisque c'est nous qui la jouons. Ce n'est pas de l'AEC, c'est un squelch.
+> **Écarté** : le joueur ne pourrait plus agir sur les objets pendant que ses coéquipiers
+> parlent, dans un jeu où crier ensemble est le geste central. On échangerait une entrée
+> fausse contre une absence d'entrée, ce qui n'est pas un progrès.
+>
+> #### Ce que cette décision impose ailleurs
+>
+> **Le message sur le casque ne peut pas être une ligne dans les options.** Il doit
+> apparaître au premier lancement, avant la calibration, et **dire pourquoi** — sans quoi le
+> joueur sur haut-parleurs vivra un jeu cassé sans jamais soupçonner la cause. C'est une
+> exigence de la section *UI Requirements* de `voice-calibration.md`.
+>
+> **Option B reste ouverte** — intégrer notre propre AEC en amont, via un plugin natif
+> WebRTC-APM — si le playtest montre qu'un casque **ouvert** fuit assez pour polluer la
+> mesure. Ce n'est pas le cas prévu, mais c'est le cas à surveiller.
 
 > ### ⚠️ Recherche du 2026-09-08 — l'AEC de Dissonance ne peut pas remplir notre contrat
 >

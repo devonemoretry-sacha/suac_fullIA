@@ -784,10 +784,12 @@ placé au niveau de la conversation de ses amis écrase ensuite toute sa parole 
 `Loudness = 0`. Il ne réagirait plus qu'aux cris, sans qu'aucune validation ne s'en
 aperçoive — les quatre contrôles vérifieraient un profil parfaitement cohérent.
 
-**L'AEC couvre ce cas en principe**, puisqu'elle est en amont de la fourche (ADR-0003) et
-retire du signal ce que les haut-parleurs émettent. Mais s'en remettre à elle seule, sur
-l'étape la plus sensible du parcours, serait un pari inutile — d'autant que la réponse
-tient en une ligne.
+> **Ne comptez pas sur l'AEC : il n'y en aura pas.** Une version antérieure de ce paragraphe
+> disait qu'elle « couvrait ce cas en principe ». La recherche du 2026-09-08 a établi que
+> l'AEC de Dissonance s'applique **en aval, sur sa branche de transmission** — jamais sur
+> notre analyse. L'exigence « AEC en amont de la fourche » a été **retirée d'ADR-0003**.
+
+Heureusement, la réponse ne dépendait pas d'elle, et elle tient en une ligne.
 
 > ### ✅ Tranché le 2026-09-08 — **le casque est un prérequis du jeu**
 >
@@ -796,10 +798,14 @@ tient en une ligne.
 > haut-parleurs sont pénalisés d'office, et c'est assumé : on n'investit pas d'énergie à
 > rattraper ce cas.
 >
-> ADR-0003 posait déjà le casque comme repli — « sans AEC → casque obligatoire ». Cette
-> décision l'en sort : **le casque n'est plus un repli, c'est la ligne de base.** Ce qui ne
-> retire rien à l'AEC, un casque ouvert fuyant largement assez pour la justifier ; cela
-> borne simplement le pire cas.
+> ADR-0003 posait le casque comme repli — « sans AEC → casque obligatoire ». Cette décision
+> l'en sort : **le casque n'est plus un repli, c'est la ligne de base.**
+>
+> **Et depuis le 2026-09-08, c'est même davantage : c'est la seule mitigation qui existe.**
+> L'AEC en amont de la fourche s'est révélée irréalisable avec Dissonance, l'exigence a été
+> retirée d'ADR-0003, et il n'y a aucun filet derrière. Un joueur sur haut-parleurs verra
+> **son meuble s'alourdir quand ses coéquipiers parlent**, et rien dans la chaîne ne peut
+> l'en protéger.
 >
 > **La solution facile est prise quand même**, parce qu'elle ne coûte rien : la
 > recalibration se fait depuis le menu, donc **en pause — le son du jeu est coupé de toute
@@ -1133,9 +1139,17 @@ le dire, et le dire **avant** que le joueur découvre que ça marche mal.
 - Message **au premier lancement**, avant la calibration — pas enterré dans un menu d'options.
 - Formulé comme un **prérequis matériel**, au même titre que la configuration minimale : ce
   n'est pas un conseil de confort.
+- **Il doit dire pourquoi.** *(Exigence renforcée le 2026-09-08, quand l'AEC a été retirée
+  d'ADR-0003.)* Une consigne sans raison sera ignorée, et le joueur qui l'ignore vivra un
+  jeu **cassé sans jamais soupçonner la cause** : ses meubles s'alourdiront quand ses
+  coéquipiers parleront, et il accusera la physique ou le réseau. Une phrase suffit — *« sur
+  haut-parleurs, le jeu entend tes coéquipiers et croit que c'est toi »*.
 - **Aucun blocage technique.** On ne peut pas détecter un casque de façon fiable, et tenter
   de le faire produirait des faux positifs qui empêcheraient des joueurs équipés de jouer.
   On informe, on n'interdit pas.
+- **Répéter le message si la configuration le suggère** — sortie sur haut-parleurs
+  identifiée par le système d'exploitation, par exemple. Indice faible, jamais un blocage,
+  mais suffisant pour reposer la question à quelqu'un qui découvre le jeu.
 
 ### La recalibration en cours de partie
 

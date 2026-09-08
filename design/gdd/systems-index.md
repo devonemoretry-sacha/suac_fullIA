@@ -288,7 +288,13 @@ là où le développeur travaille.
   plusieurs documents et assumé par aucun. Deux issues — soit l'onboarding **est** la
   calibration et les trois documents cessent de parler d'un tutoriel, soit il en faut un et
   c'est un **vingtième système**. À trancher avant `/create-architecture`.
-- ~~**Place de l'AEC dans ADR-0003**~~ — **résolu le 2026-09-03.** ADR-0003 amendé :
+> ⚠️ **Le point ci-dessous a été RENVERSÉ le 2026-09-08.** L'AEC de Dissonance s'applique en
+> aval, sur sa branche de transmission ; elle ne peut pas remonter en amont de la fourche, et
+> la branche d'analyse n'en recevra **aucune**. L'exigence a été retirée d'ADR-0003, l'AEC
+> redevient un confort pour le chat, et **le casque devient la seule mitigation**. Le
+> paragraphe est conservé tel quel comme trace de ce qu'on croyait acquis.
+
+- ~~**Place de l'AEC dans ADR-0003**~~ — ~~**résolu le 2026-09-03.**~~ ADR-0003 amendé :
   l'AEC remonte **en amont de la fourche** et protège les deux voies. Elle est
   reclassée de « confort d'écoute » à **correction de gameplay** : sans elle, un
   joueur sans casque injecte la voix de ses coéquipiers dans sa propre analyse.

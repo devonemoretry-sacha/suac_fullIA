@@ -922,9 +922,23 @@ Les quatre valeurs ne méritent pas le même traitement.
 
 ### Larsen et contamination croisée
 
-**Garanti.** Chaque `VoiceFrame` n'analyse que la capture locale du joueur, après annulation
-de ce que ses haut-parleurs émettent — c'est-à-dire la voix des autres. Aucun mixage
-serveur, aucune capture d'un autre client n'entre jamais dans une chaîne d'analyse.
+**Garanti.** Chaque `VoiceFrame` n'analyse que **la capture locale du joueur**. Aucun mixage
+serveur, aucune capture d'un autre client n'entre jamais dans une chaîne d'analyse **par le
+réseau**.
+
+> ### ⚠️ Corrigé le 2026-09-08 — ce paragraphe promettait une annulation d'écho
+>
+> Il affirmait que la capture arrivait « après annulation de ce que ses haut-parleurs
+> émettent ». **C'est faux, et ce le restera** : l'AEC de Dissonance s'applique en aval, sur
+> sa propre branche de transmission, et notre branche d'analyse n'en reçoit aucune
+> (ADR-0003, décision du 2026-09-08, option A).
+>
+> **La garantie ci-dessus ne vaut donc que pour le chemin réseau.** Par voie acoustique, sur
+> haut-parleurs, la voix des autres entre bel et bien dans l'analyse — et **nos trois
+> défenses la laissent passer**, puisqu'une vraie voix humaine franchit la porte de volume,
+> est déclarée voisée par YIN, et jitte comme il faut. **Il n'existe pas de discriminant.**
+>
+> C'est la raison pour laquelle **le casque est un prérequis du jeu** et non un conseil.
 
 **Gratuit.** Le larsen est déjà couvert sans effort supplémentaire : un effet Larsen est
 **quasi parfaitement périodique**, il tombe donc sous le test de jitter au même titre qu'un
