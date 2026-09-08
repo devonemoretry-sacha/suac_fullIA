@@ -831,126 +831,25 @@ en attendant.
 
 ## UI Requirements
 
-> **Cette section est un contrat hérité, en transit.** Un système sans interface n'a
-> normalement pas de section UI — la revue du 2026-09-07 le relève à juste titre, et
-> recommande de déplacer ce contenu vers le GDD du système 6, Calibration.
+> **Section migrée le 2026-09-08 vers `design/gdd/voice-calibration.md`.**
 >
-> **Il n'est pas déplacé maintenant, et c'est délibéré :** le GDD du système 6 n'existe pas
-> encore. Sortir du contenu pour le reloger « plus tard » est la manière la plus ordinaire
-> de le perdre. Cette section reste donc ici, **à migrer telle quelle** le jour où le
-> système 6 s'écrit — avec les trois réserves de l'UX designer, qui sont de son ressort et
-> non du nôtre : l'inconfort social de la calibration, le couplage plateau/validation, et
-> l'anti-rebond du signalement `Degraded` (ce dernier étant déjà porté par le contrat du
-> système 2, plus haut).
-
-### Les écrans requis
-
-- **Écran de calibration** — première utilisation, bloquant tant qu'il n'est pas validé
-- **Accès à la calibration** depuis le menu du lobby **et** en surcouche en jeu, sans
-  quitter la partie
-- **Indicateur d'état vocal permanent** — `Uncalibrated` / `Calibrated` / `Degraded` —
-  **distinct du sonomètre diégétique**
-- **Sonomètre diégétique** (système 19) — inchangé : il ne montre que ce que le joueur émet
-- **Écran de blocage** pour qui tente de rejoindre sans profil calibré
-
-### Le parcours de calibration
-
-Le vrai problème d'UX de ce jeu n'est pas technique : **il faut demander à quelqu'un de
-crier dans son micro, et beaucoup de joueurs sont dans un salon avec d'autres gens.** La
-calibration doit se présenter comme le réglage d'un instrument, jamais comme une épreuve à
-réussir.
-
-L'ordre des étapes fait tout le travail :
-
-1. **D'abord le silence** — « ne dis rien pendant quelques secondes ». L'étape la plus
-   neutre socialement de toutes, et la seule qui puisse donner `Floor_dB`.
-2. **Puis la parole posée** — « parle normalement, comme si tu discutais ». Donne
-   `Rest_dB` et `F0_habituel`.
-3. **Ensuite seulement la montée**, progressive, avec une jauge qui répond en temps réel.
-   Le joueur pousse **à son rythme** jusqu'à un plateau détecté automatiquement — pas
-   d'ordre frontal du type « crie le plus fort possible ».
-
-> **Corrigé le 2026-09-08.** Une version antérieure de ce parcours n'avait que deux étapes
-> et faisait produire `Floor_dB` par l'étape de parole. C'est impossible : `Floor_dB` est
-> le **plancher de bruit**, il se mesure micro ouvert et joueur muet. Le mesurer pendant
-> qu'il parle l'aurait placé au niveau de sa voix posée — après quoi `Loudness` aurait valu
-> 0 sur toute parole normale et le jeu n'aurait réagi qu'aux cris. Détail dans
-> `voice-calibration.md`, *Detailed Rules*.
-
-Deux garanties non négociables :
-
-- **Aucune diffusion vers le lobby pendant la calibration.** C'est un moment privé, même
-  en multijoueur. *Contrat à reporter dans le GDD du chat vocal.*
-- **L'étape forte se refait seule**, sans repasser par l'étape calme.
-
-> **Couplage à surveiller.** La détection automatique de plateau et la validation du profil
-> se contredisent si le plateau est reconnu trop tôt : l'écart `Scream_dB − Floor_dB`
-> tombe sous les 20 dB et le profil est refusé — le joueur a coopéré et se fait rejeter.
-> **Le seuil de détection du plateau doit être calé sur le seuil de validation, pas
-> indépendamment.**
-
-### Le refus de profil
-
-Trois profils sont rejetés par validation. Un message technique est inacceptable ici.
-
-- **Aucun vocabulaire technique** — ni dB, ni écart dynamique, ni F0.
-- **Chaque cause a sa formulation**, orientée cause probable et non verdict sur la voix du
-  joueur. Par exemple, pour un écart dynamique insuffisant : *« on n'arrive pas à
-  distinguer ta voix calme de ta voix forte — essaie avec le micro plus proche »*.
-- **L'échec ne renvoie jamais au début** : seule l'étape en cause est relancée.
-- Le ton reste celui d'un **réglage technique imparfait** — micro, environnement — jamais
-  celui d'une performance vocale insuffisante.
-
-### La porte d'entrée en partie
-
-Un joueur sans profil est bloqué, et ses amis l'attendent déjà. Le blocage doit se lire
-comme **une étape restante, pas comme une exclusion** :
-
-- Annoncer une durée courte et estimée (« ~2 min ») et enchaîner sur la calibration **en un
-  seul geste**.
-- Les autres joueurs du lobby voient un état explicite — *« X termine sa configuration »* —
-  plutôt qu'un silence qui laisse croire à un plantage.
-- Tout le parcours reste opérable **au clavier et à la souris seuls**, sans exception.
-
-### L'état `Degraded`
-
-Le sonomètre diégétique **ne peut pas porter ce signal** : à zéro, il est indiscernable
-d'un joueur qui se tait. Il faut donc un indicateur non diégétique.
-
-- **Toujours visible pendant `Degraded`** — dans le HUD, pas seulement dans un menu.
-- **Déclenché en moins d'une à deux secondes** après la perte de signal. Au-delà, le joueur
-  conclut au bug plutôt qu'au micro coupé.
-- **Accès immédiat au diagnostic** — choix du périphérique, recalibration — sans quitter la
-  partie.
-
-> **Il n'existe aucune solution de repli.** La voix n'a pas d'équivalent clavier : la seule
-> sortie de secours est de rétablir l'entrée micro, pas de la remplacer.
-
-### La recalibration en cours de partie
-
-La recalibration est autorisée à tout moment, y compris pendant qu'on porte un meuble à
-plusieurs. Pendant ces quelques secondes, **la sortie du joueur tombe à zéro** et le poids
-perçu par ses coéquipiers sur le même objet peut varier brutalement.
-
-**Ni ce document ni l'UI ne peuvent trancher seuls** si l'objet doit être verrouillé,
-lissé, ou laissé tel quel pendant cette fenêtre — c'est une décision de gameplay, traitée
-en *Open Questions* (OQ-11).
-
-Ce que l'UI doit garantir dans tous les cas : **tous les porteurs d'un même objet voient
-un signal clair identifiant le coéquipier en recalibration.** Sans quoi le comportement
-se confond avec un bug.
-
-### Accessibilité
-
-**Garanti** : opérabilité complète au clavier et à la souris sur tous les écrans de
-calibration et de menu, texte redimensionnable, sous-titrage de toute instruction, aucun
-flash ni pic sonore surprise pendant la calibration.
-
-**Hors de portée, et écrit noir sur blanc plutôt que masqué** : un joueur qui ne peut pas
-produire de voix — extinction, trouble de la parole, environnement où parler fort est
-impossible — **ne peut pas jouer à la mécanique centrale telle qu'elle est définie**. Aucun
-mode clavier ne remplace l'entrée vocale sans redéfinir le pilier du jeu. C'est une
-exclusion assumée, pas un oubli.
+> Ce système n'a pas d'interface. Il transforme un micro en quatre nombres, et rien de ce
+> qu'il produit n'est affiché par lui. La revue du 2026-09-07 le relevait à juste titre :
+> écrire une section UI ici était une erreur de rangement.
+>
+> Elle n'a pas été supprimée sur-le-champ, faute de destinataire — le GDD du système 6
+> n'existait pas, et sortir du contenu pour le reloger « plus tard » est la manière la plus
+> ordinaire de le perdre. Ce destinataire existe désormais, et la section est chez elle :
+> **`voice-calibration.md`, section *UI Requirements***.
+>
+> Cinq points y ont été corrigés au passage, dont deux qui étaient devenus faux : le
+> parcours ne compte plus deux étapes mais trois, et la recalibration en cours de partie
+> n'a plus le problème qu'on lui prêtait.
+>
+> **Ce qui reste ici**, parce que c'est bien de notre ressort : les exigences de *retour
+> visuel* du système, qui vivent dans *Visual/Audio Requirements* — ce que le joueur doit
+> voir de sa propre mesure, et pourquoi `Degraded` ne peut pas se lire sur un sonomètre à
+> zéro.
 
 ## Acceptance Criteria
 

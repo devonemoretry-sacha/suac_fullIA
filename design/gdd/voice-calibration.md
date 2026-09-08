@@ -877,8 +877,177 @@ Cinq choses ressemblent à des réglages et n'en sont pas :
 
 ## UI Requirements
 
-[À écrire — **rapatriement** de la section homonyme de `voice-analysis.md`, qui la porte
-en dépôt et la déclare « contrat hérité, à migrer vers le système 6 ».]
+> **Section rapatriée le 2026-09-08** depuis `voice-analysis.md`, qui la portait en dépôt
+> faute de destinataire. La revue du 2026-09-07 avait raison : un système sans interface
+> n'avait pas à porter cette section. Elle est chez elle ici.
+>
+> Elle n'arrive pas telle quelle. **Cinq points de la version d'origine sont devenus faux ou
+> incomplets** depuis, et sont corrigés ci-dessous — le parcours à deux étapes, le nombre de
+> causes de refus, la recalibration en cours de partie, l'exclusion d'accessibilité, et
+> l'absence de distinction entre première calibration et relance.
+
+### Les écrans requis
+
+- **Écran de calibration** — première utilisation, bloquant tant qu'il n'est pas validé
+- **Accès à la calibration** depuis le menu du lobby **et** depuis le menu en jeu
+- **Indicateur d'état vocal permanent** — `Uncalibrated` / `Calibrated` / `Degraded` —
+  **distinct du sonomètre diégétique**
+- **Écran de blocage** pour qui tente de rejoindre sans profil calibré
+- **Message de prérequis matériel** — voir *Le casque* plus bas
+
+### Le parcours
+
+Le vrai problème d'UX de ce jeu n'est pas technique : **il faut demander à quelqu'un de
+crier dans son micro, et beaucoup de joueurs sont dans un salon avec d'autres gens.** La
+calibration doit se présenter comme **le réglage d'un instrument**, jamais comme une épreuve
+à réussir.
+
+L'ordre des étapes fait tout le travail :
+
+1. **Le silence** — « ne dis rien pendant quelques secondes ». L'étape la plus neutre
+   socialement de toutes, et la seule qui puisse donner `Floor_dB`.
+2. **La parole posée** — « parle normalement, comme si tu discutais ». Donne `Rest_dB` et
+   `F0_habituel`.
+3. **La montée**, progressive, avec **une jauge qui répond en temps réel**. Le joueur pousse
+   à son rythme jusqu'à un plateau détecté automatiquement — **jamais d'ordre frontal** du
+   type « crie le plus fort possible ».
+
+Trois garanties non négociables :
+
+- **Aucune diffusion vers les autres joueurs** pendant la calibration. Moment privé, même en
+  multijoueur.
+- **Ne pas demander au joueur de bouger** — et le lui dire. Changer de distance au micro
+  entre les étapes mélange deux référentiels, et les cas légers passent toutes les
+  validations.
+- **Une étape se rejoue seule**, sans repasser par les précédentes.
+
+> **La jauge de l'étape 3 n'est pas un accessoire.** *Player Fantasy* établit que
+> l'enseignement **est** la technique de mesure : un joueur qui voit sa voix agir pousse
+> plus loin, donc se mesure mieux. Une étape 3 sans retour visuel temps réel ne produit pas
+> seulement une expérience terne — elle produit **des profils au registre écrasé**.
+
+### Deux modes, et ils ne se ressemblent pas
+
+C'est l'ajout le plus important de ce rapatriement.
+
+| | **Découverte** — la première fois | **Réparation** — toutes les suivantes |
+|---|---|---|
+| Ce que veut le joueur | Comprendre | Que ce soit fini |
+| Rythme | Aucune hâte | **Le plus court possible** |
+| Explications | Oui, c'est le moment d'onboarding | **Aucune** |
+| Point d'entrée | Le parcours complet | **L'étape en cause, directement** |
+
+**Traiter une relance comme une première fois est une faute.** Un joueur qui recalibre a un
+problème et veut le régler ; lui réexpliquer le principe le punit d'avoir eu un incident.
+
+### Le refus de profil
+
+**Quatre contrôles peuvent refuser, et V3 refuse dans deux directions opposées** — la
+version d'origine n'en comptait que trois, avant que `Rest_dB` n'ait un rôle.
+
+| Cause | Ce qu'on dit, en substance | Étape à rejouer |
+|---|---|---|
+| V1 — ordre incohérent | « Quelque chose ne colle pas dans la mesure, on recommence » | Tout |
+| V2 — écart trop faible | « On n'arrive pas à distinguer ta voix calme de ta voix forte — essaie avec le micro plus proche » | 3, puis 1 si ça persiste |
+| V3 haut — faux cri | « Ta voix forte ressemble trop à ta voix normale — tu peux pousser un peu plus ? » | **3 seulement** |
+| V3 bas — voix posée collée au plancher | « On ne t'a pas bien entendu parler — vérifie que le micro est bien orienté » | **2 seulement** |
+| V4 — hauteur aberrante | « On n'arrive pas à lire ta voix — vérifie le micro sélectionné » | 2 |
+| Écrêtage détecté | « Ton micro sature : baisse son volume d'entrée dans les réglages de ton système » | 3, **après action du joueur** |
+
+Règles de rédaction, valables pour toutes :
+
+- **Aucun vocabulaire technique** — ni dB, ni écart dynamique, ni F0.
+- **Orienté cause probable, jamais verdict sur la personne.** Le ton est celui d'un réglage
+  matériel imparfait — micro, pièce — jamais celui d'une performance vocale insuffisante.
+- **Ne jamais renvoyer au début** quand une seule étape est en cause.
+
+> **Le cas de l'écrêtage est le seul qui exige une action hors du jeu.** C'est aussi le seul
+> où ne rien dire aurait un coût durable : un micro qui sature aplatit tout le registre haut
+> du joueur **pour toute la partie**, et il n'en saura jamais rien.
+
+### La porte d'entrée en partie
+
+Un joueur sans profil est bloqué, et ses amis l'attendent déjà. Le blocage doit se lire
+comme **une étape restante, pas comme une exclusion** :
+
+- Annoncer une durée courte et estimée, et enchaîner sur la calibration **en un seul geste**.
+- Les autres joueurs du lobby voient un état explicite — *« X termine sa configuration »* —
+  plutôt qu'un silence qui se lit comme un plantage.
+- Tout le parcours reste opérable **au clavier et à la souris seuls**, sans exception.
+
+### Le casque
+
+Décidé le 2026-09-08 : **le casque avec micro est une condition d'entrée du jeu.** L'UI doit
+le dire, et le dire **avant** que le joueur découvre que ça marche mal.
+
+- Message **au premier lancement**, avant la calibration — pas enterré dans un menu d'options.
+- Formulé comme un **prérequis matériel**, au même titre que la configuration minimale : ce
+  n'est pas un conseil de confort.
+- **Aucun blocage technique.** On ne peut pas détecter un casque de façon fiable, et tenter
+  de le faire produirait des faux positifs qui empêcheraient des joueurs équipés de jouer.
+  On informe, on n'interdit pas.
+
+### La recalibration en cours de partie
+
+> **Résolu le 2026-09-08 — il n'y a presque rien à faire.**
+>
+> La version d'origine de cette section décrivait un problème réel : un joueur recalibrant
+> en portant un meuble à plusieurs, dont la sortie tombe à zéro pendant que ses coéquipiers
+> subissent le changement de poids.
+>
+> **Ce cas n'existe pas.** La recalibration se lance depuis le menu, ouvrir le menu
+> immobilise le personnage, et un personnage immobilisé **pose ce qu'il porte**. Il n'y a
+> plus de porteur fantôme, plus de poids qui varie, et le monde est en pause pour lui.
+
+Il reste une seule exigence, et elle est sociale : **les autres joueurs doivent comprendre
+pourquoi leur coéquipier vient de poser sa moitié de canapé et de se figer.** Un état
+lisible sur son avatar ou dans le bandeau d'équipe suffit — sans quoi le comportement se
+confond avec une déconnexion ou un joueur parti manger.
+
+### L'état `Degraded`
+
+Il appartient au système 1, mais **c'est vers nous qu'il doit conduire**.
+
+- **Toujours visible pendant `Degraded`** — dans le HUD, pas seulement dans un menu. Un
+  sonomètre à zéro est indiscernable d'un joueur qui se tait.
+- **Déclenché en moins d'une à deux secondes.** Au-delà, le joueur conclut au bug.
+- **Accès immédiat au diagnostic** : choix du périphérique et relance de la calibration, en
+  un geste depuis l'alerte.
+
+> **Il n'existe aucune solution de repli.** La voix n'a pas d'équivalent clavier : la seule
+> sortie de secours est de rétablir l'entrée micro, pas de la remplacer.
+
+### Quand nos propres réglages invalident un profil
+
+Les *Edge Cases* établissent qu'un profil valide à l'écriture peut devenir invalide quand
+les seuils bougent, et qu'il faut donc **revalider à chaque chargement**. L'UI porte la
+conséquence :
+
+> **Le message doit endosser la responsabilité, pas la faire porter au joueur.** « Nos
+> réglages ont changé, il faut refaire une mesure » — et surtout pas « ton profil est
+> invalide », qui laisserait croire qu'il a mal fait quelque chose il y a trois semaines.
+
+### Accessibilité
+
+**Garanti** : opérabilité complète au clavier et à la souris sur tous les écrans, texte
+redimensionnable, sous-titrage de toute instruction, aucun flash ni pic sonore surprise
+pendant la calibration.
+
+> ### L'exclusion est plus étroite qu'écrit à l'origine — révisé le 2026-09-08
+>
+> La version d'origine excluait trois populations : qui ne peut pas produire de voix, qui a
+> un trouble de la parole, et **qui vit dans un environnement où parler fort est
+> impossible**. La revue du 2026-09-07 demandait de rouvrir ce point une fois `LowRange`
+> existant. Il existe.
+>
+> **La troisième population n'est plus exclue.** Un joueur qui ne peut pas crier — voisinage,
+> enfant qui dort, timidité — obtient un profil `LowRange` : accepté, marqué, lissé, et
+> jouable. C'est exactement ce que ce drapeau a été créé pour faire.
+>
+> **Ce qui reste exclu, et qui l'est franchement** : un joueur qui ne peut pas produire de
+> voix du tout. Aucun mode clavier ne remplace l'entrée vocale sans redéfinir le pilier du
+> jeu. C'est une exclusion assumée, pas un oubli — mais elle ne concerne plus qu'un cas au
+> lieu de trois.
 
 ## Acceptance Criteria
 

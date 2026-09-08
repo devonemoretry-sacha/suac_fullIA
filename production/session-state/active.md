@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Calibration vocale — 7 sections ecrites (jusqu-a Tuning Knobs), 4 restantes
+Task: GDD Calibration vocale — 8 sections ecrites (UI Requirements rapatriee), 3 restantes
 <!-- /STATUS -->
 
 ---
