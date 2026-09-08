@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Calibration vocale COMPLET (11 sections) — prochaine etape /design-review en session neuve
+Task: Revue technique de la chaine vocale rendue — 7 defauts a traiter, non traitee
 <!-- /STATUS -->
 
 ---
