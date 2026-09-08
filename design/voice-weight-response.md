@@ -83,7 +83,38 @@ secondes, c'est beaucoup trop long »* — et a laissé le choix des délais au 
 > contradiction trouvée », pas « optimum localisé ». Des joueurs naïfs restent nécessaires
 > avant de figer.
 >
-> ### La fenêtre de réaction est peut-être la seule vraie constante
+> ### ❌ RÉFUTÉ le 2026-09-08 — c'est le délai d'avertissement, pas la fenêtre
+>
+> L'hypothèse ci-dessous a été démolie par quatre essais supplémentaires, dont **deux
+> volontairement mauvais** — le premier lot à contenir des rejets.
+>
+> | Remplissage | **Avertissement** | Fenêtre | Verdict |
+> |---|---|---|---|
+> | 1,00 s | **40 ms** | 421 ms | bon |
+> | 1,00 s | **30 ms** | 399 ms | bon |
+> | 1,50 s | **430 ms** | 441 ms | *mauvais* |
+> | 1,50 s | **550 ms** | 391 ms | *mauvais* |
+>
+> **La fenêtre ne sépare rien** : un bon à 399 ms, un mauvais à 391 — huit millisecondes
+> d'écart, verdicts opposés. **Le délai d'avertissement sépare parfaitement** : bons de 30 à
+> 200 ms, mauvais à 430 et 550, sans recouvrement.
+>
+> **Pourquoi c'est crédible.** Le raisonnement d'origine supposait que le joueur *attende*
+> un signal. Il ne l'attend pas — **il est déjà en train de parler**. Ce dont il a besoin
+> n'est pas du délai pour réagir, c'est de pouvoir **attribuer** le signal à ce qu'il vient
+> de faire. À 30 ms la cause est évidente ; à 500 ms le signal arrive plusieurs syllabes
+> plus tard et ne se rattache à rien.
+>
+> **Ce document avait vu le phénomène et mal placé la frontière** : il écrivait « au-delà de
+> ~1 s, le signal se décroche de sa cause ». Le décrochage arrive **entre 200 et 430 ms**.
+> Le tableau des phases plus bas est donc à relire avec cette correction : c'est
+> l'**amorçage à ~200 ms** qui portait la valeur, pas la fenêtre utile.
+>
+> Reste ambigu : délai **absolu** ou **fraction** `avertissement/remplissage` — les deux
+> séparent aussi bien, les deux mauvais partageant le même remplissage. L'essai qui
+> trancherait est consigné dans le `README` du prototype.
+
+> ### ~~La fenêtre de réaction est peut-être la seule vraie constante~~ *(réfuté, voir ci-dessus)*
 >
 > Un **second** jeu de réglages a été retenu dans la même session, plus nerveux sur les
 > quatre axes : remplissage 1,20 s, vidange 1,00 s, avertissement 100 ms, amorçage 10 %.

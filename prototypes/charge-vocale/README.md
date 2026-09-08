@@ -122,7 +122,16 @@ avant ça. Le code ne sera pas migré : il sera réécrit.
 
 *(Colonnes : remplissage · vidange · avertissement · amorçage.)*
 
-### La trouvaille : c'est la fenêtre de réaction qui est réglée, pas les curseurs
+> ## ❌ L'hypothèse de la fenêtre est FAUSSE — réfutée le 2026-09-08
+>
+> La section ci-dessous est conservée telle qu'elle a été écrite, parce qu'elle documente un
+> raisonnement plausible que quatre mesures ont démoli. **Ne pas s'y fier** : lire d'abord
+> *Ce qui sépare réellement*, plus bas.
+>
+> Deux points suffisaient à la tuer : un réglage jugé **bon** à 399 ms de fenêtre, un jugé
+> **mauvais** à 391 ms. Huit millisecondes d'écart, verdicts opposés.
+
+### ~~La trouvaille : c'est la fenêtre de réaction qui est réglée, pas les curseurs~~
 
 Le second jeu est **plus nerveux sur les quatre axes** — remplissage plus court, vidange
 plus rapide, avertissement deux fois plus tôt, amorçage plus discret. Et pourtant :
@@ -147,6 +156,62 @@ l'oreille d'un concepteur devrait atterrir si ce plancher est réel.
 > tenir la fenêtre à 500 ms, et vérifier que tous ces réglages sont jugés bons. Puis
 > descendre la fenêtre sous 400 ms **en gardant le reste** — si la thèse tient, ça doit
 > casser. **Trouver où ça casse vaut mieux que collectionner des réglages qui marchent.**
+
+---
+
+## Ce qui sépare réellement — le délai d'avertissement
+
+Quatre essais supplémentaires le 2026-09-08, dont **deux volontairement mauvais**. C'est le
+premier lot à contenir des rejets, et c'est lui qui tranche.
+
+| Remplissage | Avertissement | Amorçage | Fenêtre | Verdict |
+|---|---|---|---|---|
+| 1,50 s | **200 ms** | 15 % | 535 ms | **bon** |
+| 1,20 s | **100 ms** | 10 % | 489 ms | **bon** |
+| 1,00 s | **40 ms** | 11 % | 421 ms | **bon** |
+| 1,00 s | **30 ms** | 15 % | 399 ms | **bon** |
+| 1,50 s | **430 ms** | 15 % | 441 ms | *mauvais* |
+| 1,50 s | **550 ms** | 15 % | 391 ms | *mauvais* |
+
+**La fenêtre ne sépare rien.** Bons entre 399 et 535 ms, mauvais à 391 et 441 : les deux
+intervalles se chevauchent, et un bon à 421 ms est plus court qu'un mauvais à 441.
+
+**Le délai d'avertissement sépare parfaitement.** Bons de 30 à 200 ms, mauvais à 430 et 550.
+Aucun recouvrement, et un fossé de plus de 200 ms entre les deux groupes.
+
+### Pourquoi c'est crédible
+
+Le raisonnement d'origine — « il faut au joueur du temps pour réagir » — supposait qu'il
+attende un signal. **Il ne l'attend pas : il est déjà en train de parler.** Ce dont il a
+besoin n'est pas du délai, c'est de pouvoir **attribuer** le signal à ce qu'il vient de
+faire.
+
+À 30–40 ms, l'avertissement est simultané à la voix : la cause est évidente. À 500 ms, il
+arrive plusieurs syllabes plus tard, et rien ne le rattache à un acte particulier. C'est la
+promesse d'attribution du système 1 — *« quand un joueur échoue, il doit pouvoir dire de
+quoi il est coupable »* — appliquée au temps.
+
+La note de cadrage avait vu le phénomène mais placé la frontière au mauvais endroit : elle
+disait « au-delà de ~1 s, le signal se décroche de sa cause ». **Le décrochage arrive bien
+plus tôt — entre 200 et 430 ms.**
+
+### La mesure qui reste ambiguë
+
+Avec ces six points, on ne peut pas distinguer deux explications, car les deux mauvais
+partagent le même remplissage :
+
+- **le délai absolu** (430 ms est tard, point) ;
+- **la fraction** `avertissement / remplissage` — bons de 0,030 à 0,133, mauvais à 0,287 et
+  0,367. Elle sépare tout aussi parfaitement.
+
+> **L'essai qui trancherait : remplissage 3,50 s · avertissement 430 ms · amorçage 15 %.**
+> Même délai absolu qu'un point connu mauvais, mais une fraction de 0,123 — dans la plage
+> des bons. S'il est jugé **mauvais**, c'est le délai absolu qui compte. S'il est jugé
+> **bon**, c'est la fraction.
+>
+> La fenêtre y vaudra 1,26 s, très au-delà de tout ce qui a été essayé — mais elle vient
+> d'être écartée comme facteur, donc le confondant est acceptable. Les trois grandeurs sont
+> liées par `fenêtre = r·(remplissage − avertissement)` : on ne peut en tenir que deux.
 
 ### Ce que ce premier essai vaut, et ce qu'il ne vaut pas
 
