@@ -628,8 +628,11 @@ bidirectionnelle** — voici donc les contrats à reporter le jour où ils s'éc
 > `[field: SerializeField]`.
 
 **Système 6 — Calibration vocale**
-- Produire `VoiceProfile` : `Floor_dB`, repos, `F0_habituel`, `Scream_dB`, plus le drapeau
-  **`LowRange`**.
+- Produire `VoiceProfile` : `Floor_dB`, `Rest_dB`, `F0_habituel`, `Scream_dB`, plus le
+  drapeau **`LowRange`**. *(Le champ « repos » est nommé `Rest_dB` depuis le 2026-09-08 et
+  a désormais un rôle explicite : aucune formule de ce document ne l'utilise, il sert
+  d'**ancrage de validation** — troisième point qui rend une calibration vérifiable comme
+  plausible, et pas seulement comme suffisamment étalée. Voir `voice-calibration.md`.)*
 - **Valider avant de committer** — refuser les profils dégénérés listés en *Edge Cases*,
   et marquer `LowRange` entre plancher dur et bande de qualité au lieu de refuser.
 - **Mesurer `Floor_dB` avec une marge déclarée au-dessus du bruit propre du micro.**
@@ -848,11 +851,20 @@ réussir.
 
 L'ordre des étapes fait tout le travail :
 
-1. **D'abord la mesure au repos** — « parle normalement, comme si tu discutais ». Geste
-   socialement neutre, qui donne `Floor_dB` et `F0_habituel`.
-2. **Ensuite seulement la montée**, progressive, avec une jauge qui répond en temps réel.
+1. **D'abord le silence** — « ne dis rien pendant quelques secondes ». L'étape la plus
+   neutre socialement de toutes, et la seule qui puisse donner `Floor_dB`.
+2. **Puis la parole posée** — « parle normalement, comme si tu discutais ». Donne
+   `Rest_dB` et `F0_habituel`.
+3. **Ensuite seulement la montée**, progressive, avec une jauge qui répond en temps réel.
    Le joueur pousse **à son rythme** jusqu'à un plateau détecté automatiquement — pas
    d'ordre frontal du type « crie le plus fort possible ».
+
+> **Corrigé le 2026-09-08.** Une version antérieure de ce parcours n'avait que deux étapes
+> et faisait produire `Floor_dB` par l'étape de parole. C'est impossible : `Floor_dB` est
+> le **plancher de bruit**, il se mesure micro ouvert et joueur muet. Le mesurer pendant
+> qu'il parle l'aurait placé au niveau de sa voix posée — après quoi `Loudness` aurait valu
+> 0 sur toute parole normale et le jeu n'aurait réagi qu'aux cris. Détail dans
+> `voice-calibration.md`, *Detailed Rules*.
 
 Deux garanties non négociables :
 

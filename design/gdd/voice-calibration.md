@@ -163,7 +163,163 @@ Deux idées écartées du MVP, notées pour ne pas les réinventer :
 
 ## Detailed Rules
 
-[À écrire]
+### Le produit : `VoiceProfile`
+
+| Champ | Type | Mesuré par | Rôle |
+|---|---|---|---|
+| `Floor_dB` | float | **Étape 1 — silence** | Plancher de bruit : pièce + bruit propre du micro. Borne basse de l'échelle de `Loudness` |
+| `Rest_dB` | float | **Étape 2 — parole normale** | Niveau de la voix posée. **Point d'ancrage de validation** — voir plus bas |
+| `F0_habituel` | float | **Étape 2 — parole normale** | Médiane de hauteur. Référence de `Pitch`, et décide la cadence de décimation |
+| `Scream_dB` | float | **Étape 3 — montée** | Borne haute de l'échelle de `Loudness` |
+| `LowRange` | bool | Validation | Registre étroit mais exploitable : profil accepté, lissage renforcé |
+
+Le profil **appartient au joueur**, persiste entre les sessions, et n'est jamais lié à une
+partie.
+
+> ### ⚠️ Correction d'un défaut hérité — il faut **trois** étapes, pas deux
+>
+> La section *UI Requirements* de `voice-analysis.md` décrit un parcours en deux temps dont
+> la première étape, « parle normalement », est censée fournir `Floor_dB` **et**
+> `F0_habituel`. **C'est impossible :** `Floor_dB` est le plancher de bruit, il se mesure
+> quand le joueur **ne parle pas**. Le mesurer pendant qu'il parle donnerait un plancher
+> situé au niveau de sa voix posée — après quoi `Loudness` vaudrait 0 sur toute parole
+> normale, et le jeu ne réagirait qu'aux cris.
+>
+> Le parcours correct compte donc **trois mesures**. La bonne nouvelle est que l'étape
+> ajoutée est la **plus** neutre socialement de toutes : ne rien dire pendant quelques
+> secondes. L'intention de l'UX — commencer par un geste qui n'expose pas — est préservée
+> et même renforcée.
+
+> ### ⚠️ Deuxième correction — `Rest_dB` ne servait à rien
+>
+> Le contrat de voisinage réclame un champ « repos » dans le profil. Or **aucune formule du
+> système 1 ne l'utilise** : `Loudness` ne connaît que `Floor_dB` et `Scream_dB`, `Pitch` ne
+> connaît que `F0_habituel`. Un champ mesuré, persisté et transmis sans consommateur est du
+> poids mort — ou le symptôme d'un besoin non formulé.
+>
+> **Il en a un, et c'est la validation.** Deux points ne permettent de vérifier qu'une
+> chose : que l'écart est suffisant. Trois points permettent de vérifier que la mesure est
+> **plausible** — `Rest_dB` doit tomber franchement entre les deux autres. C'est ce
+> troisième point qui distingue une calibration honnête d'une calibration dégénérée que le
+> contrôle d'écart laisserait passer. Voir *Formulas*.
+
+---
+
+### Les trois mesures
+
+**Étape 1 — le silence.** *« Ne dis rien pendant quelques secondes. »*
+On mesure le niveau ambiant, micro ouvert, joueur muet. Produit `Floor_dB`.
+
+Cette valeur ne peut pas être le minimum brut observé : un creux instantané descendrait
+sous le bruit réel de la pièce et placerait le plancher trop bas. **`Floor_dB` est un
+niveau haut de la distribution du bruit**, avec une marge déclarée au-dessus du bruit
+propre du micro — c'est l'exigence que le système 1 nous adresse nommément, et c'est elle,
+et non le seuil d'écart dynamique, qui empêche une oscillation de 2 dB de faire doubler
+`Loudness`. Formule en *Formulas*.
+
+**Étape 2 — la parole posée.** *« Parle normalement, comme si tu discutais. »*
+Produit `Rest_dB` et `F0_habituel`. La hauteur est prise comme **médiane** des trames
+voisées, jamais comme moyenne : une seule erreur d'octave de YIN déplacerait une moyenne,
+elle ne déplace pas une médiane.
+
+Il faut un **minimum de trames voisées** pour que la médiane ait un sens. En dessous,
+l'étape n'a pas abouti et se rejoue — le joueur a peut-être chuchoté, ou parlé hors axe du
+micro.
+
+**Étape 3 — la montée.** *« Monte progressivement, à ton rythme. »*
+Produit `Scream_dB`. Le joueur pousse ; une jauge répond en temps réel. **Aucune
+injonction à crier fort** — la section *Player Fantasy* explique pourquoi l'insistance
+produit moins d'amplitude, pas plus.
+
+L'étape se termine de trois façons : **plateau détecté**, **arrêt demandé par le joueur**,
+ou **expiration du délai**. Dans tous les cas, la valeur retenue est le maximum atteint, et
+c'est la validation qui décide ensuite si le profil est bon, `LowRange`, ou refusé.
+
+#### La détection de plateau, et son calage obligatoire
+
+Un plateau est déclaré quand le maximum courant **cesse de progresser** de plus de
+`PlateauDelta_dB` pendant `PlateauHold_s`.
+
+> **Mais il ne peut pas être déclaré tant que le profil ne validerait pas.** Tant que
+> `max − Floor_dB` reste sous le **plancher dur**, aucun plateau n'est reconnu : l'étape
+> continue. C'est le calage exigé par le système 1, et sa raison est entièrement humaine —
+> un plateau reconnu trop tôt ferait refuser le profil d'un joueur **qui a coopéré**.
+>
+> Au-dessus du plancher dur mais sous la bande de qualité, le plateau **est** reconnu et le
+> profil sera marqué `LowRange`. Le joueur discret est mesuré, signalé, et joue.
+
+---
+
+### States and Transitions
+
+```
+Idle → MeasuringFloor → MeasuringRest → MeasuringPeak → Validating → Committed
+                                                             ↓
+                                                          Rejected → (retour à l'étape en cause)
+```
+
+| Transition | Règle |
+|---|---|
+| `Idle → MeasuringFloor` | Lancement explicite. Le profil existant, s'il y en a un, **reste actif** |
+| entre étapes | Chaque étape produit ses valeurs dans un **tampon**, jamais dans le profil actif |
+| `→ Validating` | Les trois étapes ont abouti. La validation est décrite en *Formulas* |
+| `Validating → Committed` | **Bascule atomique.** Le profil complet remplace l'ancien en une opération — aucune trame ne peut lire un `Floor_dB` neuf avec un `Scream_dB` ancien |
+| `Validating → Rejected` | Aucune écriture. Le parcours revient à **l'étape en cause**, jamais au début |
+| n'importe où → `Idle` | Annulation, ou coupure micro. **Le tampon est jeté en entier ; le profil actif est intact** |
+
+**Une étape interrompue ne se conserve pas partiellement.** Si le micro coupe pendant la
+montée, on ne garde pas « le `Scream_dB` atteint jusque-là » : c'est exactement ainsi qu'on
+fabrique les profils dégénérés que la validation existe pour refuser.
+
+#### Pendant la calibration, la voix du joueur ne joue plus
+
+**Règle non négociable, et elle manquait :** tant que la calibration est en cours, la
+sortie du joueur vers le jeu est **forcée au silence**.
+
+Sans elle, une recalibration en pleine partie ferait agir les cris de calibration sur le
+monde — le joueur mesurerait son registre en projetant les meubles à travers la pièce. Le
+système 1 nomme déjà `VoiceFrame.Silence` comme sortie d'un état non exploitable ; c'est le
+même mécanisme.
+
+> **Cette règle a un coût, et il appartient à quelqu'un d'autre.** Un joueur qui recalibre
+> en portant un meuble à plusieurs cesse d'y contribuer pendant plusieurs secondes. Ce que
+> subit l'objet — il s'alourdit, il se verrouille, ou rien — est une décision de gameplay
+> traitée en **OQ-11**, partagée avec les systèmes 9 et 12.
+
+---
+
+### Interactions
+
+| Système | Ce qu'il attend de nous | Ce qu'on attend de lui |
+|---|---|---|
+| **1. Analyse vocale** | Un `VoiceProfile` valide, ou rien. Jamais un profil partiel | Les règles de validation et les bornes ; il est la raison d'être de chaque champ |
+| **2. Audio d'entrée** | Rien — nous ne possédons pas le micro | Les échantillons, à la même cadence fixe qu'en jeu ; et le signalement d'une coupure |
+| **5. Réseau** | Rien. **La calibration est strictement locale** | Rien. Le profil ne traverse jamais le réseau — voir ci-dessous |
+| **8. Session / lobby** | Le verdict « ce joueur a un profil valide » | Le point de blocage à l'entrée, et un état visible par les autres joueurs pendant l'attente |
+| **14. Chat vocal** | Rien | **Aucune diffusion pendant la calibration.** C'est un moment privé, même en multijoueur |
+| **19. UI diégétique** | La jauge de l'étape 3, en temps réel | Un affichage qui ne soit pas le sonomètre de jeu — le contexte est différent |
+
+> **Le profil ne part jamais sur le réseau, et ce n'est pas un oubli.** ADR-0003 pose que
+> chaque client analyse sa propre voix en local et ne transmet que des `VoiceFrame` déjà
+> normalisées. Les autres joueurs n'ont donc aucun usage du profil : il resterait sur le
+> fil sans consommateur, en exposant une donnée personnelle — le niveau sonore du domicile
+> et la hauteur de voix — pour rien.
+
+#### Le mode « réparation »
+
+*Player Fantasy* distingue la première calibration des suivantes. Deux règles en découlent,
+qui ne concernent que les relances :
+
+- **Aucune étape pédagogique.** Pas de démonstration, pas d'explication du principe.
+- **L'étape en cause se rejoue seule.** Un joueur dont seul le bruit ambiant a changé —
+  fenêtre ouverte, ventilateur — rejoue l'étape 1 et rien d'autre. Le profil n'est
+  recommité qu'après une **validation complète** sur les trois valeurs, anciennes et
+  nouvelles mélangées.
+
+Ce dernier point est la seule subtilité : **une étape rejouée seule doit repasser la
+validation entière.** Un `Floor_dB` remesuré peut très bien devenir incompatible avec un
+`Scream_dB` ancien, et l'accepter sans revérifier rouvrirait la porte au retournement
+silencieux que le système 1 traque.
 
 ## Formulas
 
