@@ -208,10 +208,29 @@ extrapole plus qu'on ne mesure. **Rejetée.**
 
 | Metric | Before | Expected After | Budget |
 |--------|--------|---------------|--------|
-| CPU décimation | n/a | ~6 µs *(estimé, non mesuré)* | <1 ms/frame total pour l'analyse |
-| CPU YIN | n/a | ~25 µs *(estimé, non mesuré)* | idem |
+| CPU décimation | n/a | ~6 µs *(estimé, non mesuré)* | hors thread principal |
+| CPU YIN | n/a | **~60 à 120 µs** *(estimé, non mesuré — corrigé le 2026-09-08)* | hors thread principal |
 | Fenêtre volume | n/a | ~21 ms | — |
 | Fenêtre hauteur | n/a | ~46 ms | — |
+
+> ### Correction du 2026-09-08 — l'estimation YIN était fausse d'un facteur 3 à 4
+>
+> Recalculée sur le code par la revue de chaîne : `ComputeDifference` coûte
+> `maxLag × windowSize`. À 8 kHz, plage 70–600 Hz, fenêtre 256 → `maxLag = ⌈8000/70⌉ = 115`,
+> soit **29 440 itérations** internes, chacune avec vérification de bornes sur `Span`.
+>
+> L'estimation d'origine (~25 µs) supposait ~0,85 ns par itération — **c'est du SIMD, pas du
+> scalaire Mono ou IL2CPP**. L'ordre de grandeur réaliste est 60 à 120 µs.
+>
+> **Et cela ne change rien.** À ~50 Hz, hors thread principal, une seule instance par client
+> (ADR-0003) : **0,3 à 0,6 % d'un cœur**. Le pire cas des voix aiguës est même plus doux
+> qu'annoncé — la quatrième défense resserre aussi `minHz`, ce qui diminue `maxLag` :
+> **~1,8× et non 2,25×**.
+>
+> **Conséquence pour la conception : cesser de dimensionner contre ce budget.** Le plafond de
+> 1 ms/frame ne couvre que la remise de la `VoiceFrame` au thread principal, que personne
+> n'a chiffrée — pas la chaîne DSP. AC-42b garde sa valeur comme **diagnostic**, pas comme
+> budget.
 
 ## Migration Plan
 

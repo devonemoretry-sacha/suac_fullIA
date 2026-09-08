@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Corrections de la chaine vocale — 3 defauts sur 9 traites (cadence, dB, ADR-0007)
+Task: Corrections de la chaine vocale — 8 defauts sur 9 traites ; reste la propriete de l-AEC
 <!-- /STATUS -->
 
 ---

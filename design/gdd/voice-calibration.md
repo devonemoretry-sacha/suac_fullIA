@@ -263,13 +263,33 @@ Idle → MeasuringFloor → MeasuringRest → MeasuringPeak → Validating → C
 | `Idle → MeasuringFloor` | Lancement explicite. Le profil existant, s'il y en a un, **reste actif** |
 | entre étapes | Chaque étape produit ses valeurs dans un **tampon**, jamais dans le profil actif |
 | `→ Validating` | Les trois étapes ont abouti. La validation est décrite en *Formulas* |
-| `Validating → Committed` | **Bascule atomique.** Le profil complet remplace l'ancien en une opération — aucune trame ne peut lire un `Floor_dB` neuf avec un `Scream_dB` ancien |
+| `Validating → Committed` | **Bascule atomique.** Le profil complet remplace l'ancien en une opération — aucune trame ne peut lire un `Floor_dB` neuf avec un `Scream_dB` ancien. **Mécanisme précisé le 2026-09-08, voir ci-dessous** |
 | `Validating → Rejected` | Aucune écriture. Le parcours revient à **l'étape en cause**, jamais au début |
 | n'importe où → `Idle` | Annulation, ou coupure micro. **Le tampon est jeté en entier ; le profil actif est intact** |
 
 **Une étape interrompue ne se conserve pas partiellement.** Si le micro coupe pendant la
 montée, on ne garde pas « le `Scream_dB` atteint jusque-là » : c'est exactement ainsi qu'on
 fabrique les profils dégénérés que la validation existe pour refuser.
+
+#### Comment la bascule est atomique, concrètement
+
+*(Ajouté le 2026-09-08. Les deux GDD exigeaient l'atomicité sans jamais dire par quel
+mécanisme — une garantie dont personne ne connaissait la mise en œuvre.)*
+
+Le `VoiceProfile` est une **classe immuable**. Le commit se réduit alors à **publier une
+référence**, ce qui est atomique par construction en .NET : `Interlocked.Exchange` ici,
+`Volatile.Read` côté analyse.
+
+> **Le profil est une classe, et c'est délibéré.** Le transformer en `readonly struct` pour
+> économiser une allocation **casserait l'atomicité** : écrire cinq champs n'est pas une
+> opération indivisible, et on obtiendrait précisément la trame mixte que cette règle
+> existe pour empêcher.
+
+**Nous ne touchons à rien d'autre.** Le `Decimator` et le `PitchDetector` doivent être
+reconstruits puisque la cadence de décimation dépend du profil — mais ils sont à état, et
+c'est **le fil d'analyse** qui s'en charge, en constatant le changement de référence en tête
+de trame. Le détail de cette règle vit dans `voice-analysis.md`, *Detailed Rules*, puisqu'il
+concerne ses objets.
 
 #### Pendant la calibration, la voix du joueur ne joue plus
 
@@ -684,14 +704,31 @@ démontre en détail ; ce document s'y range.
 | Ce qui vit où | Assembly | Testable sans Unity |
 |---|---|---|
 | Mesures, médianes, détection de plateau, **les quatre validations** | `SUAC.Voice.Core` — `noEngineReferences` | **Oui** |
-| Parcours, écrans, jauge, persistance sur disque | Couche Unity | Non |
+| **Sérialisation du profil, version de schéma, revalidation au chargement** | `SUAC.Voice.Core` | **Oui** |
+| Parcours, écrans, jauge, **E/S fichier** | Couche Unity | Non |
 
 **Tout ce qui peut produire un profil faux est du côté testable.** C'est la conséquence
 directe d'ADR-0006, et elle n'est pas un hasard : les quatre contrôles de validation sont
 précisément ce qu'on veut pouvoir exercer en millisecondes, sans micro et sans scène, avec
 des profils synthétiques dégénérés.
 
-La couche Unity, elle, ne décide rien — elle collecte, affiche et range.
+La couche Unity, elle, ne décide rien — elle collecte, affiche et **range des octets**.
+
+> ### ⚠️ Correction du 2026-09-08 — la ligne du milieu n'existait pas
+>
+> Ce tableau ne comptait que deux entrées, et affirmait que « tout ce qui peut produire un
+> profil faux est du côté testable ». **C'était faux tel qu'écrit.** Le numéro de version de
+> schéma et la revalidation au chargement — CAL-30, CAL-31 — n'avaient **aucune maison** :
+> ni DSP pur, ni écran. Tombés dans la couche de persistance Unity, ces deux critères
+> devenaient intestables.
+>
+> Or ce document établit lui-même que **quatorze valeurs provisoires garantissent** qu'un
+> jour des profils enregistrés cesseront de valider. La revalidation n'est donc pas un cas
+> limite exotique : c'est un chemin qu'on empruntera à coup sûr.
+>
+> **La règle de partage est simple : Unity lit et écrit des octets, Core décide de tout le
+> reste.** Désérialiser, versionner, revalider et refuser sont des décisions ; l'accès
+> disque n'en est pas une.
 
 ---
 
@@ -1395,6 +1432,13 @@ Aucune n'est mesurée, et elles ne se résolvent pas toutes de la même façon :
 | Le parcours | `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s` | Essais sur montées réelles — **et ensemble**, voir *Tuning Knobs* |
 | La plausibilité | `RestMin`, `RestMax` | Statistiques sur calibrations réelles |
 | Croisé | Renforcement `LowRange` | **Se règle avec le système 1**, puisqu'il agit sur son enveloppe |
+
+> **L'ordre compte, et il vit ailleurs.** Ces quatorze valeurs et les dix du système 1 ne
+> sont pas indépendantes — `FloorMargin_dB` déplace `Δ`, donc `HardFloor_dB` ne peut pas se
+> régler avant lui ; `RestMin`/`RestMax` supposent des calibrations déjà passées sous seuils
+> provisoires. **La séquence canonique des vingt-quatre est écrite une seule fois**, dans
+> `voice-analysis.md`, OQ-4 — parce que c'est lui qui possède les protocoles A et B. Ne pas
+> la dupliquer ici.
 
 #### OQ-C5 — `F0Max` ne se règle pas au raisonnement, et le risque n'est pas symétrique
 

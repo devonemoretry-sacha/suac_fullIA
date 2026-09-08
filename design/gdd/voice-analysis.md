@@ -228,6 +228,30 @@ Deux ADR la résolvent déjà :
 Seule conséquence : le test de surface publique passe de `{ VoiceFrame }` à
 `{ VoiceFrame, VoiceProfile }`.
 
+#### `Degraded` n'avait aucun chemin pour sortir — corrigé le 2026-09-08
+
+Ce document consacre une sous-section entière à expliquer que **`Degraded` doit être
+distinguable d'un joueur qui se tait**, sous peine d'échec d'attribution. Il écarte aussi
+explicitement l'ajout d'un drapeau de confiance à `VoiceFrame`.
+
+**Résultat : l'information n'allait nulle part.** Les systèmes 12 et 19 devaient lire l'état
+de l'analyseur par un canal que personne n'avait spécifié. Troisième orphelin de la même
+classe que la persistance du profil et le tutoriel — un besoin nommé par plusieurs sections
+et assumé par aucune.
+
+**L'état est exposé comme propriété de l'analyseur, pas comme champ de trame.** La
+distinction est de fond : une `VoiceFrame` décrit *ce que le joueur a émis au tick N* ;
+`Degraded` décrit *le fait que l'analyseur ne peut rien mesurer en ce moment*. Ce n'est pas
+une donnée par trame, c'est un état de session.
+
+La surface publique devient donc `{ VoiceFrame, VoiceProfile, AnalyzerState }`.
+
+> **La règle d'ADR-0004 n'est pas relâchée, sa liste blanche s'allonge.** C'est la seule
+> manière correcte de la faire évoluer — et la revue de chaîne du 2026-09-08 insiste sur ce
+> point : quand un type doit devenir public, on l'inscrit, **on ne desserre pas la règle**.
+> Aucune valeur brute ne franchit la frontière pour autant : `AnalyzerState` est une
+> énumération de trois états, pas une mesure.
+
 #### Persistance
 
 Le profil survivant aux sessions, il crée un **besoin de persistance** que l'index des
@@ -523,9 +547,36 @@ oblige à choisir entre exclure des joueurs légitimes et accepter des mesures i
 - **Si `médiane × 2 > 900 Hz` même à 12 kHz** : la plage est clampée et la perte
   documentée. **Dégradant.** Cas extrême, à surveiller en playtest.
 
-> **Conséquence d'implémentation.** La cadence de décimation dépendant du profil, le
-> `Decimator` et le `PitchDetector` doivent être **reconstruits à la réception du profil**,
-> pas à la construction de l'analyseur.
+> ### Conséquence d'implémentation — et la règle de fils d'exécution qui va avec
+>
+> La cadence de décimation dépendant du profil, le `Decimator` et le `PitchDetector` doivent
+> être **reconstruits à la réception du profil**, pas à la construction de l'analyseur.
+>
+> **Or ces objets sont à état**, et c'est là que se cache le vrai problème d'atomicité —
+> *(précisé le 2026-09-08 par la revue de chaîne)*.
+>
+> **Ce qui est facile.** Le `VoiceProfile` lui-même. Une **classe immuable** publiée par
+> affectation de référence est atomique gratuitement en .NET : `Volatile.Read` côté analyse,
+> `Interlocked.Exchange` côté commit, et aucune trame ne peut lire un `Floor_dB` neuf avec
+> un `Scream_dB` ancien.
+>
+> > **Piège à écrire noir sur blanc :** « optimiser » le profil en `readonly struct` pour
+> > éviter une allocation **casserait l'atomicité** — l'écriture d'une structure de cinq
+> > champs n'est pas indivisible — et produirait exactement le bug qu'on voulait empêcher.
+> > Le profil est une **classe**, et c'est délibéré.
+>
+> **Ce qui ne l'est pas.** `Decimator` porte 81 coefficients et une ligne à retard ;
+> `PitchDetector` deux tableaux de travail. Ils ne se remplacent pas atomiquement, et **le
+> fil qui commite ne doit jamais y toucher.**
+>
+> **La règle :**
+> 1. Le fil de calibration **publie la référence du profil, rien d'autre.**
+> 2. Le fil d'analyse **lit la référence en tête de trame**, constate qu'elle a changé,
+>    reconstruit ses propres instances, puis remet enveloppe et anneau à zéro.
+> 3. Aucune trame n'est produite pendant la reconstruction : elle renvoie `Silence`.
+>
+> Sans cette règle écrite, **AC-21, AC-41b et CAL-24 ne sont pas testables** — ils décrivent
+> une garantie dont personne ne connaît le mécanisme.
 
 ### Transitions d'état
 
@@ -1239,6 +1290,30 @@ sur écrêtage. Aucune n'est mesurée. Les deux protocoles décrits en *Edge Cas
 la plupart en une session d'enregistrement et une session de playtest ; les constantes
 d'enveloppe se règlent séparément, à l'oreille, au POC audio. **Rien d'autre dans le projet
 ne doit les citer comme acquises avant** — c'est l'objet des critères AC-43 et AC-44.
+
+#### L'ordre de mesure — ajouté le 2026-09-08
+
+Avec les quatorze valeurs du système 6, cela fait **vingt-quatre**. Elles ne sont pas
+indépendantes, et **l'ordre n'était écrit nulle part** alors que les deux documents en
+contenaient les morceaux.
+
+| Rang | Ce qu'on règle | Pourquoi à ce moment |
+|---|---|---|
+| **1** | `FloorMargin_dB` **et** `Margin_dB` — **ensemble** | Ce sont **deux marges empilées au-dessus du même plancher**. Les régler séparément les double sans que personne ne s'en aperçoive |
+| **2** | `HardFloor_dB`, `QualityBand_dB` | Ils portent sur `Δ = Scream − Floor`, que le rang 1 vient de déplacer |
+| **3** | `CrestMinDb`, `CrestMaxDb`, `JitterMin`, `N` | Indépendants des précédents ; se dérivent des mêmes enregistrements |
+| **4** | Les constantes d'enveloppe, la fenêtre de gel, le TTL | À l'oreille, au POC — et **en domaine dB** |
+| **5** | `γ` | Protocole B : la courbe effort → `Loudness` **passe par la normalisation**, donc `Floor` et `Scream` doivent être stables |
+| **6** | `RestMin`, `RestMax` | « Statistiques sur calibrations réelles » — suppose que la calibration ait déjà tourné sous des seuils provisoires |
+| **7** | `F0Max` | Sujets réels, **voix d'enfant obligatoires** |
+
+> **La règle qui rend tout ça soutenable : enregistrer une fois, dériver hors ligne,
+> rejouer toujours.** Une seule session capture le **signal brut**, et les rangs 1 à 3 s'en
+> dérivent par calcul, sans micro. Sinon chaque révision de seuil coûte une nouvelle
+> session de mesure — et il y en aura plusieurs.
+>
+> C'est la règle d'AC-40 — « mesurer une fois, rejouer toujours » — généralisée aux
+> vingt-quatre.
 
 #### OQ-5 — Les constantes de temps de l'enveloppe
 
