@@ -1319,4 +1319,162 @@ assurance sur **l'exigence la plus contre-intuitive de tout le document**.
 
 ## Open Questions
 
-[À écrire]
+### Comment lire cette section
+
+Même classement qu'au système 1 — par **ce que la question empêche**, et non par thème.
+
+---
+
+### Bloque le code
+
+#### OQ-C1 — Où le profil persiste-t-il ? Et surtout : doit-il suivre le joueur ?
+
+La persistance nous appartient depuis le contrat du système 1 ; l'index des systèmes la
+signalait auparavant **sans propriétaire**. Elle en a un, mais pas de réponse.
+
+Le choix évident serait le Steam Cloud, puisqu'un profil « appartient au joueur ». **C'est
+probablement le mauvais choix, et pour une raison qui n'est pas évidente.**
+
+> **Le profil décrit un micro et une pièce autant qu'une voix.** `Floor_dB` est le bruit du
+> logement. `Scream_dB` dépend du gain d'entrée du matériel. Synchroniser ce profil entre
+> machines ferait suivre au joueur, sur son portable dans le train, une calibration faite
+> au casque dans son salon — et **le jeu se tromperait d'autant plus qu'il croirait le
+> connaître**.
+
+Trois issues :
+
+| Option | Conséquence |
+|---|---|
+| **A — local, par machine** | Correct par construction. Le joueur recalibre en changeant de machine, ce qui est exactement ce qu'il faut faire |
+| **B — cloud, un profil unique** | Faux dès la deuxième machine, et le défaut est silencieux |
+| **C — cloud, un profil par machine** | Correct et pratique, mais suppose une identification stable de la machine et davantage de logique |
+
+> **Recommandation : A pour le MVP.** C est meilleur et peut attendre : le joueur multi-postes
+> n'est pas le cas nominal d'un jeu coop entre amis, et A ne ferme pas la porte à C.
+
+#### OQ-C2 — Le détecteur d'écrêtage doit sortir de sa cachette
+
+Le système 1 détecte déjà l'écrêtage — `Peak` saturé sur plusieurs échantillons consécutifs
+— mais **uniquement pour geler sa `Continuity`**. Nous en avons besoin comme **information**,
+pour avertir le joueur que son micro sature et que son registre haut sera aplati pour toute
+la partie.
+
+Tant que ce détecteur reste enfoui dans la logique de gel, CAL-14 n'est pas exécutable et
+l'avertissement ne peut pas exister. **C'est un petit changement de surface sur `Voice.Core`,
+à décider avec le système 1.**
+
+#### OQ-C3 — Deux gardes pour l'étape 1 : redondantes ou complémentaires ?
+
+CAL-03 rejette l'étape si des trames voisées y apparaissent — le joueur a parlé. CAL-04
+la rejette si l'écart `P95 − P50` est trop large.
+
+On pourrait croire la seconde redondante. **Elle ne l'est pas**, et le formuler donne enfin
+sa valeur au seuil manquant :
+
+- CAL-03 attrape **la parole**, via la porte de voisement.
+- CAL-04 attrape **un environnement instable** — un ventilateur qui démarre, une rue
+  bruyante par intermittence — c'est-à-dire du bruit fort et non voisé, que CAL-03 laisse
+  passer intégralement.
+
+La question n'est donc pas s'il faut la garde, mais **à partir de quelle instabilité une
+pièce cesse d'être caractérisable** par un seul nombre. Cela se mesure ; ça ne se raisonne
+pas.
+
+---
+
+### Bloque le réglage
+
+#### OQ-C4 — Quatorze valeurs provisoires, et trois protocoles différents
+
+Aucune n'est mesurée, et elles ne se résolvent pas toutes de la même façon :
+
+| Groupe | Valeurs | Se règle par |
+|---|---|---|
+| Partagé avec le système 1 | `HardFloor_dB`, `QualityBand_dB` | **Protocole A** du système 1 |
+| Propre à la calibration | `FloorMargin_dB`, écart `P95−P50`, `VoicedMin`, durée étape 1, centile | Essais en pièces réelles |
+| Le parcours | `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s` | Essais sur montées réelles — **et ensemble**, voir *Tuning Knobs* |
+| La plausibilité | `RestMin`, `RestMax` | Statistiques sur calibrations réelles |
+| Croisé | Renforcement `LowRange` | **Se règle avec le système 1**, puisqu'il agit sur son enveloppe |
+
+#### OQ-C5 — `F0Max` ne se règle pas au raisonnement, et le risque n'est pas symétrique
+
+Mise à part parce qu'une erreur ici **exclut des joueurs** au lieu de dégrader une mesure.
+
+Les voix d'enfant montent couramment à 300–400 Hz de médiane. Une borne mal placée les
+refuse — dans un jeu dont la mécanique centrale est de crier, et dont le système 1 a **déjà
+dû corriger un défaut d'équité visant exactement cette population**. Deux fois sur le même
+sujet, ce n'est plus une coïncidence : c'est un angle mort du projet.
+
+**Cette valeur ne peut pas être figée sans avoir été confrontée à de vraies voix d'enfant.**
+
+---
+
+### Le risque non levé
+
+#### OQ-C6 — Toute la conception sociale de ce document est une hypothèse
+
+C'est le vrai risque du système, et il n'est pas technique.
+
+L'ordre des étapes, l'absence de cible sur la jauge, le refus d'insister, le ton des
+messages : **tout cela repose sur une thèse non vérifiée** — qu'un joueur gêné se mesure
+mieux si on ne lui demande rien frontalement.
+
+Le mode d'échec est le pire qui soit : **invisible.** Un joueur intimidé produit un profil
+au registre écrasé qui **passe toutes les validations**. `LowRange` sera peut-être levé,
+peut-être pas. Rien ne signale que le problème vient de la situation sociale et non du
+matériel. Et le joueur, ensuite, trouve simplement que le jeu réagit mal.
+
+> **Le protocole qui tranche est simple et coûte une soirée.** Faire calibrer les mêmes
+> personnes deux fois : **seules dans une pièce**, puis **avec quelqu'un d'autre présent**.
+> Comparer les `Scream_dB`.
+>
+> Si l'écart est faible, la conception tient. **S'il est large, elle a échoué** — et aucune
+> des quatorze valeurs ci-dessus n'y changera quoi que ce soit, parce que le problème ne
+> sera pas dans les seuils.
+
+#### OQ-C7 — La source non humaine, assumée
+
+Une calibration faite sur la télévision, la musique ou la voix d'un tiers est **parfaitement
+valide et parfaitement inutile**. Les quatre contrôles vérifient la cohérence des mesures,
+jamais leur provenance. Il n'y a pas de défense, ce n'est pas grave — personne n'a intérêt
+à saboter sa propre calibration — et cela reste écrit plutôt que tu.
+
+---
+
+### Sans propriétaire, ou chez le voisin
+
+| # | Question | Chez qui |
+|---|---|---|
+| OQ-C8 | **Le tutoriel n'existe pas.** Voir ci-dessous | **Personne** |
+| OQ-C9 | Le portage prévoit-il qu'un porteur **lâche** en cours de transport ? Toute l'élégance de la résolution d'OQ-11 en dépend | Système 9 |
+| OQ-C10 | Comment le lobby affiche-t-il « X termine sa configuration » ? | Système 8 |
+| OQ-C11 | La durée ressentie du parcours complet n'a aucun critère, alors que *Player Fantasy* en fait un enjeu du mode réparation | Ici, à combler |
+
+> ### ⚠️ OQ-C8 — le tutoriel est cité par deux GDD et n'appartient à personne
+>
+> `voice-analysis.md` écrit que « le joueur crée un profil personnel une fois, **via le
+> tutoriel** ». Ce document le reprend. `mvp-scope.md` fait de la calibration la
+> **porteuse de l'onboarding**.
+>
+> **Or il n'y a pas de système « tutoriel » parmi les dix-neuf.** Aucun des quatre couches
+> n'en contient, et l'index n'en mentionne aucun.
+>
+> C'est exactement la même classe d'oubli que la persistance du profil, que l'index avait
+> su repérer — un besoin nommé par plusieurs documents, assumé par aucun. Deux issues : soit
+> l'onboarding **est** la calibration et il n'y a pas de tutoriel séparé, auquel cas les
+> trois documents doivent cesser de parler d'un tutoriel ; soit il en faut un, et c'est un
+> **vingtième système** à ajouter au périmètre.
+>
+> **Cette question n'est pas la nôtre à trancher**, mais elle est nôtre à signaler, puisque
+> c'est notre document qui repose dessus.
+
+---
+
+### État du code aujourd'hui
+
+**Rien de ce document n'est implémenté.** `SUAC.Voice.Core` contient les primitives
+d'analyse — mesure de niveau, décimation, YIN, enveloppe — et 41 tests verts, mais aucune
+ligne de calibration : ni mesure d'étape, ni validation, ni profil, ni persistance.
+
+Ce document est donc une spécification intégrale, sans existant à documenter — contrairement
+à `voice-analysis.md`, qui décrivait pour moitié du code déjà écrit.

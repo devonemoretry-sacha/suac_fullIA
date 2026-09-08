@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD Calibration vocale — 10 sections, reste Open Questions
+Task: GDD Calibration vocale COMPLET (11 sections) — prochaine etape /design-review en session neuve
 <!-- /STATUS -->
 
 ---
@@ -37,6 +37,8 @@ par les skills du template.
 - [x] **ADR-0007** (`Accepted`) — cadence d'analyse par `deltaTime` explicite. Unity ne fournit aucun rappel à 50 Hz fixe : l'option « contrat implicite » n'existait pas
 - [x] **ADR-0008** (`Accepted`) — l'ingestion de PCM externe est un critère éliminatoire ; inventaire fait, backend retenu, intégration auditée et vendorisée
 - [ ] Re-revue du GDD analyse vocale après révisions
+- [x] **GDD Calibration vocale — COMPLET**, 11 sections, 1480 lignes
+- [ ] `/design-review voice-calibration` — jamais relu
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
 - [ ] `/prototype` — étape sautée, toujours non rattrapée : la Voice-Physics n'a jamais été validée comme amusante
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005

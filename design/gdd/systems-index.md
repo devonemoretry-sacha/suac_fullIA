@@ -42,7 +42,7 @@ autre (voir *Revision History*).
 | 3 | Propagation du son *(inféré)* | Gameplay | MVP | Not Started | — | 1 |
 | 4 | Restitution spatialisée *(inféré)* | Audio | MVP | Not Started | — | — |
 | 5 | Réseau | Core | MVP | Not Started | — | — |
-| 6 | Calibration vocale | Audio | MVP | **In Design** | `voice-calibration.md` | 1, 2 |
+| 6 | Calibration vocale | Audio | MVP | **Designed** | `voice-calibration.md` | 1, 2 |
 | 7 | 3C — caméra, contrôles, personnage | Core | MVP | Not Started | — | 5 |
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
@@ -276,7 +276,18 @@ là où le développeur travaille.
 
 ### Points ouverts non tranchés par cette revue
 
-- **Persistance du profil de calibration** (système 6) — aucun propriétaire assigné, et la catégorie *Persistence* est déclarée inutilisée.
+- ~~**Persistance du profil de calibration**~~ — **résolu le 2026-09-08.** Le système 6 en
+  est propriétaire depuis son GDD. Le *où* reste ouvert (OQ-C1) avec une recommandation :
+  **stockage local, par machine**, parce qu'un profil décrit un micro et une pièce autant
+  qu'une voix — le synchroniser entre machines le rendrait faux dès la deuxième.
+- ⚠️ **Le tutoriel n'existe pas, et deux GDD s'appuient dessus.** *(Relevé le 2026-09-08 en
+  écrivant `voice-calibration.md`.)* `voice-analysis.md` et `voice-calibration.md` écrivent
+  tous deux que le profil se crée « via le tutoriel », et `mvp-scope.md` fait de la
+  calibration la **porteuse de l'onboarding**. Or **aucun des dix-neuf systèmes n'est un
+  tutoriel.** Même classe d'oubli que la persistance ci-dessus : un besoin nommé par
+  plusieurs documents et assumé par aucun. Deux issues — soit l'onboarding **est** la
+  calibration et les trois documents cessent de parler d'un tutoriel, soit il en faut un et
+  c'est un **vingtième système**. À trancher avant `/create-architecture`.
 - ~~**Place de l'AEC dans ADR-0003**~~ — **résolu le 2026-09-03.** ADR-0003 amendé :
   l'AEC remonte **en amont de la fourche** et protège les deux voies. Elle est
   reclassée de « confort d'écoute » à **correction de gameplay** : sans elle, un
@@ -295,11 +306,11 @@ là où le développeur travaille.
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 19 |
-| Design docs started | **1** *(Analyse vocale — complet, 11 sections)* |
-| Design docs reviewed | **1** *(2026-09-07, verdict NEEDS REVISION — révisions appliquées le jour même)* |
+| Design docs started | **2** *(Analyse vocale et Calibration vocale — complets, 11 sections chacun)* |
+| Design docs reviewed | **1** *(2026-09-07, verdict NEEDS REVISION — révisions appliquées le jour même)* ; Calibration **non relue** |
 | Design docs approved | 0 *(re-revue à lancer)* |
-| MVP systems designed | 1 / 19 |
-| ADR ouverts par la revue | **2** — ADR-0007 (`Accepted`), ADR-0008 (`Proposed`) |
+| MVP systems designed | 2 / 19 |
+| ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |
 | Systems implemented without GDD | **0** *(l'analyse vocale a désormais son GDD)* |
 
 ---
