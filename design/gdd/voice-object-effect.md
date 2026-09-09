@@ -928,7 +928,98 @@ Six choses ressemblent à des réglages et n'en sont pas :
 
 ## Visual/Audio Requirements
 
-[À écrire]
+Le système 1 ne produisait ni image ni son ; le système 6 en produisait pour un écran de
+réglage. **Celui-ci en produit dans le jeu, en permanence, et c'est par là que le joueur
+apprend.**
+
+Comme ailleurs, la section reste au niveau **exigence** — ce qui doit être perçu, jamais à
+quoi cela ressemble. La direction visuelle évoluera avec un graphiste.
+
+### L'avertissement doit être sonore avant d'être visuel
+
+C'est l'exigence la plus structurante de la section, et elle vient de la situation :
+**le joueur regarde où il va, pas le canapé qu'il porte.** Il traverse un couloir sombre à
+reculons, il surveille une porte, il cherche son coéquipier.
+
+> **Un signal visuel sur l'objet arriverait dans un angle mort.** L'avertissement doit être
+> perceptible **sans regarder** — donc porté d'abord par le son, et par le mouvement de
+> l'objet dans la main, pas par un effet qu'il faut avoir dans son champ de vision.
+
+Le concept l'avait déjà écrit sans en tirer cette conséquence : *« du mobilier vivant et
+hypersensible au bruit »*. **Un meuble qui grince quand on parle trop fort satisfait
+l'exigence et le genre en même temps.**
+
+- **Latence nulle sur le déclenchement.** L'avertissement se déclenche à 350 ms de charge, et
+  ce délai est déjà tout le budget. Rien ne doit s'y ajouter — ni fondu d'entrée, ni montée
+  progressive du son avant qu'il soit audible.
+- **Distinct du poids.** L'avertissement dit *« ça commence »*, le poids dit *« c'est
+  arrivé »*. Deux signaux, deux moments (ADR-0002).
+- **Il doit inquiéter, pas informer.** Pilier 3 : le décalage entre panique intérieure et
+  contrôle affiché se construit ici. Un bip neutre serait fonctionnel et raterait le jeu.
+
+### Le poids ne se lit pas, il se sent
+
+**Aucune jauge, aucune barre, aucun chiffre.** La lourdeur se perçoit dans la manœuvre —
+l'objet répond moins vite, tourne mal, résiste — et **jamais dans un affichage**.
+
+> Une jauge de charge deviendrait immédiatement **un instrument à optimiser** : les joueurs
+> la regarderaient au lieu d'écouter, et joueraient contre un nombre plutôt que contre leur
+> propre voix. C'est exactement la dérive que l'index interdit au sonomètre du système 19 —
+> *« imprécis, retardé, jamais de seuil affiché »* — et elle vaut ici avec plus de force,
+> puisque nous produisons la sanction et non la mesure.
+
+**Corollaire pour le système 12** : sa prédiction porte l'avertissement, **jamais un verdict
+annoncé**. Afficher « tu vas lâcher dans 0,4 s » violerait ADR-0002 et la contrainte que
+l'index adresse au système 19.
+
+### Le frémissement du régime murmure
+
+Quand plusieurs personnes chuchotent tout près, l'objet doit **frémir sans menacer**.
+
+- Perceptible, **mais jamais confondu avec l'avertissement**. Ce sont deux états différents,
+  et le joueur doit pouvoir les distinguer sans y réfléchir.
+- **Il plafonne.** Le frémissement se stabilise et n'empire plus — c'est le comportement que
+  le plafond de murmure garantit, et le rendu doit le montrer : quelque chose qui *s'installe*
+  plutôt que quelque chose qui *monte*.
+
+C'est la nuance la plus fine du système, et la plus facile à rater : un rendu binaire —
+calme ou alarmé — effacerait tout le régime murmure et rendrait le chuchotement inutile.
+
+### La zizanie doit se sentir avant d'être facturée
+
+**On ne pénalise pas un joueur pour un état qu'il ignorait.** Si l'écran de fin annonce
+« zizanie ×3 », les trois moments doivent avoir été perceptibles sur le moment.
+
+- **Un signal d'ambiance, pas un panneau.** La zizanie est un état de la scène : c'est
+  l'atmosphère qui bascule, pas une bannière d'interface qui s'allume.
+- **Distinct de l'avertissement d'objet.** L'un dit « ce meuble est en train de te punir »,
+  l'autre « le groupe est en train de partir en vrille ».
+- Le seuil d'entrée reste **invisible** : on sent qu'on y est, on ne voit pas à quelle
+  distance on en était.
+
+### L'attribution reste auditive — et c'est un refus délibéré
+
+Le joueur doit savoir **qui** charge son canapé. **Il l'apprend en entendant la voix**, par
+le chat de proximité, et par rien d'autre.
+
+> **Aucun marqueur visuel désignant le joueur responsable.** Ce serait plus lisible, et ce
+> serait une faute : cela rendrait le canal vocal redondant, transformerait un moment social
+> en relevé d'interface, et détruirait le ressort comique — qui consiste précisément à
+> **entendre** quelqu'un paniquer et à comprendre en même temps que le meuble s'alourdit.
+
+**Coût assumé, et il faut le nommer** : l'attribution passe intégralement par l'oreille. Un
+joueur sourd ou malentendant perçoit la sanction sans jamais pouvoir en identifier la cause.
+Le GDD du système 6 pose déjà que la mécanique centrale exclut qui ne peut pas produire de
+voix ; **celle-ci ajoute une exclusion pour qui ne peut pas la percevoir**, et elle est plus
+large. Écrit noir sur blanc plutôt que découvert plus tard.
+
+### Ce qu'on ne montre jamais
+
+- **La charge**, sous quelque forme chiffrée ou graduée que ce soit.
+- **Les seuils** — ni celui de l'objet, ni celui de la zizanie. Le joueur apprend où ils sont
+  en jouant, jamais en lisant.
+- **Un verdict prédit** — « tu vas lâcher », « plus que 2 secondes ». ADR-0002.
+- **Qui est le coupable**, autrement que par sa voix.
 
 ## UI Requirements
 
