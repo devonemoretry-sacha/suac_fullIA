@@ -228,49 +228,170 @@ s'alourdirait tout seul ne serait observé par personne. *(Le système 13 peut d
 règles pour ses types particuliers — un objet à demande sonore a de bonnes raisons de vivre
 en dehors de celle-ci.)*
 
-### Qui alimente la charge, et comment leurs voix se combinent
+### Qui alimente la charge
 
 **Toutes les voix à portée**, porteurs comme non-porteurs. C'est le Pilier 2, et l'*Overview*
 explique pourquoi ce n'était pas une question ouverte.
-
-Reste la combinaison, qui n'a **aucune donnée** derrière elle à ce jour :
-
-| Règle | Ce qu'elle produit |
-|---|---|
-| **Maximum** — seule la voix la plus forte compte | Une seconde voix devient **gratuite** : rien ne dissuade de se joindre au vacarme, et la faute cesse d'être collective |
-| **Somme** — les contributions s'additionnent | Le **nombre de joueurs** devient la variable dominante : à quatre, quatre chuchotements valent un cri, ce qui punit la taille du groupe et non son comportement |
-| **Somme saturante** — chaque voix compte, avec rendement décroissant | Chaque voix supplémentaire pèse, sans que le total explose |
-
-> **Retenu, PROVISOIRE : la somme saturante**, sous sa forme la plus simple et sans paramètre.
->
-> ```
-> L_eff = 1 − ∏ (1 − L_i)          pour toutes les voix i à portée
-> ```
->
-> Une voix à 0,5 donne 0,50 · deux à 0,5 donnent 0,75 · quatre à 0,5 donnent 0,94. Bornée à
-> 1 par construction, elle ne demande aucun réglage, et elle tient les deux exigences : une
-> voix de plus se sent toujours, et quatre joueurs prudents ne valent pas un joueur qui hurle.
->
-> **Aucune de ces trois règles n'a été éprouvée** — le banc d'essai était monojoueur. C'est
-> le premier point que le prototype devra rouvrir, ou le playtest trancher.
 
 **`L_i` est la contribution de la voix `i` telle qu'elle parvient à l'objet**, donc déjà
 atténuée par la distance. *(PROVISOIRE — dépend du système 3.)* Sans atténuation, un joueur
 à l'autre bout de l'appartement chargerait le canapé autant que celui qui le porte, et il
 n'y aurait plus de jeu spatial.
 
-### Le cycle de la charge
+---
+
+### Deux régimes, deux règles de combinaison
+
+C'est la structure centrale du système, et elle réconcilie deux règles qui semblaient
+s'exclure.
+
+| | **Régime murmure** | **Régime alarme** |
+|---|---|---|
+| Condition | Toutes les voix sous le seuil de l'objet | **Au moins une** voix au-dessus |
+| Combinaison | **Somme** des contributions | **Maximum** — la plus forte pilote |
+| Vitesse | Très lente, et **plafonnée** | Pleine |
+| Coupable | Aucun — l'effet est collectif par nature | **Un seul, et tout le monde l'a entendu** |
+
+> **Pourquoi la somme n'est pas injuste ici, alors qu'elle l'était là-bas.** L'objection —
+> *« quatre chuchotements ne doivent pas valoir un cri »* — vise le régime alarme, où il faut
+> un coupable identifiable. Dans le régime murmure, l'effet est **d'un ordre de grandeur plus
+> lent** : à facteur de lenteur 10, un chuchoteur seul mettrait une minute à charger l'objet,
+> quatre chuchoteurs très proches une quinzaine de secondes — contre **1,3 seconde pour un
+> seul cri**. Il n'y a pas de faute à attribuer parce qu'il n'y a pas de faute.
+
+#### Le régime murmure
+
+Plusieurs personnes qui chuchotent tout près d'un meuble doivent le voir **frémir**, jamais
+s'alourdir. C'est la contrepartie de « permettre au mieux de chuchoter » : le murmure est
+très bon marché, mais **pas gratuit**.
 
 ```
-tant que L_eff > 0 :   charge  +=  L_eff · dt / Remplissage
-sinon              :   charge  −=  dt / Vidange
-                       charge  =  clamp(charge, 0, 1)
+L_mur   = min(1, Σ L_i)                       somme sur toutes les voix
+charge += L_mur · dt / (Remplissage × Lenteur)
+charge  = min(charge, Plafond_murmure)
 ```
 
-**La montée dépend du niveau, la descente non.** Parler fort charge plus vite ; se taire
-décharge à vitesse constante, quel que soit le vacarme qui précédait. C'est ce que le banc
-d'essai a mis en œuvre et ce que le testeur a jugé juste — un retour dont la durée dépendrait
-de la faute passée serait perçu comme une punition, pas comme une mécanique.
+**Le plafond est ce qui rend le chuchotement viable indéfiniment.** Sans lui, murmurer
+assez longtemps finirait par tout charger, et traverser un appartement à voix basse
+deviendrait impossible — l'inverse de l'intention. Avec lui, l'objet s'excite un peu, se
+stabilise là, et n'ira jamais plus loin tant que personne n'élève la voix.
+
+**Le murmure ne fait jamais redescendre la charge.** S'il en reste d'un cri précédent, elle
+tient. **Pour récupérer, il faut réellement se taire** — ce qui crée une décision collective
+à chaque incident : on se tait deux secondes, ou on continue en assumant ?
+
+#### Le régime alarme
+
+```
+L_eff   = min(1, max(L_i) × Zizanie)
+charge += L_eff · dt / Remplissage
+```
+
+Le maximum pilote. Les voix sous le seuil **ne s'ajoutent pas** : dès qu'il y a un coupable,
+c'est lui qu'on entend et c'est lui qui charge.
+
+> **Aucune voix n'est jamais réellement invisible**, contrairement à ce qu'on pourrait croire
+> du maximum. Elle n'est masquée qu'à l'instant : **dès que le plus bruyant se tait, c'est le
+> suivant qui devient le maximum.** Se cacher derrière quelqu'un ne coûte rien tant qu'il
+> crie, et coûte tout dès qu'il s'arrête.
+
+#### Le silence, et lui seul, décharge
+
+```
+si aucune voix n'atteint l'objet :   charge −= dt / Vidange
+```
+
+**La montée dépend du niveau, la descente non.** Un retour dont la durée dépendrait de la
+faute passée serait perçu comme une punition, pas comme une mécanique — c'est ce que le banc
+d'essai a mis en œuvre et ce que le testeur a jugé juste.
+
+> **La panique collective est punie par la durée, pas par le débit.** Quatre joueurs qui
+> hurlent ne chargent pas quatre fois plus vite — mais **les quatre** doivent se taire pour
+> que ça redescende, là où un seul coupable suffit à se calmer. C'est gratuit, aucun
+> paramètre ne le porte, et c'est ce qui donne son poids au chaos collectif.
+
+---
+
+### Les seuils sont personnels, et c'est tout l'intérêt de la calibration
+
+Le système 6 mesure, pour chaque joueur, **où se situe sa voix posée** entre son plancher de
+bruit et son cri. C'est exactement l'information dont ce système a besoin.
+
+```
+L_repos,i = ((Rest_dB,i − Floor_dB,i) / (Scream_dB,i − Floor_dB,i)) ^ γ
+Seuil,i   = T_objet × L_repos,i
+```
+
+**`T_objet` s'exprime en fractions de la voix posée du joueur.** « Ce vase déclenche à 0,7×
+ta voix normale » est une unité qu'un humain comprend, et qui garantit la même exigence pour
+tout le monde.
+
+> **La conversation posée est déjà une alarme.** `T_objet < 1` pour tous les objets du MVP —
+> plage de travail **0,4 à 0,9**. Seul le chuchotement est sûr. Une valeur au-dessus de 1
+> ferait un objet qui tolère la conversation : c'est possible, mais ce serait une exception
+> délibérée et non le cas général.
+
+**`T_objet` est le curseur de variété du système 13**, pas un paramètre de plus : un vase
+fragile a un seuil bas, une armoire un seuil haut. C'est le réglage que le mobilier réactif
+aurait dû inventer de toute façon.
+
+> **Conséquence à reporter au système 6.** Son GDD pose que `Rest_dB` sert à **valider** un
+> profil et jamais à normaliser. Cela reste vrai du système 1 — aucune `VoiceFrame` n'en
+> dépend, et son critère CAL-22 tient. Mais `Rest_dB` devient ici **un repère de gameplay**,
+> ce qui élève son importance : un `Rest_dB` mal mesuré ne produit plus seulement un profil
+> douteux, il déplace le seuil de déclenchement du joueur.
+
+### La zizanie
+
+Plusieurs personnes qui **crient ensemble** font basculer la scène dans le chaos. C'est un
+**état du groupe**, pas une propriété du mobilier — le canapé se moque de savoir combien de
+gens hurlent.
+
+```
+N_z      = nombre de voix telles que  L_i ≥ T_zizanie
+Zizanie  = 1 + z · (N_z − 2)     si  N_z ≥ 3
+         = 1                     sinon
+```
+
+Trois voix donnent **×1,10**, quatre **×1,20** *(z PROVISOIRE 0,10)*.
+
+**`T_zizanie` s'exprime directement en `Loudness`, sans passer par la voix posée.** L'unité
+diffère de `T_objet` pour une raison : le cri est **déjà l'ancre** de la calibration —
+`Loudness = 1` est le cri de référence de chaque joueur. Un seuil à 0,75 signifie donc « aux
+trois quarts du chemin vers ton propre cri » et vaut la même exigence pour tous, sans autre
+repère. La voix posée, elle, flotte entre 0,15 et 0,70 du registre selon les gens : c'est
+pourquoi `T_objet` a besoin de son ancre et pas `T_zizanie`.
+
+**Trois voix minimum, et c'est une décision, pas un curseur.** À deux, on ne fait pas une
+zizanie. Conséquence assumée : **une partie à deux joueurs n'en connaît jamais**, et c'est
+plutôt heureux pour un party-game — plus on est nombreux, plus ça part en vrille. Le système
+de base, lui, fonctionne à n'importe quel effectif.
+
+**Aucune hystérésis sur le multiplicateur** : la charge intègre sur plus d'une seconde, un
+franchissement fugace ne produit rien.
+
+#### La zizanie est aussi un épisode compté
+
+Elle **commence** quand la troisième voix franchit `T_zizanie`, **finit** quand il en reste
+moins de trois, et **ne compte que si elle a duré plus d'une seconde** *(PROVISOIRE)*.
+
+Ce minimum n'est pas de l'hystérésis déguisée : il donne la sémantique de comptage dont
+l'écran de fin de contrat a besoin, et évite d'afficher « zizanie ×47 » pour des
+micro-franchissements.
+
+> **Périmètre.** Le scoring de fin de contrat — étoiles, argent, « zizanie ×3, pénalité
+> −300 » — est **hors MVP tel qu'écrit** : `mvp-scope.md` pose « écran succès / échec, pas
+> d'évaluation détaillée » pour le système 18. Ce document **produit l'événement** ; qui
+> l'affiche et le monétise reste à décider avec le périmètre.
+
+### Le point d'extension, exigence de code
+
+La combinaison des voix doit être **un point d'extension explicite**, pas une expression
+noyée dans une boucle de mise à jour. La prime de zizanie n'est pas retenue aujourd'hui sous
+sa forme additive, et le régime murmure pourrait changer de règle après playtest.
+
+**Ce qui doit rester substituable sans rouvrir la structure** : la fonction qui prend
+l'ensemble des `(L_i, joueur)` et rend un `L_eff` unique, régime compris.
 
 ### Avertissement et verdict — deux signaux, deux autorités
 
