@@ -103,7 +103,98 @@ système 3.
 
 ## Player Fantasy
 
-[À écrire]
+**Les systèmes 1 et 6 garantissaient un fantasme. Celui-ci l'est.**
+
+Le GDD de l'analyse vocale le disait en toutes lettres : *« le fantasme "ma voix agit sur le
+monde" appartient à l'effet voix → objets »*. Il arrive ici, et il n'a plus personne à qui
+le déléguer.
+
+### Les trois moments que ce système doit produire
+
+**« C'est moi qui ai fait ça. »**
+Le joueur parle, sent l'objet se charger, et **fait le lien**. C'est l'attribution que le
+système 1 protège depuis le début, et le banc d'essai l'a vérifiée sur un humain :
+l'avertissement à 350 ms rend la cause lisible. Sans ce moment, il n'y a pas de compétence
+à acquérir, et le Pilier 1 s'effondre.
+
+**« C'est lui qui a fait ça. »**
+Un coéquipier panique et crie ; le canapé que *je* porte devient lourd dans mes mains. C'est
+le moment du Pilier 2, et **c'est le moteur comique du jeu**. Sans lui, la maîtrise
+redevient individuelle et le jeu cesse d'être coopératif.
+
+**« Je tremble, et je chuchote quand même. »**
+Le Pilier 3 — la dissonance entre la panique intérieure et le contrôle affiché. Ce système
+la produit à condition que le contrôle silencieux soit **possible mais coûteux**. Trivial,
+il n'y a pas de dissonance ; impossible, il n'y a que de la frustration.
+
+### L'attribution entre joueurs ne vient pas de nous — et c'est structurant
+
+Le deuxième moment pose une exigence que ce système **ne peut pas satisfaire seul** : pour
+que le joueur sache *qui* alourdit son canapé, il faut qu'il **entende qui parle**.
+
+> **Le chat vocal de proximité n'est pas seulement de la communication : c'est le canal
+> d'attribution de ce système.**
+
+Sans lui, quatre voix chargent un objet de façon **anonyme**. Le joueur subit un poids qui
+monte sans savoir d'où il vient, ne peut ni apprendre ni engueuler personne, et le chaos
+cesse d'être drôle pour devenir arbitraire.
+
+C'est un argument que le périmètre MVP ne formulait pas ainsi — il justifiait le chat vocal
+par le fait que « les testeurs passeraient sinon par Discord et l'atténuation par la
+distance disparaîtrait du test ». **La raison est plus forte que ça** : sans chat vocal
+spatialisé, le Pilier 2 ne produit rien d'attribuable.
+
+### Ce que le joueur ne doit jamais ressentir
+
+- **« C'est devenu lourd et je ne sais pas pourquoi. »** Le chaos anonyme n'est pas comique,
+  il est arbitraire.
+- **« Je n'y peux rien. »** Subir sans recours n'est drôle que si l'on peut **répondre** —
+  crier sur le coupable, ce qui empire la situation, est le ressort comique complet.
+- **« J'ai été puni pour avoir joué correctement. »** Se coordonner doit coûter, jamais
+  paraître injuste. La nuance tient entièrement au fait que le coût soit **visible et
+  attribuable**.
+- **« Autant se taire. »** C'est l'échec du Pilier 1, et ce système y mène par construction.
+  Voir l'*Overview* : le contrepoids n'est pas ici.
+
+### La tension à ne pas résoudre
+
+> **Le jeu doit punir la coopération sans décourager de coopérer.**
+
+Si parler coûte trop cher, les joueurs cessent de parler : on obtient un jeu coopératif
+silencieux, qui échoue au Pilier 1 **et** vide l'expérience sociale de sa substance. Si
+parler ne coûte presque rien, il n'y a plus de tension et le Pilier 2 devient décoratif.
+
+**La pente dangereuse est l'adoucissement**, comme au système 1 mais pour une autre raison :
+là-bas, trop lisser rendait la mesure molle ; ici, trop adoucir rend **le silence encore
+plus rentable**. Les deux erreurs se ressemblent et n'ont pas le même remède.
+
+C'est un axe de réglage, pas un problème à supprimer — et c'est celui que le prototype a
+commencé à explorer, sans l'épuiser.
+
+### Ce que ce système utilise de la `VoiceFrame` — proposition de périmètre
+
+Le banc d'essai n'a éprouvé que **`Loudness`**. Le Pilier 1 parle pourtant « du volume *et*
+du pitch ».
+
+**Proposition** : ce système ne consomme que `Loudness` ; `Pitch` et `Continuity` sont la
+matière du **système 13**, le mobilier réactif, dont l'index dit qu'il porte la *sensibilité
+par bande de fréquences*.
+
+Le pilier reste satisfait, mais **par 11 et 13 ensemble** et non par 11 seul. L'avantage est
+qu'un objet générique garde un comportement simple et lisible, et que la différenciation —
+donc la variété — vient des types de meubles.
+
+> **À confirmer** : c'est une décision de découpage, pas une évidence. Elle est marquée ici
+> pour être arbitrée avant les *Detailed Rules*, puisqu'elle détermine ce que ce document
+> spécifie.
+
+### Portée future
+
+- **Les objets à demande sonore** — qui n'avancent ou ne se stabilisent *que* sous émission
+  active. Contrepoids indispensable au Pilier 1, mais ils appartiennent au système 13.
+- **La voix agissant sur autre chose que les objets portés** — portes, habitant,
+  environnement. Systèmes 13 et 15.
+- **L'effet du pitch et de la continuité**, si le découpage ci-dessus est confirmé.
 
 ## Detailed Rules
 
