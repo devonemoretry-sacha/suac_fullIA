@@ -47,7 +47,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | Not Started | — | 3, 9 |
+| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9 |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -244,7 +244,7 @@ dans la section *Detailed Rules* du GDD concerné.
 
 | Système | Contrainte issue de la revue |
 |---|---|
-| **11. Effet voix → objets** | **La question la plus structurante de l'index** : la voix d'un joueur **non-porteur** affecte-t-elle un objet porté par autrui ? Si l'effet se limite au porteur, la maîtrise redevient individuelle, le Pilier 2 s'effondre et « la comédie survit à la maîtrise » avec lui. À trancher, pas à découvrir à l'implémentation. |
+| **11. Effet voix → objets** | ~~**La question la plus structurante de l'index** : la voix d'un joueur **non-porteur** affecte-t-elle un objet porté par autrui ?~~ **Le Pilier 2 y répondait déjà** *(relevé le 2026-09-09)* : « les objets lourds se portent à plusieurs, mais **la voix de chacun affecte tout le groupe** », et son test de conception écarte explicitement le cas où l'on peut ignorer ses coéquipiers. Le principe était acquis avant d'être posé comme question ; **seule la forme reste ouverte** — atténuation, cumul, pondération — et elle dépend du système 3. |
 | **13. Mobilier réactif** | **Au moins un des 2-3 types doit être un objet à demande sonore** — qui ne se stabilise ou n'avance que sous émission active. Sans lui, aucun système ne porte le Pilier 1 et le MVP validerait une boucle où le silence est optimal. |
 | **16. Boucle de contrat** | Porte l'invariant **« ≥ 1 élément d'obligation sonore par contrat »** comme critère d'acceptation. Doit aussi nommer deux propriétaires manquants : l'échéance de la tombée de la nuit, et le caractère **collectif** de la décision « on pousse ou on sort ? ». |
 | **2. Audio d'entrée** | Doit écrire la liste de ce qu'il **ne fait pas** : ni normalisation (fermée dans Core, ADR-0004), ni calibration (6), ni routage de canaux (14), ni encodage/transport (14). C'est ce qui l'empêche de devenir un God Object. Doit aussi **posséder l'émission des `VoiceFrame` vers l'hôte** (ADR-0003 étape 4, ~20-30 Hz) — cette responsabilité n'appartenait à aucun des 19 systèmes. |
