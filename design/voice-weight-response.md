@@ -151,12 +151,34 @@ secondes, c'est beaucoup trop long »* — et a laissé le choix des délais au 
 > **Ce n'est pas encore un résultat** : deux points, un testeur. La mesure qui trancherait
 > est de descendre la fenêtre sous 400 ms en gardant le reste, et de vérifier que ça casse.
 
-| Phase | Provisoire | Ce qui se passe |
+| Phase | Valeur | Ce qui se passe |
 |---|---|---|
-| **Amorçage** | **~200 ms** | Le signal d'avertissement apparaît. Le poids a commencé à bouger, **imperceptiblement** — le joueur est très légèrement ralenti, et ce ralentissement **fait partie de l'avertissement** |
-| **Fenêtre utile** | **jusqu'à ~500 ms** | Le joueur perçoit, comprend, et peut se taire sans conséquence notable |
-| **Montée** | **~500 ms → ~1,5–2 s** | Le poids devient franchement gênant, progressivement et linéairement |
-| **Retour** | **~1,5–2 s** | Symétrique, au silence |
+| **Amorçage** | **350 ms** — *mesuré au banc, 2026-09-08* | Le signal d'avertissement apparaît. Le poids a commencé à bouger, **imperceptiblement** — le joueur est très légèrement ralenti, et ce ralentissement **fait partie de l'avertissement** |
+| **Montée** | **jusqu'à ~1,5 s** *(remplissage aimé : 1,00 à 1,50 s)* | Le poids devient franchement gênant, progressivement et linéairement |
+| **Retour** | **~1,0 à 1,5 s** — non isolé | Symétrique, au silence |
+
+> ### La seule valeur réellement mesurée : l'amorçage à 350 ms
+>
+> Balayage à variable unique, remplissage 1,50 s, amorçage 15 % :
+>
+> | Avertissement | 200 | 300 | **350** | 400 | 430 | 550 |
+> |---|---|---|---|---|---|---|
+> | Verdict | bon | bon | **le meilleur** | moins bon | *mauvais* | *mauvais* |
+>
+> **C'est un optimum, pas une frontière.** On attendait « plus tôt, mieux c'est, jusqu'à
+> rupture ». Faux : 350 ms bat 300 ms, et bat les 200 et 30 ms essayés avant.
+>
+> **La falaise est brutale — 80 ms séparent le meilleur du mauvais.** C'est donc une
+> constante à tenir serré, pas un réglage tolérant.
+>
+> **Pourquoi trop tôt est moins bon** : sous 200 ms, le signal se déclenche sur tout, y
+> compris les mots courts qu'on allait cesser de toute façon. Il devient constant, donc il
+> cesse d'informer. L'avertissement doit être **attribuable** — ce qu'impose la falaise
+> haute — **et rare**, ce qu'impose la pente basse. Le sommet est le compromis des deux.
+>
+> **Ligne d'origine corrigée** : ce document disait « fenêtre utile jusqu'à ~500 ms ». La
+> fenêtre a été **écartée comme facteur** — deux réglages à 1,26 et 1,32 s de fenêtre ont
+> déplu. Elle n'est plus une phase du découpage, seulement une grandeur dérivée.
 
 ### D'où viennent ces nombres
 

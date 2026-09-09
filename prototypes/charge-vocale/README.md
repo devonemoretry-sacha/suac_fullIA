@@ -1,7 +1,17 @@
 # Prototype — Charge vocale
 
-**Statut : en cours — premier essai concluant le 2026-09-08.** Les valeurs par défaut n'ont
-pas été contredites. Il faut d'autres testeurs avant de figer quoi que ce soit.
+**Statut : première phase conclue le 2026-09-08.** L'hypothèse centrale est validée — la
+mécanique se ressent, et le joueur peut se taire à temps — et **une valeur est mesurée** :
+l'avertissement à **350 ms**, avec une falaise à 430.
+
+Un seul testeur, qui est le concepteur. Il faut d'autres personnes avant de figer.
+
+| Ce qui est acquis | Ce qui reste ouvert |
+|---|---|
+| L'avertissement est le facteur, en **valeur absolue** | Le **remplissage** : aimé entre 1,00 et 1,50 s, jamais resserré |
+| Son optimum est à **350 ms**, falaise entre 400 et 430 | La **vidange** : jamais isolée (essais à 1,00 · 1,15 · 1,50 s) |
+| La **fenêtre de réaction** est écartée — réfutée deux fois | L'**amorçage** : toujours entre 10 et 15 %, jamais isolé |
+| La **fraction** `avert./remplissage` est écartée pour l'échec | La position du **sommet** : absolue ou fractionnaire ? |
 
 ## L'hypothèse testée
 
@@ -232,6 +242,57 @@ pas un.
 
 > **Prochain essai, court** : à un remplissage aimé (1,50 s), balayer l'avertissement à 300,
 > 350 et 400 ms pour situer la bascule. Trois points, et la frontière est nommée.
+
+---
+
+## Le résultat principal — un optimum à 350 ms, pas une frontière
+
+Balayage mené à **remplissage 1,50 s · vidange 1,50 s · amorçage 15 %**, une seule variable
+en mouvement. C'est la série la plus propre du banc.
+
+| Avertissement | Fraction | Fenêtre | Mi-poids | Verdict |
+|---|---|---|---|---|
+| 200 ms | 0,133 | 535 ms | 735 ms | bon |
+| 300 ms | 0,200 | 494 ms | 794 ms | bon |
+| **350 ms** | **0,233** | **474 ms** | **824 ms** | **le meilleur** |
+| 400 ms | 0,267 | 453 ms | 853 ms | moins bon |
+| 430 ms | 0,287 | 441 ms | 871 ms | *mauvais* |
+| 550 ms | 0,367 | 391 ms | 941 ms | *mauvais* |
+
+**Ce n'est pas une frontière, c'est une courbe avec un sommet.** On l'attendait monotone —
+« plus tôt, mieux c'est, jusqu'à un point de rupture ». C'est faux : 350 ms est jugé
+meilleur que 300, et que les 200 et 30 ms des essais précédents.
+
+**Et la falaise est brutale : 80 ms séparent le meilleur du mauvais.** Cela fait de cette
+valeur une constante à tenir serré, pas un réglage tolérant — une dérive de conception ou
+de plateforme suffirait à la faire basculer.
+
+### Pourquoi un avertissement trop tôt serait moins bon
+
+Hypothèse, cohérente avec le reste : **à 200 ms et en dessous, le signal se déclenche sur
+tout** — y compris sur les mots courts qu'on allait cesser de toute façon. Il devient
+constant, donc il cesse d'informer. À 350 ms il ne se déclenche qu'une fois le joueur
+**engagé** dans sa phrase, et il redevient un événement.
+
+Autrement dit, l'avertissement ne doit pas seulement être **attribuable** — c'est ce que la
+falaise haute impose — il doit aussi être **rare**, ce qu'impose la pente basse. Le sommet
+est le compromis des deux.
+
+À noter, sans en tirer plus qu'une remarque : **350 ms tombe pile dans la bande de temps de
+réaction humaine à un stimulus qui demande une décision** (~300–400 ms), invoquée pour poser
+les valeurs par défaut. Une convergence agréable, pas une preuve.
+
+### Ce qui reste ouvert sur ce point précis
+
+L'optimum a été localisé à **un seul remplissage**. On ne peut donc pas dire s'il se situe à
+**350 ms absolus** ou à la **fraction 0,233**.
+
+> C'est une question distincte de celle déjà tranchée. L'échec, lui, est bien gouverné par
+> l'absolu — 430 ms déplaît même à une fraction de 0,123. Mais la position du *sommet* n'a
+> pas été testée ailleurs.
+>
+> **L'essai qui trancherait** : chercher le meilleur avertissement à remplissage 1,00 s. S'il
+> tombe vers 350 ms, c'est l'absolu. S'il tombe vers 230 ms, c'est la fraction.
 
 ### ~~La mesure qui reste ambiguë~~ *(close, voir ci-dessus)*
 
