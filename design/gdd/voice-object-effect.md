@@ -198,7 +198,126 @@ donc la variété — vient des types de meubles.
 
 ## Detailed Rules
 
-[À écrire]
+### Périmètre arrêté le 2026-09-09
+
+Ce système ne consomme que **`Loudness`**. `Pitch` et `Continuity` sont la matière du
+système 13 — sensibilité par bande de fréquences, et objet à demande sonore, qui réclame
+une **note tenue** donc `Continuity`. Le Pilier 1 reste satisfait par **11 et 13 ensemble**.
+
+> **Condition, et elle n'est pas acquise.** Pour que le système 13 puisse un jour lire
+> `Pitch` et `Continuity`, il faut que la propagation lui livre des **trames par source,
+> atténuées** — et non un scalaire agrégé du type « quel bruit perçoit-on ici ». Un scalaire
+> les détruit au passage, quelle que soit la volonté du système 13. Contrat adressé au
+> système 3, voir *Dependencies*.
+
+---
+
+### La charge appartient à l'objet, pas au joueur
+
+**Chaque objet porté possède une charge**, un scalaire de 0 à 1. Elle monte tant que des
+voix se font entendre autour de lui, elle redescend au silence, et c'est elle — et non le
+`Loudness` instantané — qui détermine son comportement.
+
+Ce choix découle du Pilier 2 : *« la voix de chacun affecte tout le groupe »*. Si la charge
+appartenait au joueur, chacun porterait sa propre pénalité et la coopération redeviendrait
+une somme d'efforts individuels. **Portée par l'objet, elle est subie par tous ses
+porteurs à égalité** — y compris celui qui s'est tu.
+
+**Un objet n'accumule que pendant qu'il est porté.** Un meuble posé dans un coin qui
+s'alourdirait tout seul ne serait observé par personne. *(Le système 13 peut définir d'autres
+règles pour ses types particuliers — un objet à demande sonore a de bonnes raisons de vivre
+en dehors de celle-ci.)*
+
+### Qui alimente la charge, et comment leurs voix se combinent
+
+**Toutes les voix à portée**, porteurs comme non-porteurs. C'est le Pilier 2, et l'*Overview*
+explique pourquoi ce n'était pas une question ouverte.
+
+Reste la combinaison, qui n'a **aucune donnée** derrière elle à ce jour :
+
+| Règle | Ce qu'elle produit |
+|---|---|
+| **Maximum** — seule la voix la plus forte compte | Une seconde voix devient **gratuite** : rien ne dissuade de se joindre au vacarme, et la faute cesse d'être collective |
+| **Somme** — les contributions s'additionnent | Le **nombre de joueurs** devient la variable dominante : à quatre, quatre chuchotements valent un cri, ce qui punit la taille du groupe et non son comportement |
+| **Somme saturante** — chaque voix compte, avec rendement décroissant | Chaque voix supplémentaire pèse, sans que le total explose |
+
+> **Retenu, PROVISOIRE : la somme saturante**, sous sa forme la plus simple et sans paramètre.
+>
+> ```
+> L_eff = 1 − ∏ (1 − L_i)          pour toutes les voix i à portée
+> ```
+>
+> Une voix à 0,5 donne 0,50 · deux à 0,5 donnent 0,75 · quatre à 0,5 donnent 0,94. Bornée à
+> 1 par construction, elle ne demande aucun réglage, et elle tient les deux exigences : une
+> voix de plus se sent toujours, et quatre joueurs prudents ne valent pas un joueur qui hurle.
+>
+> **Aucune de ces trois règles n'a été éprouvée** — le banc d'essai était monojoueur. C'est
+> le premier point que le prototype devra rouvrir, ou le playtest trancher.
+
+**`L_i` est la contribution de la voix `i` telle qu'elle parvient à l'objet**, donc déjà
+atténuée par la distance. *(PROVISOIRE — dépend du système 3.)* Sans atténuation, un joueur
+à l'autre bout de l'appartement chargerait le canapé autant que celui qui le porte, et il
+n'y aurait plus de jeu spatial.
+
+### Le cycle de la charge
+
+```
+tant que L_eff > 0 :   charge  +=  L_eff · dt / Remplissage
+sinon              :   charge  −=  dt / Vidange
+                       charge  =  clamp(charge, 0, 1)
+```
+
+**La montée dépend du niveau, la descente non.** Parler fort charge plus vite ; se taire
+décharge à vitesse constante, quel que soit le vacarme qui précédait. C'est ce que le banc
+d'essai a mis en œuvre et ce que le testeur a jugé juste — un retour dont la durée dépendrait
+de la faute passée serait perçu comme une punition, pas comme une mécanique.
+
+### Avertissement et verdict — deux signaux, deux autorités
+
+C'est l'application directe d'ADR-0002 : **« prédire l'avertissement, jamais le verdict »**.
+
+| | **L'avertissement** | **Le verdict** |
+|---|---|---|
+| Ce que c'est | L'objet « s'excite » — signal perceptible | Le poids réel qui gêne la manœuvre |
+| Déclenché à | **350 ms** *(mesuré, 2026-09-08)* | Progressivement ensuite |
+| Autorité | **Aucune** — couche de retour local (12) | **Hôte** (ADR-0002) |
+| Latence | Immédiate en local | Aller-retour réseau |
+
+**Conséquence sur le réseau, et elle est favorable.** Chaque client reçoit les `VoiceFrame`
+de tous les joueurs (ADR-0003) : il peut donc prédire la charge lui-même. **Sa propre
+contribution à l'avertissement est instantanée** ; celle des autres arrive avec la latence du
+réseau.
+
+> Ce déséquilibre n'est pas un défaut à corriger — **il est juste**. Le joueur est
+> immédiatement redevable de sa propre voix, et découvre celle des autres au rythme où il les
+> entend. C'est exactement ce que le chat vocal lui donne par ailleurs.
+
+### Comment la charge devient du poids
+
+Reprise du modèle éprouvé au banc d'essai, à ceci près que « poids » y était une inertie de
+glissement et devra ici être une grandeur physique. *(PROVISOIRE — dépend du système 9.)*
+
+```
+seuil       = Avertissement / Remplissage          fraction de charge à l'avertissement
+amorçage    = Amorçage · min(charge / seuil, 1)    imperceptible, mais présent dès le début
+principal   = max(0, (charge − seuil) / (1 − seuil))
+lourdeur    = min(1, amorçage + principal · (1 − Amorçage))
+```
+
+**Le poids bouge dès la première trame**, très légèrement — et ce ralentissement
+**fait partie de l'avertissement**, décision de l'utilisateur du 2026-09-08. Le joueur est
+freiné avant d'être puni, et il le sent sans pouvoir le nommer.
+
+### Ce que ce document ne peut pas encore fixer
+
+| Question | Bloqué par |
+|---|---|
+| Ce que « lourdeur = 1 » veut dire mécaniquement — vitesse, inertie, points d'ancrage, chute | **Système 9** — enveloppe de portage |
+| L'atténuation de `L_i` par la distance, et sa forme | **Système 3** — propagation |
+| La lourdeur rend-elle le transport **impossible** ou seulement pénible ? | **Système 9**, et un arbitrage de gameplay |
+
+Ces trois-là sont nommés plutôt que devinés. Les deviner produirait des règles qui seraient
+contredites dès que les GDD voisins s'écriront.
 
 ## Formulas
 
