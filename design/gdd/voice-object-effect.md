@@ -839,7 +839,92 @@ Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces syst
 
 ## Tuning Knobs
 
-[À écrire]
+### L'arbitrage à exposer avant tous les autres
+
+> **Punir la coopération sans décourager de coopérer.**
+
+Si parler coûte trop cher, les joueurs se taisent : on obtient un jeu coopératif silencieux,
+qui échoue au Pilier 1 **et** vide l'expérience sociale de sa substance. Si parler ne coûte
+presque rien, le Pilier 2 devient décoratif et la friction disparaît.
+
+**La pente dangereuse est l'adoucissement, et pour une raison contre-intuitive** : adoucir ce
+système rend **le silence plus rentable**, donc aggrave exactement le défaut qu'on croyait
+corriger. C'est le piège symétrique de celui du système 1 — là-bas, trop lisser rendait la
+mesure molle ; ici, trop adoucir rend le mutisme optimal. Les deux erreurs se ressemblent et
+n'ont pas le même remède.
+
+### Les curseurs
+
+| Curseur | Provisoire | Plage sûre | Trop haut | Trop bas |
+|---|---|---|---|---|
+| `Avertissement` | **350 ms** *(mesuré)* | 200 – 400 ms | **falaise à 430 ms** : le signal se décroche de sa cause, le joueur ne fait plus le lien | sous 200 ms, il se déclenche sur tout — y compris les mots qu'on allait cesser — et cesse d'informer |
+| `Remplissage` | **1,5 s** | 1,0 – 1,5 s | la faute met trop longtemps à se payer, l'attribution s'étiole | la sanction arrive avant qu'on ait pu réagir : l'avertissement devient décoratif |
+| `Vidange` | **1,5 s** | 1,0 – 2,0 s | une erreur pèse trop longtemps, la partie devient une punition continue | le bruit n'a plus de conséquence durable, on peut crier en boucle |
+| `Amorçage` | **15 %** | 10 – 20 % | le ralentissement cesse d'être imperceptible : il devient une sanction *avant* l'avertissement | plus de préavis physique, seul le signal prévient |
+| `T_objet` **(par objet)** | **0,4 – 0,9** | < 1 | au-delà de 1, l'objet tolère la conversation et le jeu perd sa tension | respirer déclenche : plus aucune zone sûre, le chuchotement lui-même devient inutile |
+| `Lenteur` | **10** | 6 – 15 | le murmure ne fait plus rien : la nuance basse disparaît, tout devient binaire | chuchoter devient coûteux, et « permettre au mieux de chuchoter » tombe |
+| `Plafond_murmure` | **0,25 – 0,30** | **contraint** | le murmure amène dans le **poids réel**, ce qu'il ne doit jamais faire | l'objet ne frémit plus, on ne voit rien du tout |
+| `T_zizanie` | **0,75** | 0,65 – 0,85 | la zizanie ne se déclenche jamais : le multiplicateur est mort et le score n'a rien à compter | elle devient permanente dès que le groupe parle, et cesse de vouloir dire quoi que ce soit |
+| `z` | **0,10** | 0,05 – 0,15 | **au-delà de 0,15 l'écart 4-modérés / 2-bruyants s'érode** : on retombe dans le défaut de la somme saturante | la panique collective ne se sent pas |
+| Durée minimale d'épisode | **1 s** | 0,5 – 2 s | des zizanies réelles ne sont pas comptées | l'écran de fin affiche « zizanie ×47 » pour des franchissements fugaces |
+
+### Les interactions — tourner un curseur peut en annuler deux
+
+**`Remplissage` gouverne trois autres réglages, et personne ne le voit.** Le seuil
+d'avertissement vaut `Avertissement / Remplissage`, et `Plafond_murmure` se cale juste
+au-dessus de ce seuil.
+
+> **Conséquence lourde : changer `Remplissage` invalide la seule mesure du document.** Les
+> 350 ms ont été trouvés **à `Remplissage = 1,5 s`**. À 1,0 s, la même valeur absolue
+> représente une fraction de charge très différente, et il faudrait remesurer. **Ne pas
+> toucher à `Remplissage` sans rouvrir le banc d'essai.**
+
+**`T_objet` contre `Lenteur`.** Ils se disputent l'importance, pas la valeur. Un `T_objet`
+bas fait du régime alarme le cas courant, et `Lenteur` ne sert presque plus. Un `T_objet`
+haut fait vivre le jeu en régime murmure, et `Lenteur` devient le curseur principal. **Régler
+l'un change ce que l'autre gouverne.**
+
+**`T_zizanie` contre `T_objet`.** S'ils se rapprochent, la zizanie se déclenche presque en
+même temps que l'alarme et les deux états se confondent — un seul signal pour deux idées.
+**Il leur faut une séparation franche** : le seuil d'objet est territoire de la parole, celui
+de la zizanie territoire du cri.
+
+**`Vidange` contre le régime murmure, et c'est le piège caché.** Le murmure **ne décharge
+pas** : seul le silence total le fait. Le coût réel de `Vidange` dépend donc de **la
+fréquence à laquelle le silence total survient**, qui dépend elle-même de `T_objet` et du
+comportement du groupe. Dans une équipe bavarde, une `Vidange` même courte peut ne jamais
+s'appliquer. **Ce curseur ne se règle pas dans l'abstrait, mais sur une partie réelle.**
+
+**`z` contre la discrimination du modèle.** C'est le seul curseur dont le franchissement
+détruit une propriété structurelle, et il est chiffré : à `z = 0,10`, quatre joueurs modérés
+et deux bruyants restent séparés d'un facteur **1,36** ; la prime additive écartée le
+réduisait à **1,06**. Au-delà de 0,15, on reconstruit le défaut qu'on a passé une journée à
+écarter.
+
+### Ce qui n'est pas un curseur
+
+Six choses ressemblent à des réglages et n'en sont pas :
+
+- **`N_z ≥ 3`** — le minimum de voix pour une zizanie est une **décision de conception**. À
+  deux, on ne fait pas une zizanie. Le baisser à deux rendrait le phénomène banal ; le monter
+  à quatre le rendrait impossible en partie normale.
+- **Le `max` du régime alarme.** C'est le modèle, pas un réglage. Le changer, c'est rouvrir la
+  décision du 2026-09-09 et son argumentaire chiffré.
+- **La somme du régime murmure.** Idem, et pour la raison inverse : elle n'est acceptable
+  *que* parce que le régime est lent et plafonné.
+- **Le fait que seul le silence décharge.** C'est ce qui rend la panique collective coûteuse
+  sans aucun paramètre — les quatre doivent se taire.
+- **Le fait que la charge appartienne à l'objet.** C'est le Pilier 2 en structure de données.
+- **Le comptage de la zizanie sur le `Loudness` brut**, et non atténué. C'est ce qui en fait
+  un état du groupe plutôt qu'une propriété du mobilier.
+
+> **Règle générale de report.** Les dix curseurs ci-dessus portent tous **une valeur
+> provisoire, un déclencheur nommé et un propriétaire** — le test que le système 1 impose à
+> tout report. Aucun trou avec un paragraphe dessus dans ce document.
+>
+> **Mais sept d'entre eux n'ont jamais été éprouvés à plusieurs joueurs**, le banc d'essai
+> étant monojoueur. Tout ce qui touche à la combinaison relève du raisonnement, pas de la
+> mesure — et c'est écrit ainsi partout où ils apparaissent.
 
 ## Visual/Audio Requirements
 
