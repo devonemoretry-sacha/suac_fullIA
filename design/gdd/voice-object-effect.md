@@ -442,7 +442,155 @@ contredites dès que les GDD voisins s'écriront.
 
 ## Formulas
 
-[À écrire]
+Les règles vivent en *Detailed Rules* ; cette section les rassemble sous leur forme
+opposable, avec les variables, les exemples chiffrés et la liste des valeurs à mesurer.
+
+**Une seule valeur de ce document est mesurée** — l'avertissement à 350 ms. Toutes les
+autres sont **PROVISOIRES** et relèvent de la porte de mesure du système 1 : rien ailleurs
+ne doit les citer comme acquises.
+
+### 1. Les grandeurs personnelles
+
+La calibration sait où se situe la voix de chaque joueur. C'est cette information qu'on
+exploite, et c'est tout l'intérêt du système 6.
+
+```
+L_repos,i = ((Rest_dB,i − Floor_dB,i) / (Scream_dB,i − Floor_dB,i)) ^ γ
+Seuil,i   = T_objet × L_repos,i
+```
+
+| Variable | Type | Plage | Description |
+|---|---|---|---|
+| `L_repos,i` | float | 0 … 1 | Le `Loudness` que produit la **voix posée** du joueur `i`. Dérivé de son profil, jamais mesuré en jeu |
+| `T_objet` | float | **0,4 … 0,9** | Tolérance de l'objet, **en fractions de voix posée**. Propriété de l'objet, curseur de variété du système 13 |
+| `Seuil,i` | float | 0 … 1 | Le `Loudness` à partir duquel la voix de `i` fait basculer **cet** objet en régime alarme |
+
+> **`T_objet < 1` pour tout le MVP.** La conversation posée est déjà une alarme ; seul le
+> chuchotement est sûr. Une valeur au-dessus de 1 ferait un objet qui tolère la
+> conversation — exception délibérée, jamais le cas général.
+
+### 2. Le régime, et la combinaison des voix
+
+```
+Régime = ALARME   s'il existe i tel que  L_i ≥ Seuil,i
+       = MURMURE  sinon
+```
+
+**`L_i` est déjà atténué par la distance** *(PROVISOIRE — dépend du système 3)*.
+
+```
+MURMURE :  L_mur  = min(1, Σ L_i)
+
+ALARME  :  N_z     = #{ i : L_i ≥ T_zizanie }
+           Zizanie = 1 + z · (N_z − 2)   si N_z ≥ 3,  sinon  1
+           L_eff   = min(1, max(L_i) × Zizanie)
+```
+
+| Variable | Type | Provisoire | Description |
+|---|---|---|---|
+| `T_zizanie` | float | **0,75** | En `Loudness` direct — le cri est déjà l'ancre de la calibration, `Loudness = 1` **est** le cri de référence |
+| `z` | float | **0,10** | Pas du multiplicateur par voix au-delà de deux |
+| `N_z ≥ 3` | — | **décision** | Pas un curseur. À deux, on ne fait pas une zizanie |
+
+### 3. La charge
+
+```
+MURMURE :  charge += L_mur · dt / (Remplissage × Lenteur)
+           charge  = min(charge, Plafond_murmure)      ← ne redescend jamais ici
+
+ALARME  :  charge += L_eff · dt / Remplissage
+
+SILENCE :  charge −= dt / Vidange                      ← aucune voix n'atteint l'objet
+
+           charge  = clamp(charge, 0, 1)
+```
+
+| Variable | Provisoire | Description |
+|---|---|---|
+| `Remplissage` | **1,5 s** | Durée jusqu'à charge pleine, **à pleine voix**. Plage aimée : 1,0 à 1,5 s |
+| `Vidange` | **1,5 s** | Retour au transportable. Ne dépend pas du niveau précédent |
+| `Lenteur` | **10** | Facteur de ralentissement du régime murmure |
+| `Plafond_murmure` | **0,25 … 0,30** | Voir la contrainte ci-dessous |
+
+> **`Plafond_murmure` doit rester juste au-dessus du seuil d'avertissement.** Ce n'est pas
+> une valeur libre : le murmure doit faire entrer dans la **zone d'amorçage** — l'objet
+> frémit, le joueur est très légèrement ralenti — et **jamais au-delà**. Le calage est donc
+> `Plafond_murmure ≳ Avertissement / Remplissage`, soit ≈ 0,25 à 0,30 pour la configuration
+> de référence.
+
+### 4. De la charge au poids
+
+Reprise directe du modèle éprouvé au banc d'essai.
+
+```
+seuil_av  = Avertissement / Remplissage
+amorçage  = Amorçage · min(charge / seuil_av, 1)
+principal = max(0, (charge − seuil_av) / (1 − seuil_av))
+lourdeur  = min(1, amorçage + principal · (1 − Amorçage))
+```
+
+| Variable | Valeur | Description |
+|---|---|---|
+| `Avertissement` | **350 ms** — *mesuré, 2026-09-08* | L'objet « s'excite ». Optimum, pas frontière : falaise entre 400 et 430 ms |
+| `Amorçage` | **15 %** *(PROVISOIRE)* | Ralentissement imperceptible dès la première trame — il fait partie de l'avertissement |
+
+> **⚠️ Les 350 ms valent à pleine voix, et seulement là.** La charge monte à `L_eff / Remplissage` :
+> l'avertissement arrive donc à `Avertissement / L_eff`. À `L_eff = 0,9` il tombe à **389 ms**,
+> à `L_eff = 0,5` à **700 ms**.
+>
+> Ce n'est pas un défaut, c'est une propriété souhaitable : **une petite transgression laisse
+> plus de temps qu'un cri.** Mais personne ne doit lire « 350 ms » comme une constante — c'est
+> un **plancher**, atteint au maximum de la voix.
+
+### 5. Exemples chiffrés
+
+Configuration de référence — la meilleure connue : `Remplissage = 1,5 s` · `Avertissement = 350 ms`
+· `Amorçage = 15 %` · `T_objet = 0,7` · `T_zizanie = 0,75` · `z = 0,10` · joueurs à
+`L_repos = 0,5`, donc **`Seuil = 0,35`**.
+
+| Situation | Régime | `L_eff` | Charge pleine en | Zizanie |
+|---|---|---|---|---|
+| Un joueur à 0,9, trois muets | alarme | 0,90 | **1,67 s** | non |
+| Deux joueurs à 0,8 | alarme | 0,80 | **1,88 s** | non |
+| **Quatre joueurs à 0,5** | alarme | 0,50 | **3,00 s** | non |
+| Un à 0,9 et trois à 0,4 | alarme | 0,90 | 1,67 s | non |
+| Trois joueurs à 0,8 | alarme | 0,88 | 1,70 s | **×1,10** |
+| Quatre joueurs à 0,8 | alarme | 0,96 | 1,56 s | **×1,20** |
+| Quatre chuchotements à 0,2 | murmure | 0,80 | *plafonne à 0,30* | non |
+
+**La ligne qui justifie tout le modèle** : quatre joueurs modérés mettent **3,00 s**, deux
+joueurs bruyants **1,88 s**. Un rapport de **1,6×** — l'intensité individuelle reste le
+signal, le nombre de joueurs n'en est pas un. *(La somme saturante écartée donnait 1,28 s
+contre 1,25 s : indiscernables.)*
+
+**Le régime murmure** : quatre chuchoteurs très proches atteignent le plafond en **≈ 5,6 s**,
+et la lourdeur s'y stabilise autour de **0,22**. L'objet frémit, il ne s'alourdit pas — et
+il n'ira jamais plus loin tant que personne n'élève la voix.
+
+**Aucune voix n'est invisible** : dans la ligne « un à 0,9 et trois à 0,4 », les trois
+n'ajoutent rien *pendant que* le premier crie. Mais qu'il se taise, et le maximum devient
+0,4 — au-dessus du seuil de 0,35. **La charge continue de monter**, simplement plus
+lentement.
+
+### Récapitulatif des valeurs
+
+Une mesurée, huit provisoires. Elles s'ajoutent aux vingt-quatre des systèmes 1 et 6.
+
+| Valeur | État | Se règle par |
+|---|---|---|
+| `Avertissement` = 350 ms | **mesuré** | Banc d'essai, 2026-09-08 |
+| `Remplissage` = 1,5 s | provisoire | Banc — plage aimée 1,0 à 1,5 s, jamais resserrée |
+| `Vidange` = 1,5 s | provisoire | Jamais isolée au banc |
+| `Amorçage` = 15 % | provisoire | Jamais isolé au banc |
+| `T_objet` ∈ [0,4 ; 0,9] | provisoire | **Par objet** — playtest, et c'est la variété du système 13 |
+| `Lenteur` = 10 | provisoire | Playtest : « on voit l'objet frémir » sans qu'il s'alourdisse |
+| `Plafond_murmure` ≈ 0,25–0,30 | provisoire | **Contraint** par `Avertissement / Remplissage` |
+| `T_zizanie` = 0,75 | provisoire | Playtest à 3+ joueurs — n'a jamais été éprouvé |
+| `z` = 0,10 | provisoire | Playtest — au-delà de 0,15 l'écart 4-modérés / 2-bruyants s'érode |
+
+> **Sept de ces neuf valeurs n'ont jamais été éprouvées à plusieurs joueurs.** Le banc
+> d'essai était monojoueur. Tout ce qui touche à la combinaison — `T_zizanie`, `z`, le
+> régime murmure entier — est du raisonnement, pas de la mesure.
 
 ## Edge Cases
 
