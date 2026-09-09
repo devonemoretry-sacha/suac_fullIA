@@ -481,10 +481,18 @@ Régime = ALARME   s'il existe i tel que  L_i ≥ Seuil,i
 ```
 MURMURE :  L_mur  = min(1, Σ L_i)
 
-ALARME  :  N_z     = #{ i : L_i ≥ T_zizanie }
+ALARME  :  N_z     = #{ i : Loudness_i ≥ T_zizanie }    ← NON atténué, voir ci-dessous
            Zizanie = 1 + z · (N_z − 2)   si N_z ≥ 3,  sinon  1
            L_eff   = min(1, max(L_i) × Zizanie)
 ```
+
+> **La zizanie se compte sur le `Loudness` brut du joueur, pas sur sa contribution atténuée.**
+> C'est la conséquence directe d'en avoir fait un **état du groupe** : si on comptait les
+> voix telles qu'elles parviennent à l'objet, la zizanie deviendrait une propriété du meuble
+> — trois hurleurs seraient « en zizanie » près du canapé et « calmes » près de l'armoire,
+> ce qui n'a aucun sens et rendrait le comptage au score inintelligible.
+>
+> Elle décrit combien de joueurs braillent, pas combien de bruit arrive quelque part.
 
 | Variable | Type | Provisoire | Description |
 |---|---|---|---|
@@ -495,8 +503,9 @@ ALARME  :  N_z     = #{ i : L_i ≥ T_zizanie }
 ### 3. La charge
 
 ```
-MURMURE :  charge += L_mur · dt / (Remplissage × Lenteur)
-           charge  = min(charge, Plafond_murmure)      ← ne redescend jamais ici
+MURMURE :  si charge < Plafond_murmure :
+               charge = min(charge + L_mur · dt / (Remplissage × Lenteur), Plafond_murmure)
+           sinon : inchangée                           ← ne redescend jamais ici
 
 ALARME  :  charge += L_eff · dt / Remplissage
 
@@ -504,6 +513,12 @@ SILENCE :  charge −= dt / Vidange                      ← aucune voix n'attei
 
            charge  = clamp(charge, 0, 1)
 ```
+
+> **Corrigé le 2026-09-09.** La première écriture appliquait `charge = min(charge, Plafond)`
+> après la montée — ce qui aurait **rabattu** à 0,30 une charge de 0,60 héritée d'un cri, dès
+> que quelqu'un se remettait à chuchoter. Le murmure serait alors devenu une **stratégie de
+> récupération plus rapide que le silence**, exactement l'inverse de la règle voulue. Le
+> plafond ne borne que la **montée**, jamais la charge elle-même.
 
 | Variable | Provisoire | Description |
 |---|---|---|
@@ -594,7 +609,118 @@ Une mesurée, huit provisoires. Elles s'ajoutent aux vingt-quatre des systèmes 
 
 ## Edge Cases
 
-[À écrire]
+Chaque entrée nomme la **condition exacte**, la **résolution exacte**, et sa sévérité :
+**bloquant** (le système produit un comportement faux sans le signaler), **dégradant**
+(comportement médiocre mais honnête) ou **cosmétique**.
+
+### La bascule de régime
+
+- **Si une voix oscille autour du seuil d'un objet** : le régime alterne entre murmure et
+  alarme à chaque trame. **Cosmétique** — la charge intègre sur 1,5 s et `Loudness` est déjà
+  lissé par l'enveloppe du système 1. Aucune hystérésis, aucun paramètre.
+
+- **Si un même joueur franchit le seuil d'un objet et pas d'un autre** : c'est **le
+  comportement voulu**. Le régime est **par objet**, pas global — la même voix peut mettre un
+  vase en alarme et laisser une armoire en murmure. C'est précisément ce que `T_objet` sert
+  à produire.
+
+- **Si la charge dépasse le plafond de murmure puis que tout le monde chuchote** : la charge
+  **reste où elle est**. Elle ne redescend pas. **Bloquant si mal écrit** — voir la
+  correction du 2026-09-09 en *Formulas* : rabattre la charge au plafond ferait du murmure
+  une récupération plus rapide que le silence, et détruirait la règle « pour récupérer, il
+  faut se taire ».
+
+### Les seuils personnels
+
+- **Si un joueur n'a pas de profil valide** — `Uncalibrated` ou `Degraded` : sa `VoiceFrame`
+  est `Silence`, donc `L_i = 0`. **Il n'affecte plus aucun objet.** Correct par
+  construction : on ne peut pas situer une voix qu'on ne sait pas mesurer.
+
+  > **Exploit théorique, et pourquoi il s'annule.** Débrancher son micro rendrait
+  > acoustiquement inoffensif tout en permettant de coordonner par un canal externe. Mais le
+  > joueur perd aussi le chat vocal, et surtout **il ne peut plus rien faire de ce qui exige
+  > d'émettre** — les objets à demande sonore du système 13 lui deviennent inaccessibles.
+  > **Dégradant, auto-limitant, accepté.**
+
+- **Si `Rest_dB` a été mal mesuré** : `L_repos` est faux, donc `Seuil` est faux. Trop bas, le
+  joueur déclenche l'alarme en respirant ; trop haut, il crie sans conséquence.
+  **Bloquant, et c'est le coût assumé du modèle** : sous une somme, une calibration douteuse
+  se diluait ; sous un maximum, elle domine. La justesse du système 6 devient porteuse.
+
+- **Si `L_repos` valait 0**, le seuil s'effondrerait et tout deviendrait alarme.
+  **Impossible, et c'est le système 6 qui l'interdit** : sa validation V1 garantit
+  `Floor < Rest`, et V3 impose `r ≥ RestMin` — soit `L_repos ≥ 0,15^γ ≈ 0,29`, donc
+  `Seuil ≥ 0,20` avec `T_objet = 0,7`. **Le troisième point de la calibration protège notre
+  seuil**, en plus de valider le profil.
+
+### La zizanie
+
+- **Si exactement trois joueurs franchissent `T_zizanie`** : zizanie ×1,10. C'est le seuil
+  d'entrée, et il est **volontairement le minimum** — à deux, on ne fait pas une zizanie.
+
+- **Si la partie compte deux joueurs** : la zizanie **ne se déclenche jamais**. **Ce n'est
+  pas un défaut**, c'est la conséquence assumée d'en faire un phénomène de foule. Le système
+  de base fonctionne à n'importe quel effectif.
+
+- **Si le compte oscille autour de trois voix** : le multiplicateur clignote entre 1,00 et
+  1,10. **Cosmétique** pour la charge, qui intègre. **Mais pas pour le comptage au score** —
+  d'où la durée minimale d'une seconde, sans laquelle l'écran de fin afficherait
+  « zizanie ×47 » pour des franchissements fugaces.
+
+- **Si un joueur se déconnecte en pleine zizanie** : `N_z` retombe, l'épisode se termine
+  normalement. **Cosmétique.**
+
+### Le portage
+
+- **Si l'objet est posé alors qu'il est chargé** : il **décharge à la vitesse normale**, et
+  n'accumule plus rien quelles que soient les voix. Poser devient donc une **tactique de
+  récupération** — « on le pose et on se tait » contre « on pousse et on assume ». C'est un
+  choix de conception, pas une conséquence subie.
+
+- **Si un porteur lâche et que les autres continuent** : la charge est **inchangée**. Elle
+  appartient à l'objet, pas aux porteurs — c'est toute la règle.
+
+- **Si tous les porteurs lâchent en pleine charge** : ce qui advient de l'objet lâché
+  appartient au **système 9**. Nous n'en disons rien. *(Voir aussi la recalibration en cours
+  de partie, système 6 : elle emprunte exactement ce chemin.)*
+
+### Le conflit avec l'objet à demande sonore
+
+> **Le contrepoids du Pilier 1 entre en collision frontale avec ce système, et il faut le
+> dire.**
+
+Le système 13 doit porter au moins un objet qui **n'avance que sous émission active**. Or
+notre système **punit l'émission**. Un tel objet serait donc simultanément exigeant en son
+et alourdi par le son — potentiellement injouable, ou au mieux incohérent.
+
+**La résolution appartient au système 13**, et trois voies existent :
+
+| Voie | Ce qu'elle donne |
+|---|---|
+| `T_objet` **très haut** — au-delà de 1, l'exception délibérée évoquée en *Formulas* | L'objet tolère la parole ; seul le cri le charge. Simple, et cohérent avec le reste |
+| **Exemption totale** de la charge pour ce type | Le plus simple, mais l'objet sort du système et cesse d'obéir à ses règles |
+| **Inversion** — la charge le fait *avancer* au lieu de l'alourdir | Le plus intéressant, et le plus coûteux à spécifier |
+
+**Nous n'en tranchons aucune** : ce document ne possède pas ces objets. Il pose seulement
+que **le conflit existe et qu'il n'est pas soluble sans décision explicite**.
+
+### Numérique et réseau
+
+- **Si la charge vaut exactement le seuil d'avertissement** : la lourdeur y est continue —
+  `amorçage` atteint `Amorçage` et `principal` vaut zéro. **Aucune discontinuité.**
+
+- **Si `Scream_dB = Floor_dB`** : `L_repos` diviserait par zéro. **Impossible** — la
+  validation V2 du système 6 refuse ces profils au commit, avec un plancher dur d'écart
+  dynamique. Nous en dépendons explicitement.
+
+- **Si la charge prédite localement diverge de celle de l'hôte** : c'est **attendu et
+  admis**. ADR-0002 : la prédiction locale ne porte que l'**avertissement** ; le poids réel
+  vient de l'hôte. Un écart sur l'avertissement est le prix de son immédiateté.
+
+- **Si un client ment sur ses `VoiceFrame`** : il peut se rendre acoustiquement invisible.
+  **Accepté par ADR-0003** — « en coop entre amis sur invitation Steam, la triche n'est pas
+  un modèle de menace ». Rappelé ici parce que le maximum y est **plus sensible qu'une
+  somme** : un tricheur ne se dilue pas, il disparaît.
 
 ## Dependencies
 
