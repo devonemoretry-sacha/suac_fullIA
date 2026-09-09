@@ -724,7 +724,118 @@ que **le conflit existe et qu'il n'est pas soluble sans décision explicite**.
 
 ## Dependencies
 
-[À écrire]
+Même distinction que dans les deux GDD précédents : une **dépendance de conception** empêche
+de *spécifier* tant que l'autre ne l'est pas ; une **dépendance d'exécution** empêche de
+*fonctionner* une fois en marche.
+
+**Contrairement aux systèmes 1 et 6, celui-ci a deux dépendances de conception non
+satisfaites.** C'est ce qui explique les mentions `PROVISOIRE` du document, et pourquoi
+certaines sections nomment un trou plutôt que de le combler.
+
+### Le tableau
+
+| Système | Nature | Sens | Interface |
+|---|---|---|---|
+| **9. Portage** | **DURE — conception, NON satisfaite** | mutuelle | Nous consommons « qui porte quoi » ; il consomme notre `lourdeur`. **Sans lui, « lourd » n'a pas de définition** |
+| **3. Propagation** | **DURE — conception, NON satisfaite** | il nous fournit | `L_i` atténué à la position de l'objet. **Sans lui, aucune dimension spatiale** |
+| **6. Calibration** | **DURE — exécution** | il nous fournit | `L_repos,i`, d'où dérivent tous nos seuils. *Absent de l'index — voir ci-dessous* |
+| **1. Analyse vocale** | **DURE — exécution** | il nous fournit | `Loudness` par joueur, via `VoiceFrame` |
+| 5. Réseau | exécution | mutuelle | Achemine les `VoiceFrame` ; l'hôte fait autorité sur la charge (ADR-0002) |
+| 12. Retour local | consommateur | il lit | La charge prédite, pour l'**avertissement seul** |
+| 13. Mobilier réactif | consommateur | il fournit | Les valeurs de `T_objet` par type. *Faux cycle — voir ci-dessous* |
+| 16 / 18. Contrat, résolution | consommateur | ils lisent | Les **épisodes de zizanie**. *Absent de l'index* |
+| 14. Chat vocal | **structurant, sans donnée** | — | **Le canal d'attribution.** Sans lui, la charge est anonyme et le Pilier 2 ne produit rien |
+
+### Deux dépendances que l'index ne mentionne pas
+
+L'index déclare que le système 11 dépend de **3 et 9**. Il en manque deux, et elles sont
+apparues en écrivant ce document.
+
+**Le système 6.** Les seuils sont désormais **personnels** — `Seuil,i = T_objet × L_repos,i`.
+Sans profil de calibration, ce système n'a plus de seuil du tout. C'est une dépendance dure,
+d'exécution *et* de conception : on ne pouvait pas concevoir « un seuil en fractions de voix
+posée » sans savoir que quelqu'un mesure la voix posée. **Elle est satisfaite** — le
+système 6 est `Designed`.
+
+**Les systèmes 16 et 18.** La zizanie produit des **épisodes comptés**, destinés à la
+résolution de fin de contrat. L'index fait dépendre 18 du seul système 16. Il y a donc une
+arête manquante, et elle est signalée dans l'index.
+
+### Le faux cycle 11 ↔ 13
+
+L'index fait dépendre 13 de 11, et ce document réclame `T_objet` au système 13. Cela
+ressemble à un cycle et n'en est pas un.
+
+**Nous définissons ce que `T_objet` signifie et comment il agit ; le système 13 en fournit
+les valeurs.** Ce document se spécifie entièrement avec `T_objet` comme variable — c'est
+exactement le rapport qu'entretiennent le système 1 et le `VoiceProfile`. Une dépendance de
+paramètre n'est pas une dépendance de conception.
+
+---
+
+### Ce que les GDD voisins devront porter
+
+Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces systèmes n'a de GDD.
+
+**Système 3 — Propagation du son**
+
+> **⚠️ L'exigence la plus structurante de ce document, et elle précède la question des bandes.**
+>
+> La propagation doit livrer **une valeur par source**, pas un agrégat. « Quel bruit
+> perçoit-on ici » ne suffit pas : il nous faut **« quel bruit chaque joueur fait-il ici »**.
+>
+> Sans identité de source, `max(L_i)` est incalculable, et **tout le modèle s'effondre** —
+> plus de coupable, plus d'attribution, retour au chaos anonyme que la *Player Fantasy*
+> interdit. L'index posait la question « scalaire ou énergies par bande » ; **la question
+> antérieure est « agrégé ou par source »**, et sa réponse n'est pas négociable.
+
+- Être une **requête pure** — le bruit d'un joueur au point P — jamais un `SoundManager` à
+  inscription d'auditeurs. *(Contrainte déjà posée par la revue directeurs.)*
+- La question **scalaire ou bandes** reste ouverte, mais elle ne nous concerne pas : nous ne
+  consommons que `Loudness`. Elle décide en revanche si le système 13 pourra un jour lire
+  `Pitch` et `Continuity`.
+
+**Système 9 — Portage d'objets**
+- Nous dire **quels objets sont portés et par qui**.
+- Consommer une `lourdeur ∈ [0,1]` et décider ce qu'elle veut dire — vitesse, inertie, chute.
+  **Nous ne le décidons pas**, nous fournissons un scalaire.
+- Trancher si `lourdeur = 1` rend le transport **impossible ou seulement pénible**.
+- Gérer le cas « tous les porteurs lâchent en pleine charge ».
+- **Prévoir qu'un porteur puisse lâcher en cours de transport** — chemin déjà réclamé par le
+  système 6 pour la recalibration en jeu.
+
+**Système 6 — Calibration vocale**
+- Exposer **`L_repos` précalculé** sur le `VoiceProfile`, et non nous laisser le dériver.
+
+  > **Ce n'est pas du confort.** Recalculer `L_repos` ici dupliquerait la constante `γ`, ce
+  > que le critère **AC-43 du système 1 interdit explicitement** — chaque valeur provisoire
+  > doit apparaître en un seul endroit. La porte de mesure impose la forme de cette
+  > interface.
+
+- Savoir que `Rest_dB` est devenu **un repère de gameplay** : un profil mal mesuré ne produit
+  plus seulement un profil douteux, il déplace le seuil de déclenchement du joueur.
+
+**Système 13 — Mobilier réactif**
+- Porter les valeurs de `T_objet` par type — **c'est sa variété**, et elle ne lui coûte rien
+  de plus que ce qu'il aurait dû inventer.
+- **Résoudre le conflit de l'objet à demande sonore**, décrit en *Edge Cases*. Trois voies y
+  sont posées, aucune n'est tranchée ici.
+
+**Système 12 — Couche de retour local**
+- Prédire **l'avertissement seul**, jamais le poids. ADR-0002.
+- Sa prédiction diverge légitimement de l'hôte ; c'est le prix de l'immédiateté.
+
+**Systèmes 16 et 18 — Boucle de contrat, résolution**
+- Compter et présenter les **épisodes de zizanie**. Nous produisons l'événement, avec sa
+  durée minimale d'une seconde ; nous ne décidons ni de sa pénalité, ni de son affichage.
+- **Réserve de périmètre** : `mvp-scope.md` pose « écran succès / échec, pas d'évaluation
+  détaillée ». Un score chiffré est hors MVP tel qu'écrit.
+
+**Système 14 — Chat vocal de proximité**
+- **Il est le canal d'attribution de ce système**, et c'est une raison plus forte que celle
+  qu'invoquait le périmètre MVP. Sans voix spatialisée, le joueur subit une charge dont il
+  ignore l'origine, et le Pilier 2 ne produit plus rien d'attribuable — seulement de
+  l'arbitraire.
 
 ## Tuning Knobs
 

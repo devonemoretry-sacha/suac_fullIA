@@ -47,7 +47,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9 |
+| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9, **6** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -129,7 +129,12 @@ Vertical Slice / Alpha / Full Vision existent comme vision dans le GDD source ma
 
 9. **Portage d'objets** — dépend de 5, 7. **Définit l'enveloppe de portage** (dimensions max, nombre de porteurs, rayon de braquage) — contrat consommé par 10.
 10. **Appartement** — dépend de 7, 9. Ne peut pas être dessiné sans l'enveloppe de portage.
-11. **Effet voix → objets** — dépend de 3, 9.
+11. **Effet voix → objets** — dépend de 3, 9, et **6** *(ajouté le 2026-09-09)*. Ses seuils
+    sont **personnels** : `Seuil,i = T_objet × L_repos,i`, où `L_repos` dérive du profil de
+    calibration. Sans profil, ce système n'a plus de seuil du tout. **Arête manquante par
+    ailleurs : 11 → 16/18**, la zizanie produisant des épisodes comptés destinés à la
+    résolution de fin de contrat, alors que l'index ne fait dépendre 18 que de 16.
+    Voir `voice-object-effect.md`, *Dependencies*.
 12. **Couche de retour local** — dépend de 1, 2 (voix locale, avant réseau), 5 (état autoritaire), 9, 11. Règles d'ADR-0002 : décalage additif amorti, borné, « prédire l'avertissement, jamais le verdict ». **Doit être spécifié comme solveur pur** (voix locale + temps → delta borné amorti) ; la *composition* avec la transformée autoritaire appartient au consommateur, avec **un ordre de composition unique et un seul écrivain** — sinon 9, 11, 12 et 13 écrivent tous la même transformée de rendu.
 13. **Mobilier réactif** — dépend de 3, 11. Sensibilité par bande de fréquences.
 14. **Chat vocal de proximité** — dépend de 2, 4, 5. Porte le **routage de canaux** (vivants / morts), codé maison.
@@ -248,7 +253,7 @@ dans la section *Detailed Rules* du GDD concerné.
 | **13. Mobilier réactif** | **Au moins un des 2-3 types doit être un objet à demande sonore** — qui ne se stabilise ou n'avance que sous émission active. Sans lui, aucun système ne porte le Pilier 1 et le MVP validerait une boucle où le silence est optimal. |
 | **16. Boucle de contrat** | Porte l'invariant **« ≥ 1 élément d'obligation sonore par contrat »** comme critère d'acceptation. Doit aussi nommer deux propriétaires manquants : l'échéance de la tombée de la nuit, et le caractère **collectif** de la décision « on pousse ou on sort ? ». |
 | **2. Audio d'entrée** | Doit écrire la liste de ce qu'il **ne fait pas** : ni normalisation (fermée dans Core, ADR-0004), ni calibration (6), ni routage de canaux (14), ni encodage/transport (14). C'est ce qui l'empêche de devenir un God Object. Doit aussi **posséder l'émission des `VoiceFrame` vers l'hôte** (ADR-0003 étape 4, ~20-30 Hz) — cette responsabilité n'appartenait à aucun des 19 systèmes. |
-| **3. Propagation du son** | **Décision structurante** : la propagation transporte-t-elle un scalaire ou des **énergies par bande** ? Si scalaire, la sensibilité par bande de fréquences du système 13 ne survit pas à la distance. Doit être une **requête pure** (bruit perçu au point P), jamais un `SoundManager` à inscription d'auditeurs. |
+| **3. Propagation du son** | ⚠️ **Une question en précède une autre** *(relevé le 2026-09-09)*. **Agrégé ou par source ?** La propagation doit livrer **une valeur par joueur** au point P, pas un total. Sans identité de source, le `max(L_i)` du système 11 est incalculable et **tout son modèle s'effondre** — plus de coupable, plus d'attribution. Ce n'est pas négociable. *Ensuite* seulement vient la question d'origine : **scalaire ou énergies par bande** ? Si scalaire, la sensibilité par bande du système 13 ne survit pas à la distance. Doit être une **requête pure** (bruit perçu au point P), jamais un `SoundManager` à inscription d'auditeurs. |
 | **5. Réseau** | Contrat de réplication, pas manager : classes de canaux, autorité, cadences ; chaque feature possède son schéma. **Il manque un budget de bande passante** — 8 dépendants, aucun chiffre, alors que CPU, mémoire et draw calls en ont un. |
 | **19. UI diégétique** | Le sonomètre est le seul élément qui frôle un anti-pilier : c'est un HUD informatif, et il *aide à optimiser le silence*. À contraindre — imprécis, retardé, **jamais de seuil affiché**. Ne doit jamais afficher un verdict prédit (recoupe le système 12). |
 
