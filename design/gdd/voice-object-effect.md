@@ -1023,7 +1023,75 @@ large. Écrit noir sur blanc plutôt que découvert plus tard.
 
 ## UI Requirements
 
-[À écrire]
+**Ce système n'a presque pas d'interface, et c'est un résultat, pas un oubli.**
+
+Tout ce qu'il produit passe par le monde : un meuble qui grince, qui résiste, une ambiance
+qui bascule. La section *Visual/Audio Requirements* a consisté pour l'essentiel à **refuser
+des affichages** — jauge de charge, seuils, verdict prédit, marqueur de coupable. Ce qui
+reste ici tient en peu de lignes.
+
+### Ce qui vient de nous et n'est pourtant pas de l'UI
+
+| Ce que le joueur perçoit | Où ça vit |
+|---|---|
+| L'objet s'excite | Son et animation de l'objet — système 13, direction audio |
+| L'objet est lourd | La manœuvre elle-même — système 9 |
+| Le groupe part en vrille | Ambiance de scène — direction audio |
+| Qui est le coupable | **Sa voix**, par le chat de proximité — système 14 |
+
+Aucune de ces quatre lignes n'est un élément d'interface, et c'est délibéré.
+
+### Le seul écran concerné, et il ne nous appartient pas
+
+**La résolution de fin de contrat** affiche les épisodes de zizanie — *« zizanie ×3,
+pénalité −300 »*. Nous produisons l'événement avec sa durée minimale ; **le système 18
+décide de sa présentation et de son barème**.
+
+> **Réserve de périmètre, déjà signalée** : `mvp-scope.md` pose « écran succès / échec, pas
+> d'évaluation détaillée ». Un score chiffré est hors MVP tel qu'écrit. Le système produit
+> l'événement dans tous les cas — ne pas l'afficher ne coûte rien et ne ferme aucune porte.
+
+### La question d'accessibilité, à trancher
+
+Les *Visual/Audio Requirements* refusent tout marqueur visuel désignant le coupable, et
+nomment le coût : **un joueur sourd ou malentendant subit la sanction sans jamais pouvoir en
+identifier la cause.**
+
+C'est plus large que l'exclusion déjà assumée par le système 6 — celle-ci frappait qui ne
+peut pas *produire* de voix ; celle-là frappe qui ne peut pas la *percevoir*, et un joueur
+malentendant pourrait parfaitement jouer par ailleurs.
+
+> **Piste : une option d'accessibilité, désactivée par défaut**, qui affiche discrètement
+> quel joueur charge l'objet.
+>
+> Elle **dégrade délibérément** l'expérience de qui l'active — le ressort comique repose sur
+> l'écoute — mais elle la rend possible. Et comme elle est hors du chemin par défaut, elle ne
+> coûte rien à l'intention de conception.
+>
+> **Ce n'est pas tranché.** Le projet a jusqu'ici préféré **assumer franchement** les
+> exclusions plutôt que de les rattraper à moitié — casque obligatoire, voix obligatoire. Ce
+> cas-ci diffère parce que le rattrapage est **cheap et optionnel**, mais la cohérence de
+> cette ligne éditoriale appartient à l'utilisateur, pas à ce document.
+
+### Ce qu'aucun écran ne doit jamais montrer
+
+Rappelé ici parce que c'est à l'UI qu'on demandera ces affichages, et qu'ils paraîtront tous
+raisonnables au moment où on les demandera :
+
+- **La charge**, sous quelque forme graduée ou chiffrée que ce soit
+- **Les seuils** — ni celui de l'objet, ni celui de la zizanie
+- **Un verdict prédit** — « tu vas lâcher », « plus que 2 secondes ». ADR-0002, et contrainte
+  que l'index adresse déjà au système 19
+- **Le coupable**, hors de l'option d'accessibilité ci-dessus
+
+### Outillage — hors jeu, mais nécessaire
+
+Dix curseurs, dont **sept jamais éprouvés à plusieurs joueurs**. Les régler exigera de les
+modifier **pendant une partie à quatre**, pas entre deux compilations.
+
+Un panneau de réglage en direct — même rudimentaire, même moche — est donc un **prérequis de
+playtest**, pas un confort. Le banc d'essai `prototypes/charge-vocale/` a prouvé la valeur de
+cette approche sur une seule variable ; il en faudra l'équivalent en jeu pour les dix.
 
 ## Acceptance Criteria
 
