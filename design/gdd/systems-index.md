@@ -47,7 +47,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9, **6** ⚠️ |
+| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -129,7 +129,9 @@ Vertical Slice / Alpha / Full Vision existent comme vision dans le GDD source ma
 
 9. **Portage d'objets** — dépend de 5, 7. **Définit l'enveloppe de portage** (dimensions max, nombre de porteurs, rayon de braquage) — contrat consommé par 10.
 10. **Appartement** — dépend de 7, 9. Ne peut pas être dessiné sans l'enveloppe de portage.
-11. **Effet voix → objets** — dépend de 3, 9, et **6** *(ajouté le 2026-09-09)*. Ses seuils
+11. **Effet voix → objets** — dépend de 3, 9, **6** *(ajouté le 2026-09-09)* et **10**
+    *(ajouté le 2026-09-11 : la **zizanie se compte par pièce**, il lui faut donc une
+    partition de l'appartement et la requête « dans quelle pièce est ce point »)*. Ses seuils
     sont **personnels** : `Seuil,i = T_objet × L_repos,i`, où `L_repos` dérive du profil de
     calibration. Sans profil, ce système n'a plus de seuil du tout. **Arête manquante par
     ailleurs : 11 → 16/18**, la zizanie produisant des épisodes comptés destinés à la

@@ -343,15 +343,46 @@ aurait dû inventer de toute façon.
 
 ### La zizanie
 
-Plusieurs personnes qui **crient ensemble** font basculer la scène dans le chaos. C'est un
-**état du groupe**, pas une propriété du mobilier — le canapé se moque de savoir combien de
-gens hurlent.
+Plusieurs personnes qui **crient ensemble dans la même pièce** font basculer celle-ci dans le
+chaos. C'est un **état de la pièce**, ni du mobilier ni du groupe dispersé.
 
 ```
-N_z      = nombre de voix telles que  L_i ≥ T_zizanie
-Zizanie  = 1 + z · (N_z − 2)     si  N_z ≥ 3
-         = 1                     sinon
+N_z(pièce) = nombre de joueurs DANS CETTE PIÈCE tels que  Loudness_i ≥ T_zizanie
+Zizanie    = 1 + z · (N_z − 2)     si  N_z ≥ 3
+           = 1                     sinon
 ```
+
+Le multiplicateur s'applique aux objets **de cette pièce**, et à eux seuls.
+
+> ### La pièce dit *qui compte*, le `Loudness` brut dit *s'il crie*
+>
+> Deux filtres, deux rôles, et c'est ce qui rend la règle propre :
+>
+> - **La pièce** décide quelles voix entrent dans le compte. C'est une partition franche, pas
+>   une distance continue.
+> - **Le `Loudness` brut** — non atténué — décide si la personne braille. Dans une même pièce
+>   l'atténuation est faible, et ce qu'on veut savoir est *« cette personne hurle-t-elle »*,
+>   pas *« combien de son arrive à ce meuble précis »*.
+>
+> Conséquence : **deux objets d'une même pièce subissent la même zizanie**, ce qui est juste —
+> c'est la pièce qui est en chaos, pas le meuble.
+
+> ### ⚠️ Corrigé le 2026-09-11 — la zizanie n'est pas globale
+>
+> Ce document en faisait un **état du groupe**, comptant toutes les voix de la partie. Le
+> `qa-lead` en avait tiré un défaut : un hurleur à l'autre bout de l'appartement gonflait le
+> multiplicateur d'un objet qu'il était trop loin pour charger lui-même. J'avais défendu ce
+> couplage au nom du chaos général.
+>
+> **C'était une erreur, et l'arbitrage de l'utilisateur la corrige** : *« la zizanie ne peut
+> pas être considérée comme quelque chose de groupe si les gens sont séparés »*. La carte est
+> une **suite de pièces** — appartements, maisons — et c'est la partition naturelle.
+>
+> **Elle règle un problème que ma défense ne réglait qu'à moitié.** Je justifiais l'effet sans
+> cause audible par le signal d'ambiance : le joueur saurait que « le groupe part en vrille »
+> sans distinguer qui. Avec la règle par pièce, **les trois hurleurs sont dans la pièce du
+> porteur : il les entend**. L'attribution redevient **directe et individuelle**, et le
+> rattrapage collectif devient inutile.
 
 Trois voix donnent **×1,10**, quatre **×1,20** *(z PROVISOIRE 0,10)*.
 
@@ -383,26 +414,22 @@ moins de trois, et **ne compte que si elle a duré plus d'une seconde** *(PROVIS
 > Le même paramètre fait donc **deux métiers** : durée minimale pour compter, et écart minimal
 > pour séparer. Aucun réglage supplémentaire.
 
-#### Une voix inaudible peut quand même peser — et c'est voulu
+#### Le cas de la porte
 
-`N_z` se compte sur le `Loudness` **brut**, alors que le régime alarme se déclenche sur `L_i`
-**atténué**. Un joueur qui hurle à l'autre bout de l'appartement peut donc **gonfler le
-multiplicateur** d'un objet qu'il est bien trop loin pour charger lui-même.
+Un jeu qui consiste à sortir des meubles d'un appartement passe l'essentiel de son temps
+**dans les embrasures**. Un canapé porté à deux peut donc avoir **un porteur de chaque côté
+d'une cloison**, et l'objet à cheval.
 
-**Ce n'est pas une incohérence, c'est la définition** : la zizanie est un état du groupe. Le
-chaos général rend tout plus difficile, ce qui est littéralement la règle d'or du Pilier 1 —
-*« le chaos entraîne la chute »*.
+**Règle : la pièce de l'objet fait foi**, pas celle des porteurs. Un seul lieu, une seule
+zizanie, aucune ambiguïté.
 
-> **L'objection d'attribution, et sa réponse.** Un joueur pourrait subir une charge accélérée
-> par une voix qu'il n'entend pas — le chat de proximité atténue, deux pièces plus loin on
-> n'entend rien. Ce serait un effet sans cause perceptible, ce que ce document interdit.
->
-> **Le signal d'ambiance de la zizanie est précisément là pour ça.** *Visual/Audio
-> Requirements* exige qu'elle se sente avant d'être facturée : le joueur sait que **le groupe
-> part en vrille**, même s'il ne distingue pas qui. C'est une attribution collective au lieu
-> d'individuelle, et c'est la bonne granularité pour un état de groupe.
->
-> L'effet reste par ailleurs **borné à +20 %** à quatre joueurs.
+> **Conséquence de jeu, et elle est plutôt heureuse** : franchir une porte peut faire *sortir*
+> un objet d'une pièce en zizanie, ou l'y faire *entrer*. **Le passage devient un acte
+> tactique** — « on le sort d'ici avant qu'ils ne recommencent » — dans le lieu même où le
+> portage est déjà le plus difficile.
+
+*(Ce que « la pièce de l'objet » veut dire exactement — centre de masse, point d'ancrage,
+volume dominant — dépend du système 9 et du découpage du système 10.)*
 
 Ce minimum n'est pas de l'hystérésis déguisée : il donne la sémantique de comptage dont
 l'écran de fin de contrat a besoin, et évite d'afficher « zizanie ×47 » pour des
@@ -510,24 +537,25 @@ Régime = ALARME   s'il existe i tel que  L_i ≥ Seuil,i
 ```
 MURMURE :  L_mur  = min(1, Σ L_i)
 
-ALARME  :  N_z     = #{ i : Loudness_i ≥ T_zizanie }    ← NON atténué, voir ci-dessous
+ALARME  :  N_z     = #{ i DANS LA PIÈCE DE L'OBJET : Loudness_i ≥ T_zizanie }
            Zizanie = 1 + z · (N_z − 2)   si N_z ≥ 3,  sinon  1
            L_eff   = min(1, max(L_i) × Zizanie)
 ```
 
-> **La zizanie se compte sur le `Loudness` brut du joueur, pas sur sa contribution atténuée.**
-> C'est la conséquence directe d'en avoir fait un **état du groupe** : si on comptait les
-> voix telles qu'elles parviennent à l'objet, la zizanie deviendrait une propriété du meuble
-> — trois hurleurs seraient « en zizanie » près du canapé et « calmes » près de l'armoire,
-> ce qui n'a aucun sens et rendrait le comptage au score inintelligible.
+> **Deux filtres, deux rôles.** La **pièce** décide *qui compte* — partition franche, pas
+> distance continue. Le **`Loudness` brut**, non atténué, décide *si la personne braille* :
+> dans une même pièce l'atténuation est faible, et la question est « hurle-t-elle », pas
+> « combien de son arrive à ce meuble ».
 >
-> Elle décrit combien de joueurs braillent, pas combien de bruit arrive quelque part.
+> Deux objets d'une même pièce subissent donc **la même zizanie**. C'est juste : le chaos est
+> une propriété du lieu, pas du mobilier.
 
 | Variable | Type | Provisoire | Description |
 |---|---|---|---|
 | `T_zizanie` | float | **0,75** | En `Loudness` direct — le cri est déjà l'ancre de la calibration, `Loudness = 1` **est** le cri de référence |
 | `z` | float | **0,10** | Pas du multiplicateur par voix au-delà de deux |
 | `N_z ≥ 3` | — | **décision** | Pas un curseur. À deux, on ne fait pas une zizanie |
+| Pièce | — | **partition** | Fournie par le découpage de l'appartement. **Trois hurleurs dispersés ne font pas une zizanie** |
 
 ### 3. La charge
 
@@ -772,7 +800,8 @@ certaines sections nomment un trou plutôt que de le combler.
 | 5. Réseau | exécution | mutuelle | Achemine les `VoiceFrame` ; l'hôte fait autorité sur la charge (ADR-0002) |
 | 12. Retour local | consommateur | il lit | La charge prédite, pour l'**avertissement seul** |
 | 13. Mobilier réactif | consommateur | il fournit | Les valeurs de `T_objet` par type. *Faux cycle — voir ci-dessous* |
-| 16 / 18. Contrat, résolution | consommateur | ils lisent | Les **épisodes de zizanie**. *Absent de l'index* |
+| **10. Appartement** | **DURE — exécution** | il nous fournit | **Le découpage en pièces**, et dans quelle pièce se trouve un objet. *Absent de l'index — ajouté le 2026-09-11* |
+| 16 / 18. Contrat, résolution | consommateur | ils lisent | Les **épisodes de zizanie**, désormais par pièce. *Absent de l'index* |
 | 14. Chat vocal | **structurant, sans donnée** | — | **Le canal d'attribution.** Sans lui, la charge est anonyme et le Pilier 2 ne produit rien |
 
 ### Deux dépendances que l'index ne mentionne pas
@@ -849,6 +878,15 @@ Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces syst
   de plus que ce qu'il aurait dû inventer.
 - **Résoudre le conflit de l'objet à demande sonore**, décrit en *Edge Cases*. Trois voies y
   sont posées, aucune n'est tranchée ici.
+
+**Système 10 — Appartement**
+- Exposer **une partition en pièces**, et la requête « dans quelle pièce est ce point ». La
+  zizanie s'y adosse depuis le 2026-09-11.
+- La partition doit être **franche** : un point appartient à une pièce et une seule. Un
+  découpage flou — zones qui se chevauchent, transitions graduelles — rendrait le compte de
+  zizanie ambigu aux endroits précis où le jeu se joue le plus, **les embrasures**.
+- *(Cette partition sert probablement aussi au système 3 pour l'occlusion. À vérifier lors de
+  son écriture plutôt que d'en créer deux.)*
 
 **Système 12 — Couche de retour local**
 - Prédire **l'avertissement seul**, jamais le poids. ADR-0002.
@@ -956,7 +994,8 @@ Six choses ressemblent à des réglages et n'en sont pas :
   sans aucun paramètre — les quatre doivent se taire.
 - **Le fait que la charge appartienne à l'objet.** C'est le Pilier 2 en structure de données.
 - **Le comptage de la zizanie sur le `Loudness` brut**, et non atténué. C'est ce qui en fait
-  un état du groupe plutôt qu'une propriété du mobilier.
+  un état **de la pièce** plutôt qu'une propriété du mobilier. Et **le compte est limité aux
+  joueurs présents dans cette pièce** : trois hurleurs dispersés ne font pas une zizanie.
 
 > **Règle générale de report.** Les dix curseurs ci-dessus portent tous **une valeur
 > provisoire, un déclencheur nommé et un propriétaire** — le test que le système 1 impose à
@@ -1205,7 +1244,9 @@ testable hors éditeur, tests en millisecondes — s'applique et doit être tenu
 | # | Critère | Type |
 |---|---|---|
 | VO-10 | GIVEN `N_z < 3` THEN `Zizanie = 1` | `[UNIT]` |
-| VO-11 | GIVEN `N_z ≥ 3`, comptés sur le `Loudness` **brut non atténué** THEN `Zizanie = 1 + z·(N_z − 2)` | `[UNIT]` |
+| VO-11 | GIVEN `N_z ≥ 3` **dans la pièce de l'objet**, comptés sur le `Loudness` brut THEN `Zizanie = 1 + z·(N_z − 2)` | `[UNIT]` |
+| VO-11b | GIVEN trois hurleurs **répartis dans trois pièces différentes** THEN **aucune zizanie nulle part** — `N_z = 1` dans chacune | `[UNIT]` |
+| VO-11c | GIVEN deux objets **dans la même pièce** THEN ils subissent **la même** zizanie | `[UNIT]` |
 | VO-12 | GIVEN `N_z` croissant THEN `Zizanie` **croît strictement** — propriété de structure, aucune valeur figée | `[UNIT]` |
 | VO-13 | GIVEN `max(L_i)` et `Zizanie` THEN `L_eff = min(1, max(L_i) × Zizanie)`, **borné à 1** | `[UNIT]` |
 | VO-14 | **Aucune voix n'est invisible.** GIVEN deux joueurs au-dessus du seuil WHEN le plus fort se tait THEN le second devient le maximum et la charge **continue de monter**, plus lentement | `[UNIT]` |
@@ -1254,7 +1295,8 @@ testable hors éditeur, tests en millisecondes — s'applique et doit être tenu
 | VO-32 | Les quatre porteurs subissent **la même** lourdeur | **9** — la traduction lourdeur → comportement |
 | VO-33 | Un porteur qui lâche ne change pas la charge ; le sort de l'objet lâché | **9** |
 | VO-34 | À `Loudness` égal, le plus éloigné contribue moins | **3** — aucune forme d'atténuation spécifiée |
-| VO-35 | Un hurleur hors de portée gonfle la zizanie d'un objet qu'il ne peut pas charger seul — **couplage croisé brut/atténué**, voulu et borné à +20 % | **3** |
+| VO-35 | GIVEN un objet **à cheval sur une embrasure**, porteurs de part et d'autre THEN c'est **la pièce de l'objet** qui détermine sa zizanie, jamais celle des porteurs | **9 et 10** — le point de référence de l'objet et le découpage en pièces |
+| VO-36 | GIVEN un objet franchissant une porte pendant une zizanie THEN son multiplicateur **change au passage** | **10** |
 
 ---
 
