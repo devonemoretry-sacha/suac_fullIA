@@ -832,10 +832,21 @@ Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces syst
   détaillée ». Un score chiffré est hors MVP tel qu'écrit.
 
 **Système 14 — Chat vocal de proximité**
-- **Il est le canal d'attribution de ce système**, et c'est une raison plus forte que celle
-  qu'invoquait le périmètre MVP. Sans voix spatialisée, le joueur subit une charge dont il
-  ignore l'origine, et le Pilier 2 ne produit plus rien d'attribuable — seulement de
-  l'arbitraire.
+- **Il est le premier canal d'attribution de ce système**, et c'est une raison plus forte que
+  celle qu'invoquait le périmètre MVP. Sans voix spatialisée, le joueur subit une charge dont
+  il ignore l'origine, et le Pilier 2 ne produit plus que de l'arbitraire.
+
+**Système 19 — UI diégétique, le Sonomètre**
+- **Il est le second canal d'attribution**, et sans lui l'exclusion des joueurs malentendants
+  redevient totale.
+- Il lit `Loudness`, **ce que le joueur émet, jamais ce que cela provoque** — limite posée par
+  le GDD canonique § 2.4.5 et reprise par l'index. Il ne doit donc **jamais** refléter la
+  charge d'un objet, qui est ce que la voix *provoque*.
+- **L'aiguille est analogique et inerte**, ce qui n'est pas qu'un choix esthétique : son
+  retard et son tremblement sont ce qui l'empêche de devenir un instrument de précision.
+  L'index l'exige déjà — *« imprécis, retardé, jamais de seuil affiché »*.
+- **On lit celui des autres, jamais le sien.** Ce document en dépend pour l'attribution
+  croisée, pas pour le retour sur soi.
 
 ## Tuning Knobs
 
@@ -997,21 +1008,40 @@ calme ou alarmé — effacerait tout le régime murmure et rendrait le chuchotem
 - Le seuil d'entrée reste **invisible** : on sent qu'on y est, on ne voit pas à quelle
   distance on en était.
 
-### L'attribution reste auditive — et c'est un refus délibéré
+### L'attribution a deux canaux, et ils sont tous deux diégétiques
 
-Le joueur doit savoir **qui** charge son canapé. **Il l'apprend en entendant la voix**, par
-le chat de proximité, et par rien d'autre.
+> **Corrigé le 2026-09-11.** Une version antérieure affirmait que l'attribution passait
+> « intégralement par l'oreille » et refusait tout marqueur visuel. **Le GDD canonique en
+> prévoit un depuis le début**, et il est meilleur que ce que j'aurais proposé.
 
-> **Aucun marqueur visuel désignant le joueur responsable.** Ce serait plus lisible, et ce
-> serait une faute : cela rendrait le canal vocal redondant, transformerait un moment social
-> en relevé d'interface, et détruirait le ressort comique — qui consiste précisément à
-> **entendre** quelqu'un paniquer et à comprendre en même temps que le meuble s'alourdit.
+Le joueur doit savoir **qui** charge son canapé. Il l'apprend de deux façons, qui se
+complètent :
 
-**Coût assumé, et il faut le nommer** : l'attribution passe intégralement par l'oreille. Un
-joueur sourd ou malentendant perçoit la sanction sans jamais pouvoir en identifier la cause.
-Le GDD du système 6 pose déjà que la mécanique centrale exclut qui ne peut pas produire de
-voix ; **celle-ci ajoute une exclusion pour qui ne peut pas la percevoir**, et elle est plus
-large. Écrit noir sur blanc plutôt que découvert plus tard.
+**Par la voix** — le chat de proximité. Il entend qui panique, et comprend au même instant
+que le meuble s'alourdit. C'est le canal immédiat, et c'est celui qui porte la comédie.
+
+**Par le Sonomètre** — le boîtier à aiguille collé sur le torse de chaque personnage
+(§ 2.4.5 du GDD canonique). *« Porté par tous, et lisible par tous »*, *« plus lisible de
+loin »*. **On lit celui des autres, jamais le sien** : il n'y a rien sur son propre torse
+qu'on puisse regarder.
+
+> **Ce n'est pas un marqueur d'interface, et c'est toute la différence.** Le refus posé plus
+> haut visait un surlignage d'UI désignant le coupable — un relevé collé par-dessus le monde.
+> Le Sonomètre est **un objet porté par un personnage**, qu'on lit en le regardant, comme on
+> lirait une expression. Il ne court-circuite pas la scène, il en fait partie.
+
+**Conséquence pour l'accessibilité, et elle est bonne.** L'exclusion nommée plus haut est
+**plus étroite qu'annoncée** : un joueur sourd ou malentendant peut voir quelle aiguille part
+dans le rouge. Il perd la nuance et l'immédiateté que donne la voix, il ne perd pas
+l'attribution.
+
+> **Le Sonomètre appartient au système 19**, pas à celui-ci. Mais il en est le **second canal
+> d'attribution**, et ce document en dépend autant que du chat vocal. Contrat reporté en
+> *Dependencies*.
+
+**Et il ne renseigne jamais sur soi.** Ce qui apprend à un joueur son propre écart, c'est
+**la réaction de l'objet qu'il porte** — donc ce système, et rien d'autre. La connaissance de
+soi est proprioceptive ; celle des autres est instrumentée.
 
 ### Ce qu'on ne montre jamais
 
@@ -1019,7 +1049,9 @@ large. Écrit noir sur blanc plutôt que découvert plus tard.
 - **Les seuils** — ni celui de l'objet, ni celui de la zizanie. Le joueur apprend où ils sont
   en jouant, jamais en lisant.
 - **Un verdict prédit** — « tu vas lâcher », « plus que 2 secondes ». ADR-0002.
-- **Qui est le coupable**, autrement que par sa voix.
+- **Qui est le coupable, par un surlignage d'interface.** La voix et le Sonomètre le disent
+  déjà, tous deux depuis le monde. Un troisième canal, posé par-dessus, ne servirait qu'à
+  dispenser de regarder et d'écouter.
 
 ## UI Requirements
 
@@ -1061,17 +1093,23 @@ C'est plus large que l'exclusion déjà assumée par le système 6 — celle-ci 
 peut pas *produire* de voix ; celle-là frappe qui ne peut pas la *percevoir*, et un joueur
 malentendant pourrait parfaitement jouer par ailleurs.
 
-> **Piste : une option d'accessibilité, désactivée par défaut**, qui affiche discrètement
-> quel joueur charge l'objet.
+> ### ✅ Question close le 2026-09-11 — le Sonomètre y répondait déjà
 >
-> Elle **dégrade délibérément** l'expérience de qui l'active — le ressort comique repose sur
-> l'écoute — mais elle la rend possible. Et comme elle est hors du chemin par défaut, elle ne
-> coûte rien à l'intention de conception.
+> Cette section proposait une option d'accessibilité affichant le joueur responsable, et
+> s'interrogeait sur sa cohérence avec la ligne éditoriale du projet.
 >
-> **Ce n'est pas tranché.** Le projet a jusqu'ici préféré **assumer franchement** les
-> exclusions plutôt que de les rattraper à moitié — casque obligatoire, voix obligatoire. Ce
-> cas-ci diffère parce que le rattrapage est **cheap et optionnel**, mais la cohérence de
-> cette ligne éditoriale appartient à l'utilisateur, pas à ce document.
+> **Elle était sans objet.** Le GDD canonique prévoit depuis le début un **Sonomètre à
+> aiguille porté sur le torse de chaque personnage**, *« lisible par tous »* et *« plus
+> lisible de loin »* (§ 2.4.5). Un joueur malentendant voit quelle aiguille part dans le
+> rouge.
+>
+> **Rien à ajouter, et surtout rien à mettre en option** : la réponse est diégétique,
+> permanente, et identique pour tout le monde. Ce qui vaut infiniment mieux qu'une case à
+> cocher dans un menu.
+>
+> L'exclusion demeure — un joueur malentendant perd la nuance et l'immédiateté de la voix —
+> mais **elle est bien plus étroite que ce que j'avais écrit**, et elle ne porte plus sur
+> l'attribution elle-même.
 
 ### Ce qu'aucun écran ne doit jamais montrer
 

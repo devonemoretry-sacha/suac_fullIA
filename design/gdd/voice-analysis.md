@@ -890,10 +890,25 @@ La raison n'est pas le coût, elle est l'attribution. Un sidetone donnerait au j
 jeu agit**. Deux retours désaccordés du même geste, c'est précisément la confusion que ce
 système existe pour éviter.
 
-> **Le coût est réel et assumé** : en casque fermé, le joueur perd le retour acoustique
-> naturel de sa voix. Ce manque est porté par le visuel — le sonomètre — et non par l'audio.
-> Noter que le sonomètre n'est pas instantané non plus : il lit `Loudness`, donc une valeur
-> déjà passée par l'enveloppe. Sa latence est celle du jeu, ce qui est le point.
+> ### ⚠️ Corrigé le 2026-09-11 — le sonomètre ne compense rien
+>
+> Ce paragraphe affirmait que la perte du retour acoustique était « portée par le visuel —
+> le sonomètre ». **C'est faux, et le GDD canonique le dit depuis le début** : le Sonomètre
+> est *« collé sur le torse »* du personnage, *« porté par tous, et lisible par tous »*
+> (§ 2.4.5). **On lit celui des autres, jamais le sien.**
+>
+> **Le joueur n'a donc aucun retour visuel sur sa propre voix.** Il ne sait ce qu'il émet que
+> par ses propres oreilles et son propre corps, et il apprend ce que font les autres en les
+> regardant.
+>
+> Ce n'est pas un manque à combler, c'est la structure du jeu : **la connaissance de soi est
+> proprioceptive, la connaissance des autres est instrumentée.** Ce qui renseigne un joueur
+> sur son propre écart n'est pas un cadran — c'est **la réaction de l'objet qu'il porte**,
+> donc le système 11.
+>
+> Le refus du sidetone tient toujours, et pour la raison donnée plus haut : deux références
+> désaccordées du même geste. Mais le coût est **plus grand** qu'écrit, et il faut le dire
+> ainsi.
 
 ### `Degraded` est muet, et c'est un défaut d'attribution
 
