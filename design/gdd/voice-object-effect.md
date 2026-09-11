@@ -375,6 +375,35 @@ franchissement fugace ne produit rien.
 Elle **commence** quand la troisième voix franchit `T_zizanie`, **finit** quand il en reste
 moins de trois, et **ne compte que si elle a duré plus d'une seconde** *(PROVISOIRE)*.
 
+> **Deux épisodes séparés par moins que cette même durée n'en font qu'un.** *(Trou comblé le
+> 2026-09-11.)* Sans cette règle, un compte oscillant autour de trois voix produirait une
+> **inflation d'épisodes** — exactement ce que le minimum devait empêcher, mais par l'autre
+> bout : au lieu de compter des épisodes trop courts, on en compterait trop.
+>
+> Le même paramètre fait donc **deux métiers** : durée minimale pour compter, et écart minimal
+> pour séparer. Aucun réglage supplémentaire.
+
+#### Une voix inaudible peut quand même peser — et c'est voulu
+
+`N_z` se compte sur le `Loudness` **brut**, alors que le régime alarme se déclenche sur `L_i`
+**atténué**. Un joueur qui hurle à l'autre bout de l'appartement peut donc **gonfler le
+multiplicateur** d'un objet qu'il est bien trop loin pour charger lui-même.
+
+**Ce n'est pas une incohérence, c'est la définition** : la zizanie est un état du groupe. Le
+chaos général rend tout plus difficile, ce qui est littéralement la règle d'or du Pilier 1 —
+*« le chaos entraîne la chute »*.
+
+> **L'objection d'attribution, et sa réponse.** Un joueur pourrait subir une charge accélérée
+> par une voix qu'il n'entend pas — le chat de proximité atténue, deux pièces plus loin on
+> n'entend rien. Ce serait un effet sans cause perceptible, ce que ce document interdit.
+>
+> **Le signal d'ambiance de la zizanie est précisément là pour ça.** *Visual/Audio
+> Requirements* exige qu'elle se sente avant d'être facturée : le joueur sait que **le groupe
+> part en vrille**, même s'il ne distingue pas qui. C'est une attribution collective au lieu
+> d'individuelle, et c'est la bonne granularité pour un état de groupe.
+>
+> L'effet reste par ailleurs **borné à +20 %** à quatre joueurs.
+
 Ce minimum n'est pas de l'hystérésis déguisée : il donne la sémantique de comptage dont
 l'écran de fin de contrat a besoin, et évite d'afficher « zizanie ×47 » pour des
 micro-franchissements.
@@ -1133,7 +1162,143 @@ cette approche sur une seule variable ; il en faudra l'équivalent en jeu pour l
 
 ## Acceptance Criteria
 
-[À écrire]
+### Ce qu'un critère doit valoir ici
+
+Mêmes étiquettes que dans les GDD précédents, plus une nouvelle que ce système impose :
+`[UNIT]` automatisable hors Unity et bloquant · `[INTEG]` plusieurs systèmes, bloquant ·
+`[HUMAIN]` playtest, consultatif · **`[BLOQUÉ]`** dépend d'un système qui n'a pas de GDD.
+
+**Presque tout est `[UNIT]`** : charge, régimes, combinaison, lourdeur et zizanie sont de
+l'arithmétique pure, sans dépendance moteur. La même discipline qu'au système 1 — assembly
+testable hors éditeur, tests en millisecondes — s'applique et doit être tenue.
+
+> **Un principe propre à ce document.** Sept valeurs sur dix sont des paris de ressenti. Pour
+> celles qui se **dérivent** — les temps de charge, le seuil d'avertissement — le test calcule
+> sa valeur attendue depuis la constante nommée. Pour les autres — `T_zizanie`, `z`,
+> `Lenteur`, la durée d'épisode — **il n'y a rien à dériver** : le test vérifie alors une
+> **propriété de structure** (« la zizanie croît avec le nombre de voix »), jamais une valeur.
+> Figer un seuil de ressenti dans un test unitaire fige une opinion, pas une propriété.
+
+---
+
+### A — Seuils et régime
+
+| # | Critère | Type |
+|---|---|---|
+| VO-01 | GIVEN `L_repos,i` et `T_objet` THEN `Seuil,i = T_objet × L_repos,i` | `[UNIT]` |
+| VO-02 | GIVEN toutes les voix sous leur seuil respectif THEN régime **murmure** | `[UNIT]` |
+| VO-03 | GIVEN au moins une voix au-dessus THEN régime **alarme** | `[UNIT]` |
+| VO-04 | GIVEN un joueur `Uncalibrated` ou `Degraded` THEN `L_i = 0` : il ne déclenche aucune alarme et ne pèse pas dans la somme du murmure | `[UNIT]` |
+| VO-05 | GIVEN un joueur qui **recalibre en cours de partie** THEN son `L_repos` change, ses contributions **futures** en tiennent compte, et **aucune charge en cours n'est recalculée rétroactivement** | `[UNIT]` |
+
+### B — Régime murmure
+
+| # | Critère | Type |
+|---|---|---|
+| VO-06 | GIVEN murmure et `charge < Plafond_murmure` THEN `charge` monte de `L_mur · dt / (Remplissage × Lenteur)`, bornée au plafond | `[UNIT]` |
+| VO-07 | **Non-régression obligatoire.** GIVEN une charge de 0,60 héritée d'une alarme, régime murmure actif THEN `charge` **reste ≥ 0,60**. Toute implémentation écrivant `charge = min(charge, Plafond)` échoue ce critère | `[UNIT]` |
+| VO-08 | GIVEN quatre voix murmurant indéfiniment THEN `charge` converge vers `Plafond_murmure` **sans jamais le dépasser** | `[UNIT]` |
+| VO-09 | GIVEN la configuration de référence THEN `Plafond_murmure > seuil_av` — le murmure atteint la **zone d'amorçage** et jamais le poids réel. *Calé, pas libre* | `[UNIT]` |
+
+### C — Régime alarme et zizanie
+
+| # | Critère | Type |
+|---|---|---|
+| VO-10 | GIVEN `N_z < 3` THEN `Zizanie = 1` | `[UNIT]` |
+| VO-11 | GIVEN `N_z ≥ 3`, comptés sur le `Loudness` **brut non atténué** THEN `Zizanie = 1 + z·(N_z − 2)` | `[UNIT]` |
+| VO-12 | GIVEN `N_z` croissant THEN `Zizanie` **croît strictement** — propriété de structure, aucune valeur figée | `[UNIT]` |
+| VO-13 | GIVEN `max(L_i)` et `Zizanie` THEN `L_eff = min(1, max(L_i) × Zizanie)`, **borné à 1** | `[UNIT]` |
+| VO-14 | **Aucune voix n'est invisible.** GIVEN deux joueurs au-dessus du seuil WHEN le plus fort se tait THEN le second devient le maximum et la charge **continue de monter**, plus lentement | `[UNIT]` |
+| VO-15 | **Punition par la durée.** GIVEN quatre hurleurs se taisant un par un THEN la charge ne décroît **qu'une fois le dernier repassé sous le seuil** | `[UNIT]` |
+| VO-16 | GIVEN le calcul de `N_z` THEN il lit le `Loudness` **brut**, jamais `L_i`. *Ce chemin ne dépend pas du système 3 et se teste dès maintenant* | `[UNIT]` |
+
+### D — Silence et discrimination
+
+| # | Critère | Type |
+|---|---|---|
+| VO-17 | GIVEN aucune voix n'atteignant l'objet THEN `charge −= dt / Vidange`, **indépendamment de la charge précédente** — pas de punition proportionnelle à la faute | `[UNIT]` |
+| VO-18 | GIVEN 4 joueurs à 0,5 THEN le temps de charge pleine vaut `Remplissage / 0,5`, **dérivé de la constante**, jamais 3,00 s en dur | `[UNIT]` |
+| VO-19 | GIVEN 2 joueurs à 0,8 THEN le temps vaut `Remplissage / 0,8` | `[UNIT]` |
+| VO-20 | **La propriété qui a fait rejeter le modèle précédent.** GIVEN VO-18 et VO-19 THEN leur rapport vaut `0,8 / 0,5`, **calculé**. Une régression vers une combinaison additive l'écraserait vers 1 | `[UNIT]` |
+
+### E — De la charge au poids
+
+| # | Critère | Type |
+|---|---|---|
+| VO-21 | GIVEN `charge = 0` THEN `lourdeur = 0` ; GIVEN `charge = 1` THEN `lourdeur = 1` | `[UNIT]` |
+| VO-22 | GIVEN `charge = seuil_av` THEN `lourdeur = Amorçage` **exactement** — la jonction amorçage/principal est continue | `[UNIT]` |
+| VO-23 | **Les 350 ms sont un plancher, pas une constante.** GIVEN un régime alarme à `L_eff = x` THEN le temps jusqu'à `charge = seuil_av` vaut `Avertissement / x`. **Le test est paramétré sur plusieurs `x`** — 1,0 · 0,9 · 0,5 — et vérifie la formule. Une assertion unique à « 350 ms » figerait la mauvaise lecture et laisserait passer la régression | `[UNIT]` |
+
+### F — La zizanie comme épisode
+
+| # | Critère | Type |
+|---|---|---|
+| VO-24 | GIVEN une **horloge virtuelle** à pas fixes — jamais `Time.deltaTime` réel — et un épisode de 1,4 s simulées THEN il **est compté** | `[UNIT]` |
+| VO-25 | GIVEN un épisode de 0,6 s simulées THEN il **n'est pas compté** | `[UNIT]` |
+| VO-26 | GIVEN deux épisodes séparés par moins que la durée minimale THEN ils **n'en font qu'un**. *Sans quoi une oscillation autour de trois voix produit une inflation d'épisodes* | `[UNIT]` |
+
+### G — Ce qui exige des humains
+
+| # | Critère | Type |
+|---|---|---|
+| VO-27 | GIVEN quatre joueurs réels WHEN l'un panique et crie THEN les autres **identifient qui** a alourdi l'objet — par sa voix, ou par son Sonomètre | `[HUMAIN]` |
+| VO-28 | GIVEN un joueur qui chuchote THEN il rapporte un **frémissement perceptible et non gênant**, jamais une entrée dans le poids réel | `[HUMAIN]` |
+| VO-29 | GIVEN une session complète à quatre sur la configuration de référence THEN au moins un testeur rapporte **avoir perçu et exploité l'avertissement pour se taire à temps**. *Hypothèse à réfuter, pas validation acquise — jamais éprouvée à plusieurs* | `[HUMAIN]` |
+| VO-30 | GIVEN une zizanie en cours THEN les joueurs **savent qu'ils y sont** avant de la voir facturée à l'écran de fin | `[HUMAIN]` |
+
+### H — Bloqués par un système sans GDD
+
+| # | Critère | Bloqué par |
+|---|---|---|
+| VO-31 | Un objet **posé** n'accumule plus rien et décharge normalement | **9** — l'événement porté/posé lui appartient |
+| VO-32 | Les quatre porteurs subissent **la même** lourdeur | **9** — la traduction lourdeur → comportement |
+| VO-33 | Un porteur qui lâche ne change pas la charge ; le sort de l'objet lâché | **9** |
+| VO-34 | À `Loudness` égal, le plus éloigné contribue moins | **3** — aucune forme d'atténuation spécifiée |
+| VO-35 | Un hurleur hors de portée gonfle la zizanie d'un objet qu'il ne peut pas charger seul — **couplage croisé brut/atténué**, voulu et borné à +20 % | **3** |
+
+---
+
+### Ce que ces critères ne couvrent pas
+
+**1. Le point d'extension de la combinaison.** Le GDD exige que la fonction qui rend `L_eff`
+soit **substituable sans rouvrir la boucle de mise à jour**. On peut tester toutes ses sorties
+numériques sans jamais vérifier cette propriété — **c'est un critère d'architecture, et il
+n'en existe aucun**. À traiter comme le test de surface publique du système 1 : par inspection
+statique, pas par comportement.
+
+**2. Le couplage `Remplissage` × `Plafond_murmure` × `Avertissement`.** Les trois sont liés par
+construction, et les *Tuning Knobs* signalent qu'un changement de `Remplissage` invalide la
+seule mesure du document. **Aucun test ne le vérifie.** Un critère devrait échouer si
+`Plafond_murmure` cesse d'être supérieur à `seuil_av` — VO-09 le fait pour la configuration de
+référence, pas pour une configuration arbitraire.
+
+**3. Les seuils de ressenti n'ont pas de critère de valeur, par construction.** `T_zizanie`,
+`z`, `Lenteur` et la durée d'épisode ne se dérivent d'aucune formule. VO-12 vérifie une
+structure ; la valeur appartient au playtest. **C'est une limite assumée, pas un oubli.**
+
+### Les cas difficiles
+
+**Les 350 ms.** La seule protection est de **bannir toute assertion à valeur unique** et
+d'exiger un test paramétré sur plusieurs `L_eff`. La réponse tient, à condition que la
+discipline soit tenue en revue : un test à un seul point laisserait passer la régression
+exactement comme la formulation d'origine du GDD laissait croire à une constante.
+
+**Le plafond du murmure.** VO-07 attrape la régression décrite, en partant d'une charge
+**au-dessus** du plafond et en vérifiant l'absence de décroissance. C'est le critère le plus
+important du lot : il défend une règle de conception — *« pour récupérer, il faut se taire »* —
+qu'une optimisation bien intentionnée détruirait en une ligne.
+
+**Les valeurs non mesurées.** Structure en unitaire, valeur en playtest. Jamais l'inverse.
+
+**L'épisode de zizanie.** L'horloge virtuelle règle la stabilité. La continuité de l'épisode
+était un **trou de spécification**, pas de test — comblé le 2026-09-11 : deux épisodes séparés
+par moins que la durée minimale fusionnent, ce qui donne au même paramètre un second métier.
+
+### Ce qui reste hors de portée d'une machine
+
+Le ressenti de l'avertissement, l'attribution sociale, la lisibilité du frémissement en
+murmure — et **tout ce qui suppose quatre joueurs calibrés**, jamais éprouvé. Aucune métrique
+ne remplace la question *« est-ce drôle, ou est-ce frustrant ? »*.
 
 ## Open Questions
 
