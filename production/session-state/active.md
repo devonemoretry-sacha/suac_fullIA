@@ -1,11 +1,11 @@
 # Session State — Active
 
-**Dernière mise à jour**: 2026-09-08
+**Dernière mise à jour**: 2026-09-11
 
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype Charge vocale monte dans prototypes/ — a jouer et regler
+Task: GDD systeme 11 complet et pousse — prochain jalon a choisir
 <!-- /STATUS -->
 
 ---
@@ -39,8 +39,12 @@ par les skills du template.
 - [ ] Re-revue du GDD analyse vocale après révisions
 - [x] **GDD Calibration vocale — COMPLET**, 11 sections, 1480 lignes
 - [ ] `/design-review voice-calibration` — jamais relu
+- [x] **Prototype Charge vocale — joué et réglé** (2026-09-08/09). Falsification utile : la « fenêtre de réaction » n'est **pas** l'invariant du ressenti — c'est le **délai d'avertissement** qui sépare les réglages bons des mauvais. Valeur retenue : **350 ms, mesurée**, la seule valeur mesurée de tout le système 11
+- [x] **Revue du directeur technique sur toute la chaîne vocale** (2026-09-08) — archivée dans `docs/architecture/voice-chain-td-review-2026-09-08.md` avec deux objections vérifiées de ma part. Corrections appliquées : taux d'échantillonnage contractualisé, enveloppe lissée **en dB**, ADR-0003 rétrogradé
+- [x] **GDD Effet voix → objets — COMPLET**, 11 sections, 1457 lignes, statut `Designed` (2026-09-11)
+- [ ] `/design-review voice-object-effect` — jamais relu
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
-- [~] `/prototype` — **banc monté** : `prototypes/charge-vocale/`, servi sur `http://localhost:4321` (`node prototypes/charge-vocale/serve.js`). Cahier des charges : `design/voice-weight-response.md`. Reste à jouer, régler, et consigner les résultats dans son `README.md`
+- [x] `/prototype` — **banc monté, joué, réglé** : `prototypes/charge-vocale/`, servi sur `http://localhost:4321` (`node prototypes/charge-vocale/serve.js`). Cahier des charges et résultats : `design/voice-weight-response.md`. **Extension proposée (OQ-11.6)** : trois voix simulées, pour tester combinaison et zizanie sans réunir quatre humains
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
 - [x] **Backend vocal retenu : Dissonance** (2026-09-07). 120 $ + 55 $ pont FMOD, **dès le départ et non en upgrade** — ADR-0005 amendé
 - [x] Audit de `DissonanceVoiceForFishNet` — verdict **vendoriser, ne pas dépendre** : 698 lignes MIT, auteur d'origine parti mais dépôt vivant (l'auteur de Dissonance y a lui-même contribué)
@@ -136,3 +140,21 @@ Commits au fil des étapes.
 | `b787542` | ADR-0003 amendé — AEC en amont de la fourche |
 | `fd649a0` | Inventaire `/gate-check` Technical Setup → Pre-Production |
 | `2a40531` | Contraintes moteur consignées, `/create-architecture` en pause |
+
+---
+
+## Ajouts du 2026-09-11
+
+| Fichier | Rôle |
+|---|---|
+| `design/gdd/voice-object-effect.md` | **GDD système 11**, 11 sections, 1457 lignes, `Designed` |
+| `design/voice-weight-response.md` | Cible de ressenti + brief du prototype ; les 350 ms mesurées y sont consignées |
+| `prototypes/charge-vocale/` | Banc de réglage (`index.html`, `serve.js`, `README.md`) |
+| `docs/architecture/voice-chain-td-review-2026-09-08.md` | Revue TD de la chaîne vocale + mes deux objections vérifiées |
+| `Unity/.../ThirdParty/DissonanceFishNet~/` | Intégration vendorisée, inerte |
+
+**Le risque dominant du système 11 (OQ-11.6)**, à garder en tête : le paradoxe central
+— l'objet le plus lourd au moment où l'on a le plus envie de crier — n'a jamais été testé,
+et son mode de défaillance *ressemble à de la maîtrise*. Si le jeu se résout en jouant en
+silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contrepoids prévu
+(l'objet qui **exige** du son) appartient au système 13 et n'existe pas.
