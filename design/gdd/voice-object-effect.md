@@ -1,8 +1,8 @@
 # Effet voix → objets
 
-> **Status**: In Design
+> **Status**: Designed
 > **Author**: Sacha (devonemoretry-sacha) + Claude
-> **Last Updated**: 2026-09-09
+> **Last Updated**: 2026-09-11
 > **Implements Pillar**: Pilier 1 — « La Voice-Physics récompense le contrôle, pas le silence »
 > et Pilier 2 — « La coopération est sous contrainte, jamais confortable ».
 > **Contrairement aux systèmes 1 et 6, celui-ci ne prépare pas les piliers : il les réalise.**
@@ -1344,4 +1344,114 @@ ne remplace la question *« est-ce drôle, ou est-ce frustrant ? »*.
 
 ## Open Questions
 
-[À écrire]
+### Comment lire cette section
+
+Même classement que dans les GDD précédents — par **ce que la question empêche**. Mais la
+répartition est inhabituelle, et il faut le dire d'emblée :
+
+> **Ce document ne se doit aucune décision.** Le prototype et les arbitrages de l'utilisateur
+> ont fermé le modèle : régimes, combinaison, seuils, zizanie, tout est tranché. **Ce qui
+> bloque vient entièrement des voisins**, et ce qui reste ouvert chez nous relève du réglage,
+> pas de la conception.
+>
+> C'est la situation inverse des systèmes 1 et 6, qui se spécifiaient seuls et gardaient des
+> trous internes.
+
+---
+
+### Bloqué par un voisin qui n'a pas de GDD
+
+| # | Question | Chez qui |
+|---|---|---|
+| OQ-11.1 | **Ce que « lourdeur = 1 » veut dire mécaniquement** — vitesse, inertie, points d'ancrage, chute. Et si cela rend le transport **impossible ou seulement pénible** | **9 — Portage** |
+| OQ-11.2 | **La forme de l'atténuation de `L_i`** par la distance, et son exigence préalable : **une valeur par source, jamais un agrégat** | **3 — Propagation** |
+| OQ-11.3 | **La partition en pièces**, et la requête « dans quelle pièce est ce point » | **10 — Appartement** |
+| OQ-11.4 | **Le point de référence d'un objet** pour déterminer sa pièce — centre de masse, point d'ancrage, volume dominant ? Décisif dans les embrasures | **9 et 10** |
+
+**Aucune de ces quatre ne se devine.** Les combler par supposition produirait des règles
+contredites dès que ces GDD s'écriront.
+
+### Bloque le réglage
+
+#### OQ-11.5 — Dix valeurs, dont une seule mesurée
+
+`Avertissement` vaut 350 ms, éprouvé au banc. Les neuf autres sont des paris, et **sept
+d'entre elles n'ont jamais été confrontées à plusieurs joueurs**.
+
+Elles se répartissent en deux familles qui ne se règlent pas de la même façon :
+
+| Famille | Valeurs | Méthode |
+|---|---|---|
+| **Dérivables** | `Remplissage`, `Vidange`, `Amorçage`, `Plafond_murmure` | Banc d'essai, une variable à la fois — la méthode a déjà fonctionné |
+| **Seuils de ressenti** | `T_objet`, `Lenteur`, `T_zizanie`, `z`, durée d'épisode | **Rien à dériver.** Playtest, et les tests unitaires ne vérifient que la structure |
+
+> **Rappel de couplage** : `Remplissage` gouverne le seuil d'avertissement et le plafond du
+> murmure. **Le toucher invalide la seule mesure du document.**
+
+---
+
+### Le risque qui domine tous les autres
+
+#### OQ-11.6 — Le paradoxe central n'a jamais été éprouvé
+
+Ce système repose sur une thèse que rien ne valide : **qu'on peut punir la parole sans que les
+joueurs cessent de parler.**
+
+Si le coût s'avère trop élevé, les joueurs se taisent — et l'on obtient un jeu coopératif
+silencieux qui échoue au Pilier 1 *et* vide l'expérience sociale. Le mode d'échec est
+particulièrement traître : **il ressemble à de la maîtrise.** Une équipe silencieuse et
+efficace paraît avoir bien joué.
+
+**Et le contrepoids n'existe pas encore.** L'*Overview* pose que ce système, seul, rend le
+silence optimal, et que sa correction vit dans l'« objet à demande sonore » du système 13.
+Tant que celui-ci n'est pas écrit, **le MVP pourrait valider une boucle où se taire gagne**,
+sans que personne s'en aperçoive.
+
+> **C'est le seul point de ce document qui puisse invalider le jeu plutôt que le système.**
+
+#### OQ-11.7 — La combinaison est du raisonnement, pas de la mesure
+
+Deux régimes, un maximum, une somme plafonnée, un multiplicateur par pièce : **rien de tout
+cela n'a été ressenti par personne.** Le banc d'essai était monojoueur.
+
+Le raisonnement est solide et chiffré — le rapport 1,6 entre quatre joueurs modérés et deux
+bruyants est la propriété qui a fait rejeter le modèle précédent. **Mais un rapport calculé
+n'est pas un ressenti vérifié.**
+
+### Ce que le prototype devrait faire ensuite
+
+Le banc existe et a déjà tué deux hypothèses. **Il peut tester la combinaison sans réunir
+quatre personnes.**
+
+> **Proposition : trois voix simulées, plus la vraie.** Trois curseurs de `Loudness` fixes à
+> côté du micro réel, chacun assignable à une pièce.
+>
+> On sentirait alors, seul et en quelques minutes : le maximum qui masque puis démasque, la
+> somme du murmure, le plafond, le multiplicateur de zizanie, et le franchissement de porte.
+>
+> **Ce que ça ne teste pas** : le social — l'attribution, la comédie, l'envie de crier sur
+> quelqu'un. Mais ça vaut infiniment mieux que de coder neuf valeurs sur du raisonnement pur,
+> et c'est une après-midi.
+
+### Appartient ailleurs
+
+| # | Question | Chez qui |
+|---|---|---|
+| OQ-11.8 | **Le conflit de l'objet à demande sonore** — il exige du son, nous punissons le son. Trois voies posées en *Edge Cases*, aucune tranchée | **13** |
+| OQ-11.9 | Les **valeurs de `T_objet`** par type de meuble — c'est la variété du mobilier | **13** |
+| OQ-11.10 | Le **barème et l'affichage** des épisodes de zizanie. **Hors MVP tel qu'écrit** : `mvp-scope.md` pose « écran succès / échec, pas d'évaluation détaillée » | **16 et 18** |
+| OQ-11.11 | La perte de **nuance pour les joueurs malentendants** — le Sonomètre donne l'attribution, pas l'immédiateté ni le ton | **19**, et une décision d'ensemble |
+| OQ-11.12 | La partition en pièces sert-elle **aussi** à l'occlusion ? En créer deux serait une faute | **3 et 10** |
+
+---
+
+### État du code aujourd'hui
+
+**Rien n'est implémenté**, et c'est vrai de tous les systèmes sauf le 1.
+
+Mais une remarque utile pour la suite : **le cœur de ce système est écrivable dès maintenant.**
+Charge, régimes, combinaison, lourdeur et zizanie sont de l'arithmétique pure, sans dépendance
+moteur — exactement comme `SUAC.Voice.Core`. Les vingt-six critères `[UNIT]` passeraient sans
+qu'aucun des systèmes 3, 9 ou 10 n'existe.
+
+**Ce qui est bloqué, ce n'est pas le modèle, c'est son branchement.**

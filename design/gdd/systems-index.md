@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Created**: 2026-09-03
-> **Last Updated**: 2026-09-03
+> **Last Updated**: 2026-09-11
 > **Source Concept**: `design/gdd/game-concept.md`
 > **Scope Authority**: `design/mvp-scope.md`
 
@@ -47,7 +47,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **In Design** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
+| 11 | Effet voix → objets | Gameplay | MVP | **Designed** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -319,10 +319,10 @@ là où le développeur travaille.
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 19 |
-| Design docs started | **2** *(Analyse vocale et Calibration vocale — complets, 11 sections chacun)* |
+| Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
 | Design docs reviewed | **1** *(2026-09-07, verdict NEEDS REVISION — révisions appliquées le jour même)* ; Calibration **non relue** |
 | Design docs approved | 0 *(re-revue à lancer)* |
-| MVP systems designed | 2 / 19 |
+| MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |
 | Systems implemented without GDD | **0** *(l'analyse vocale a désormais son GDD)* |
 
@@ -336,12 +336,15 @@ là où le développeur travaille.
 | 2026-09-03 | **Correction de méthode** : les couches traduisent l'ordre de conception, pas les dépendances de compilation. `Audio d'entrée` et `Propagation du son` remontent de Core en Foundation ; `Calibration` remonte de Feature en Core ; `Appartement` descend de Core en Feature (dépend de l'enveloppe de portage). |
 | 2026-09-03 | **Audio d'entrée redéfini** comme propriétaire unique du micro, qui fourche vers analyse et chat vocal — conforme à ADR-0003, résout le conflit de ressource par conception. |
 | 2026-09-03 | Conflit `mvp-scope.md` ↔ ADR-0005 tranché : le routage de canaux vocaux (morts / vivants) sera codé maison sur l'implémentation gratuite, plutôt que d'avancer l'achat de Dissonance. |
+| 2026-09-07 | **Système 1 `Designed`** — `voice-analysis.md`, 11 sections. Rétro-documentation du code déjà implémenté. |
+| 2026-09-09 | **Système 6 `Designed`** — `voice-calibration.md`, 11 sections. Le système 11 gagne une dépendance de conception vers 6 : ses seuils sont personnels. |
+| 2026-09-11 | **Système 11 `Designed`** — `voice-object-effect.md`, 11 sections. Modèle à deux régimes (murmure / alarme), charge et lourdeur, zizanie **par pièce** — d'où une dépendance nouvelle vers le système 10 pour la partition de l'appartement. Délai d'avertissement **mesuré** à 350 ms au prototype. |
 
 ---
 
 ## Next Steps
 
-- [ ] Rétro-documenter l'**Analyse vocale** (code implémenté et testé, GDD manquant)
+- [x] Rétro-documenter l’**Analyse vocale** (code implémenté et testé, GDD manquant) — fait le 2026-09-07
 - [ ] **POC audio** — lever la contention de périphérique avant tout le reste
 - [ ] `/design-system` sur les systèmes 2 et 3 (parallélisables)
 - [ ] Prototype ciblé sur la physique partagée sous latence, avant les systèmes 13, 15, 16
