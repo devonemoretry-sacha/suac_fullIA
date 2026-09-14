@@ -42,7 +42,7 @@ autre (voir *Revision History*).
 | 3 | Propagation du son *(inféré)* | Gameplay | MVP | Not Started | — | 1 |
 | 4 | Restitution spatialisée *(inféré)* | Audio | MVP | Not Started | — | — |
 | 5 | Réseau | Core | MVP | Not Started | — | — |
-| 6 | Calibration vocale | Audio | MVP | **Designed** | `voice-calibration.md` | 1, 2 |
+| 6 | Calibration vocale | Audio | MVP | **Needs Revision** | `voice-calibration.md` | 1, 2 |
 | 7 | 3C — caméra, contrôles, personnage | Core | MVP | Not Started | — | 5 |
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
@@ -320,7 +320,7 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
-| Design docs reviewed | **1** *(2026-09-07, verdict NEEDS REVISION — révisions appliquées le jour même)* ; Calibration **non relue** |
+| Design docs reviewed | **2** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED**, révision groupée en attente)* ; Effet voix → objets **non relu** |
 | Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |
