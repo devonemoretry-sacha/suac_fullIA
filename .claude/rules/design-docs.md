@@ -28,3 +28,11 @@ paths:
   per-player, derived from calibration. A fixed constant in the voice chain may only
   detect a **physically broken measurement**, never an **unusual voice** — unusual
   cases are accepted (flagged if needed), not refused
+- **Provenance of measured values** (added 2026-09-14, after the voice-object-effect
+  review): any value presented as *measured* must cite the code and model it was
+  measured under (file, line, formula) and list every difference with the model the
+  GDD now specifies. A number measured under another model is a provisional value
+  with a history, not a measurement of the new one
+- **Availability of consumed data** (added 2026-09-14): any input a formula consumes
+  must name **where** it is available at runtime (local client, host, every client)
+  and cite the ADR line that routes it there. No routing = the formula cannot run

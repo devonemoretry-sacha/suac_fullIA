@@ -47,7 +47,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **Designed** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
+| 11 | Effet voix → objets | Gameplay | MVP | **Needs Revision** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -320,7 +320,7 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
-| Design docs reviewed | **2** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED**, révision groupée en attente)* ; Effet voix → objets **non relu** |
+| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED**, révision groupée en attente)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED**, révision groupée en attente)* |
 | Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |

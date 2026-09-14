@@ -1,0 +1,1 @@
+- [Voice-object-effect (system 11) AC review 2026-09-14](project_voice-object-effect-review-2026-09-14.md) — BLOQUANT findings (SILENCE regime contradiction, VO-09 self-contradiction, reachability gap, miscount, missing ADR-0002 test) pending fold-in to the grouped 1/6/11 revision pass.
