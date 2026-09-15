@@ -36,3 +36,13 @@ paths:
 - **Availability of consumed data** (added 2026-09-14): any input a formula consumes
   must name **where** it is available at runtime (local client, host, every client)
   and cite the ADR line that routes it there. No routing = the formula cannot run
+- **Correct in place** (owner decision F5, 2026-09-15, after the voice-analysis re-review):
+  a correction or an ADR status change **edits the normative section in place**, after
+  searching the term across every GDD and ADR. The dated note goes to a *Revision History*
+  section at the end of the document; a callout that contradicts the text above it is a
+  defect. A value or a count is written **once**, with its owner; elsewhere, link to it.
+  An upstream GDD publishes a **table of reachable domains** for its outputs, and
+  downstream GDDs cite it instead of re-deriving. Any technical claim coming from a
+  review — a number, an API, an engine behaviour — is **verified against the code or the
+  documentation before being applied**: a review recommendation is a hypothesis, not a
+  requirement

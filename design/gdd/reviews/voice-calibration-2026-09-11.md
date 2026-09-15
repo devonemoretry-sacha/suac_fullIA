@@ -45,6 +45,11 @@ comprises.
 | D2 | Combien de refus avant le profil approximatif consenti ? | **2** |
 | D3 | AEC auto-référencée : rouvrir ADR-0003 ? | **Non.** Mais reformuler « c'est irréalisable » en « c'est possible, nous le refusons, voici le prix » |
 
+
+### Décisions du propriétaire — 2026-09-15
+
+**Les dix recommandations du §6 sont acceptées telles quelles** (« d'accord sur tout »), ainsi que les points tranchés par le creative-director sans décision (Pitch = 0 hors voisement, pas de passe-haut avant mesure, voix < 70 Hz documentées, reformulation d'ADR-0003). La passe groupée démarre dans l'ordre du §4 : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`.
+
 ---
 
 ## Le constat central — sur six bornes de validation, deux fonctionnent

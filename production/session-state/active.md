@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Obtenir les 10 decisions consolidees, puis passe groupee 1 -> ADR -> 6 -> 11
+Task: Passe groupee — etape 1 : revision du systeme 1 (voice-analysis.md)
 <!-- /STATUS -->
 
 ---
@@ -165,7 +165,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 
 1. [x] Archiver la revue du système 6, règle de méthode « atteignabilité + témoin »
 2. [x] Revue full du système 11 → re-revue full du système 1 (NEEDS REVISION)
-3. [ ] **Étape en cours — décisions à obtenir** (10, liste consolidée en §6 de `voice-analysis-2026-09-14.md`), puis **une seule passe de révision** sur les systèmes 1, 6 et 11 — poser d'abord à l'utilisateur, **en langage simple**, la liste consolidée des décisions (D1–D3, E1–E5, et celles de la re-revue du système 1)
+3. [~] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées** (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
 4. [ ] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
 5. [ ] Test à plusieurs humains — **dont au moins une session dans la même pièce** (OQ-8)
 6. [ ] Puis les GDD suivants

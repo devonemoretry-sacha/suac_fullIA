@@ -17,6 +17,11 @@
 
 **Rien n’est appliqué.** La passe groupée 1 → ADR → 6 → 11 attend les décisions du propriétaire (§6 ci-dessous, qui fusionne D1–D3 de la revue du système 6, E1–E5 de celle du système 11, et F1–F5 de celle-ci). La règle de méthode proposée en §4 (corriger en place, vérifier les recommandations de revue) **n’est pas encore ajoutée** aux règles de conception : c’est la décision n° 1.
 
+
+### Décisions du propriétaire — 2026-09-15
+
+**Les dix recommandations du §6 sont acceptées telles quelles** (« d'accord sur tout »), ainsi que les points tranchés par le creative-director sans décision (Pitch = 0 hors voisement, pas de passe-haut avant mesure, voix < 70 Hz documentées, reformulation d'ADR-0003). La passe groupée démarre dans l'ordre du §4 : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`.
+
 ---
 
 

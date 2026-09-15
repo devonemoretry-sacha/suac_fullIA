@@ -41,6 +41,11 @@ revue du système 6.
 | **E4** | **On garde « parler normalement déclenche l'alarme » sur tous les meubles ?** | **Garder la décision**, et mettre **un** meuble tolérant (`T_objet ≥ 1`) dans le prototype comme point de comparaison |
 | **E5** | **Accepter que ton « niveau de voix normale » — un seul nombre, `L_repos` — parte vers l'hôte ?** Sans lui, l'hôte ne calcule aucun seuil et le système ne fonctionne pas en réseau. | **Oui.** Le profil en dB reste sur la machine ; amender ADR-0003 et CAL-34 dans la même passe |
 
+
+### Décisions du propriétaire — 2026-09-15
+
+**Les dix recommandations du §6 sont acceptées telles quelles** (« d'accord sur tout »), ainsi que les points tranchés par le creative-director sans décision (Pitch = 0 hors voisement, pas de passe-haut avant mesure, voix < 70 Hz documentées, reformulation d'ADR-0003). La passe groupée démarre dans l'ordre du §4 : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`.
+
 ---
 
 ## Trois constats ajoutés par le creative-director
