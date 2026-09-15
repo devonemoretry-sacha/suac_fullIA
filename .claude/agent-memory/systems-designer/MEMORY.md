@@ -1,0 +1,3 @@
+- [Voice-Physics grouped revision workflow](project-voice-physics-grouped-revision.md) — systems 1/6/11 reviewed together, single revision pass, session-logs per reviewer key
+- [Adversarial review style expected](feedback-adversarial-review-style.md) — French, dense arithmetic witnesses, cite exact lines, no padding
+- [Design-docs rules: reachability/provenance/thresholds](reference-design-docs-rules.md) — where the three 2026-09-14 rules live and what they require

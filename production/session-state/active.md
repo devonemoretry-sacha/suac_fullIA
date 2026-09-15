@@ -1,11 +1,11 @@
 # Session State — Active
 
-**Dernière mise à jour**: 2026-09-11
+**Dernière mise à jour**: 2026-09-14
 
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: GDD systeme 11 complet et pousse — prochain jalon a choisir
+Task: Obtenir les 10 decisions consolidees, puis passe groupee 1 -> ADR -> 6 -> 11
 <!-- /STATUS -->
 
 ---
@@ -36,13 +36,13 @@ par les skills du template.
 - [x] `/design-review voice-analysis` — verdict **NEEDS REVISION**, révisions appliquées le 2026-09-07. Rapport et traitement dans `design/gdd/reviews/voice-analysis-2026-09-07.md`
 - [x] **ADR-0007** (`Accepted`) — cadence d'analyse par `deltaTime` explicite. Unity ne fournit aucun rappel à 50 Hz fixe : l'option « contrat implicite » n'existait pas
 - [x] **ADR-0008** (`Accepted`) — l'ingestion de PCM externe est un critère éliminatoire ; inventaire fait, backend retenu, intégration auditée et vendorisée
-- [ ] Re-revue du GDD analyse vocale après révisions
+- [x] **Re-revue full du GDD analyse vocale** — **NEEDS REVISION** (synthèse 2026-09-15), archivée `design/gdd/reviews/voice-analysis-2026-09-14.md` + annexes. Premier de la passe groupée : formule de sonie = racine commune. Vérification adverse : 154 affirmations, 11 réfutées
 - [x] **GDD Calibration vocale — COMPLET**, 11 sections, 1480 lignes
-- [ ] `/design-review voice-calibration` — jamais relu
+- [x] `/design-review voice-calibration` — **MAJOR REVISION NEEDED** (2026-09-11), archivé `design/gdd/reviews/voice-calibration-2026-09-11.md`. Décisions D1–D3 ouvertes
 - [x] **Prototype Charge vocale — joué et réglé** (2026-09-08/09). Falsification utile : la « fenêtre de réaction » n'est **pas** l'invariant du ressenti — c'est le **délai d'avertissement** qui sépare les réglages bons des mauvais. Valeur retenue : **350 ms, mesurée**, la seule valeur mesurée de tout le système 11
 - [x] **Revue du directeur technique sur toute la chaîne vocale** (2026-09-08) — archivée dans `docs/architecture/voice-chain-td-review-2026-09-08.md` avec deux objections vérifiées de ma part. Corrections appliquées : taux d'échantillonnage contractualisé, enveloppe lissée **en dB**, ADR-0003 rétrogradé
 - [x] **GDD Effet voix → objets — COMPLET**, 11 sections, 1457 lignes, statut `Designed` (2026-09-11)
-- [ ] `/design-review voice-object-effect` — jamais relu
+- [x] `/design-review voice-object-effect` — **MAJOR REVISION NEEDED** (2026-09-14), archivé `design/gdd/reviews/voice-object-effect-2026-09-14.md`. Décisions E1–E5 ouvertes
 - [x] `/art-bible` — sections 1-3 écrites, **cadre provisoire assumé**. Section 4 différée : la direction visuelle évoluera avec un graphiste, et elle ne lève aucun risque de gameplay
 - [x] `/prototype` — **banc monté, joué, réglé** : `prototypes/charge-vocale/`, servi sur `http://localhost:4321` (`node prototypes/charge-vocale/serve.js`). Cahier des charges et résultats : `design/voice-weight-response.md`. **Extension proposée (OQ-11.6)** : trois voix simulées, pour tester combinaison et zizanie sans réunir quatre humains
 - [x] **Inventaire des SDK vocaux** (ADR-0008) — fait le 2026-09-07, sourcé. 4 candidats passent le critère d'ingestion PCM ; **Steam Voice échoue deux fois** et invalide l'implémentation A d'ADR-0005
@@ -158,3 +158,18 @@ Commits au fil des étapes.
 et son mode de défaillance *ressemble à de la maîtrise*. Si le jeu se résout en jouant en
 silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contrepoids prévu
 (l'objet qui **exige** du son) appartient au système 13 et n'existe pas.
+
+---
+
+## Plan arrêté le 2026-09-14 (décision utilisateur)
+
+1. [x] Archiver la revue du système 6, règle de méthode « atteignabilité + témoin »
+2. [x] Revue full du système 11 → re-revue full du système 1 (NEEDS REVISION)
+3. [ ] **Étape en cours — décisions à obtenir** (10, liste consolidée en §6 de `voice-analysis-2026-09-14.md`), puis **une seule passe de révision** sur les systèmes 1, 6 et 11 — poser d'abord à l'utilisateur, **en langage simple**, la liste consolidée des décisions (D1–D3, E1–E5, et celles de la re-revue du système 1)
+4. [ ] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
+5. [ ] Test à plusieurs humains — **dont au moins une session dans la même pièce** (OQ-8)
+6. [ ] Puis les GDD suivants
+
+**Principe utilisateur du 2026-09-14** : les seuils sont personnels ; une constante ne détecte qu'une mesure cassée, jamais une voix inhabituelle. Consigné dans `.claude/rules/design-docs.md` et en mémoire.
+
+**Découverte qui change le sens du seul chiffre mesuré** : au banc, le halo s'allumait dès la première trame parlée et les 350 ms fixaient le début du poids réel (`prototypes/charge-vocale/index.html` l. 629, `heaviness()` l. 543–548). La question E1 est à poser à l'utilisateur : qu'a-t-il jugé « le meilleur » ?

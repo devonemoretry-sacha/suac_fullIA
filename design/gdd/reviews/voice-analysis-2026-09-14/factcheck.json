@@ -1,0 +1,974 @@
+[
+ {
+  "domain": "Arithmétique et signal — témoins numériques, évaluations de formules, comptages de fenêtres/périodes, calculs en dB, estimations de complexité et ordres de grandeur acoustiques (revue sys1, 2026-09-14)",
+  "claims": [
+   {
+    "source": "game-designer #1",
+    "claim": "Un bruit à Floor+2 dB donne x = 0,05 et Loudness = 0,05^0,65 ≈ 0,14.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "0,05^0,65 = e^(0,65·ln 0,05) = e^(−1,947) = 0,1427. Valable seulement pour Δ = 40 dB, que le rapport ne précise pas (repris de l'exemple GDD:293, Floor −50 / Scream −10)."
+   },
+   {
+    "source": "game-designer #1",
+    "claim": "Ni la traîne ni le bruit propre du micro ne ramènent Loudness à 0. On ne tombe à x = 0 que sous le « plancher dur », qu'aucun micro n'atteint en permanence.",
+    "verdict": "PARTIEL",
+    "evidence": "Floor_dB = P95(Rms_dB) + FloorMargin_dB, avec FloorMargin_dB = 3 (voice-calibration.md:365-366). Un bruit stationnaire reste donc au moins 3 dB sous Floor sur au moins 95 % des trames, et x = 0 pour elles. Le témoin ne tient que pour des transitoires (souffle, clavier) qui dépassent P95+3 dB. De plus, le « plancher dur » (HardFloor_dB) est un seuil portant sur Δ (GDD:488), pas sur un niveau : le rapport confond les deux."
+   },
+   {
+    "source": "game-designer #1 / systems-designer §1.5",
+    "claim": "Aucun AC ne couvre Rms_dB ∈ (Floor_dB, Floor_dB+Margin_dB).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-02 (GDD:1023) teste seulement Rms_dB = Floor_dB. AC-36 (GDD:1099) teste au-dessus de Floor+Margin. AC-40 (GDD:1103) teste sous Floor_dB. L'intervalle ouvert entre les deux n'est couvert par personne."
+   },
+   {
+    "source": "systems-designer §1.1",
+    "claim": "Profil LowRange à Δ = 13 : un bruit à Floor+2 dB donne Loudness ≈ 0,296, « presque 0,30 sur du bruit de pièce ».",
+    "verdict": "PARTIEL",
+    "evidence": "Le calcul est juste : (2/13)^0,65 = e^(0,65·ln 0,1538) = 0,2962. Mais Floor+2 dB correspond à P95+5 dB (voice-calibration.md:366) : c'est un transitoire, pas le bruit de pièce stationnaire. Par ailleurs, la valeur 13 vient de voice-calibration.md:466 ; le GDD donne ~12–15 (GDD:488)."
+   },
+   {
+    "source": "systems-designer §1.2",
+    "claim": "Une garde a posteriori sous Floor+Margin crée un saut de 0 à 0,322, alors que le remappage x' = (Rms − (Floor+Margin)) / (Scream − (Floor+Margin)) est continu.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "(7/40)^0,65 = e^(0,65·ln 0,175) = 0,3221. x' vaut exactement 0 à Floor+Margin et 1 à Scream_dB. La porte de voisement utilise le même seuil (GDD:417), donc le saut coïncide bien avec son ouverture."
+   },
+   {
+    "source": "systems-designer §1.3",
+    "claim": "Au plancher dur, la plage utile devient Δ' = Δ − Margin_dB = 13 − 7 = 6 dB.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "13 − 7 = 6. Avec la fourchette du GDD (plancher dur ~12–15, GDD:488 ; Margin 7, GDD:426), Δ' vaut 5 à 8 dB. La conclusion qualitative (plage très étroite) tient."
+   },
+   {
+    "source": "systems-designer §1.4",
+    "claim": "L'exemple du GDD (0,148 → 0,286 pour ~2 dB à Δ = 20) est juste ; le remappage déplace le doublement au-dessus du nouveau zéro sans le supprimer.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "x = 0,148^(1/0,65) = 0,0529, soit 1,06 dB ; x = 0,286^(1/0,65) = 0,1458, soit 2,92 dB. Écart 1,86 dB, rapport 1,93. Ce rapport ne dépend que du rapport des x : (2,915/1,058)^0,65 = 1,93, quel que soit le dénominateur. Nuance : le bruit stationnaire, lui, n'est plus à la nouvelle origine."
+   },
+   {
+    "source": "systems-designer §2 (point 1) ; prémisse partagée par qa-lead #1",
+    "claim": "Rien dans la chaîne ne fabrique activement un Pitch = 0 : la phrase de Formulas §2 décrit un comportement que l'implémentation ne produit pas.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "VoiceFrame.cs:101-103 contient `Pitch = voiced ? pitch : 0f;` et Silence() force aussi Pitch à 0 (VoiceFrame.cs:113). C'est le type public déjà livré qui implémente Formulas §2. Faire gagner AC-34 impose donc de modifier ce constructeur, ce qu'aucun des deux rapports ne signale."
+   },
+   {
+    "source": "systems-designer §3.1",
+    "claim": "F0_habituel issu de la calibration est structurellement dans [70, 600] Hz, donc le témoin 0,01 Hz est inatteignable par la voie organique.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "maxLag = ⌈8000/70⌉ = 115, donc F0 min = 69,57 Hz. minLag = ⌊8000/600⌋ = 13, et le décalage d'interpolation peut aller jusqu'à −1 (PitchDetector.cs:120-121, 303), donc F0 max = 8000/12 = 666,7 Hz. Les bornes exactes sont [69,6 ; 666,7], mais la conclusion tient. Le calcul du GDD est juste : 12·log2(120/0,01) = 162,6 demi-tons (GDD:519-520)."
+   },
+   {
+    "source": "systems-designer §3.1",
+    "claim": "Il manque une garde sur le nombre de trames voisées acceptées pendant la calibration.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "Cette garde existe déjà : « |V| ≥ VoicedMin, VoicedMin PROVISOIRE 100 trames » (voice-calibration.md:399), et CAL-07 rejoue l'étape sans écrire F0_habituel (voice-calibration.md:1251)."
+   },
+   {
+    "source": "systems-designer §3.2",
+    "claim": "Une fois calibré à 110 Hz, la plage en jeu devient [55, 220] Hz : elle réadmet la vraie fondamentale de 55 Hz, d'où une oscillation de 0 à −12 demi-tons d'une trame à l'autre.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "Médiane/2 = 55 < 70, donc la plage est recadrée à [70, médiane×2] = [70, 220] (GDD:536-537, AC-30 GDD:1077). maxLag = ⌈8000/70⌉ = 115 échantillons, inférieur à la période de 55 Hz (145,5 échantillons) : 55 Hz reste hors de portée. Le calcul 12·log2(55/110) = −12 est juste, mais la prémisse est fausse."
+   },
+   {
+    "source": "audio-director #5 / systems-designer §3.2",
+    "claim": "Sévérité BLOQUANT « pour les voix graves 85–140 Hz » ; témoin proposé : une basse réelle vers 70–90 Hz.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "Incohérence interne. Le mécanisme décrit exige F0 < 70 Hz (plancher de recherche). Or 85–140 Hz est à l'intérieur de la plage cherchable [69,6 ; 666,7] Hz, où la vraie période est testée. La plage déclarée bloquante est donc dans la zone que le constat lui-même tient pour saine, et le témoin 70–90 Hz aussi."
+   },
+   {
+    "source": "audio-director #5",
+    "claim": "Pour F0 < 70 Hz, YIN accroche systématiquement 2×F0, et chaque Pitch est ensuite décalé de −12 demi-tons de façon persistante pour la voix habituelle du joueur.",
+    "verdict": "PARTIEL",
+    "evidence": "Avec le recadrage [70, 220], le 55 Hz reste indétectable en jeu. Si YIN a accroché 110 Hz en calibration, il l'accroche aussi en jeu : Pitch ≈ 0 à la voix habituelle, pas −12. L'erreur n'apparaît que lorsque la vraie F0 entre dans la plage : un vrai 70 Hz se lit 12·log2(70/110) = −7,8 au lieu de +4,2. Que YIN accroche 2×F0 (décalage T/2) dépend de la forme d'onde ; un non-voisement est au moins aussi probable. NON VÉRIFIABLE sans signal."
+   },
+   {
+    "source": "audio-director #3 / accessibility #6",
+    "claim": "À 85 Hz la période fait 11,76 ms, soit 1,8 période dans la fenêtre de 21 ms ; à 400 Hz, 8,4 périodes.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "1000/85 = 11,765 ms ; 21/11,765 = 1,785. 1000/400 = 2,5 ms ; 21/2,5 = 8,4. La fenêtre de volume fait bien 21 ms (1008 échantillons à 48 kHz, GDD:124)."
+   },
+   {
+    "source": "audio-director #3",
+    "claim": "Sur moins de deux périodes, un bord de fenêtre qui tombe en plein pic ou en creux change radicalement Peak/Rms : Continuity est structurellement plus bruitée pour les voix graves.",
+    "verdict": "PARTIEL",
+    "evidence": "Le sens est juste, le mécanisme et l'amplitude sont surévalués. Une fenêtre de 21 ms est plus longue qu'une période de 11,76 ms : elle contient toujours une période entière, donc Peak est toujours capté. Seule Rms varie, selon la fraction 0,785 de période partielle. Pire cas (train d'impulsions) : énergie entre E et 2E, Rms ×√2, CrestDb ±3 dB, soit ±0,25 de Continuity sur l'étendue de 12 dB (GDD:385-386). À 8,4 périodes : 8E contre 9E, ±0,5 dB, soit ±0,04."
+   },
+   {
+    "source": "audio-director #1 (co-signé par systems-designer §1.6)",
+    "claim": "Un chuchotement est à 15–25 dB sous la parole normale, « donc » à 15–25 dB au-dessus du plancher. La bande 0–7 dB est celle du souffle et du bruit, pas du chuchotement.",
+    "verdict": "PARTIEL",
+    "evidence": "Les valeurs de littérature sont NON VÉRIFIABLES, mais la déduction ne suit pas : être à X dB sous la parole ne place à X dB au-dessus du plancher que si la parole est à 30–50 dB au-dessus. Or le projet borne la voix posée par r = (Rest−Floor)/Δ ≤ RestMax = 0,70 (voice-calibration.md:476-477). À Δ = 40 (exemple GDD:293), la voix posée est au plus à Floor+28, donc un chuchotement 15–25 dB plus bas est au plus à Floor+13 dB, souvent sous le plancher. La conclusion ne tient que pour Δ ≥ ~43 dB (bas de fourchette) à ~57 dB (fourchette entière)."
+   },
+   {
+    "source": "audio-director #7",
+    "claim": "Un squelch matériel qui ramène Rms_dB à −120 ajoute « plusieurs dizaines de millisecondes » de retard supplémentaire à la remontée de l'enveloppe.",
+    "verdict": "PARTIEL",
+    "evidence": "Pour un suiveur exponentiel en dB, le surcoût vaut τ·ln(D₁/D₀). Avec une distance 3× plus grande (90 dB contre 30), τ·ln 3 = 11 ms (τ = 10) à 22 ms (τ = 20), soit au plus une trame à 50 Hz : à τ = 20 ms, c = 0,368, il faut 2 trames depuis −120 contre 1 depuis le plancher. Le rapport surévalue donc. « Constantes calées pour 40 dB » n'est pas sourcé dans le GDD. Effet manqué, plus fort : le relâchement jusqu'à Loudness = 0 (parole −30, Floor −55) prend τ·ln(30/5) = 215–358 ms sans squelch, contre τ·ln(90/65) = 39–65 ms avec, soit ~5,5× plus court."
+   },
+   {
+    "source": "audio-director #9",
+    "claim": "Une fois l'enveloppe en dB, aucune valeur ne peut devenir un flottant dénormalisé : l'edge case et AC-15 sont un rameau mort.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Près de −120, l'écart entre deux float vaut 0 ou au moins ulp(120) ≈ 7,6e-6 : jamais dénormalisé. Seul témoin théorique : une cible d'exactement 0 dBFS (Rms = 1,0). Dans le domaine dB, AC-15 « vaut exactement 0f » (GDD:1049) voudrait dire forcer à 0 dBFS, la pleine échelle, ce qui renforce le constat. Enfin, à ~50 appels par seconde, même des opérations dénormalisées coûtent quelques µs par seconde ; le blocage CPU classique concerne les IIR par échantillon à 48 kHz."
+   },
+   {
+    "source": "audio-director #10",
+    "claim": "Un flux int16 normalisé écrête « exactement à ±1,0 (32767/32768) », d'où un seuil proposé de 0,998 sur 3 échantillons.",
+    "verdict": "PARTIEL",
+    "evidence": "32767/32768 = 0,99997 ≠ 1,0 ; seul −32768/32768 vaut exactement −1,0, et le résultat dépend de la convention (÷32767 ou ÷32768). Le seuil de 0,998 couvre les deux cas. L'absence de valeur numérique dans GDD:597 est confirmée."
+   },
+   {
+    "source": "audio-director #11",
+    "claim": "Un offset DC pèse relativement plus en régime faible et corrompt « quand je me tais, rien ne bouge ». Un passe-haut à 20–40 Hz ne toucherait pas la forme d'un vrai signal vocal.",
+    "verdict": "PARTIEL",
+    "evidence": "Rms² = Rms_AC² + DC² : l'effet relatif est confirmé. Mais un DC constant entre dans P95, donc dans Floor_dB (voice-calibration.md:365) : le silence reste sous le plancher, et l'effet réel est une compression près du plancher, pas une entrée fantôme. Passe-haut à un pôle à 40 Hz : −1,23 dB et +29,7° à 70 Hz, −0,87 dB et +25,2° à 85 Hz. Il déforme donc l'onde des voix graves (et CrestDb). À 20 Hz : −0,34 dB à 70 Hz."
+   },
+   {
+    "source": "audio-director #6",
+    "claim": "Un micro-casque donne typiquement 15–25 dB d'atténuation naturelle de la voix d'un voisin à 1–2 m.",
+    "verdict": "PARTIEL",
+    "evidence": "En champ libre, en 1/r depuis ~3 cm : 20·log10(100/3) = 30,5 dB à 1 m et 36,5 dB à 2 m. Le champ réverbéré d'une pièce réduit cet écart, la directivité l'augmente. La fourchette est plausible mais non sourcée, et plus basse que le calcul en champ libre."
+   },
+   {
+    "source": "audio-director #4 / accessibility #2",
+    "claim": "Une voix entraînée a un jitter de 0,1–0,3 % sur note tenue, sous JitterMin = 0,5 % : elle est rejetée.",
+    "verdict": "PARTIEL",
+    "evidence": "Les valeurs de littérature (NON VÉRIFIABLES ici) sont du jitter cycle à cycle. Le GDD mesure la variance « sur les 3 à 5 dernières trames » avec des valeurs que YIN calcule déjà (GDD:147-149), soit une F0 par trame de 20 ms : c'est une variabilité trame à trame qui inclut vibrato et dérive. La comparaison n'est pas homogène, et GDD:420 (« périodes acceptées ») est ambigu. Résolution : 0,5 % d'une période de 220 Hz à 8 kHz = 0,18 échantillon, du même ordre que l'erreur d'interpolation parabolique de YIN (non mesurée)."
+   },
+   {
+    "source": "accessibility #2 / #3, audio-director #4",
+    "claim": "Un électrolarynx a un jitter quasi nul (comme un bourdonnement secteur) et une plage dynamique très étroite.",
+    "verdict": "NON VÉRIFIABLE",
+    "evidence": "Ordres de grandeur de littérature, aucune source dans le dépôt. Même réserve que ci-dessus : le JitterPct du GDD est trame à trame, pas cycle à cycle."
+   },
+   {
+    "source": "performance-analyst F2",
+    "claim": "La complexité réelle de YIN est O(windowSize × maxLag), pas O(fenêtre²). maxLag est fixé par minHz, qui monte avec la médiane après calibration.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Double boucle lag = 1..maxLag × j = 0..windowSize−1 (PitchDetector.cs:179-188) ; maxLag = ⌈SR/minHz⌉ (PitchDetector.cs:121) ; plage médiane ± 1 octave (GDD:127). Nuance : le constructeur impose windowSize ≥ 2·maxLag (PitchDetector.cs:123-128), donc O(fenêtre²) n'est vrai que pour une fenêtre à sa taille minimale."
+   },
+   {
+    "source": "performance-analyst F2",
+    "claim": "Tableau chiffré (fenêtre 368/552 échantillons, Decimator 368×81) : ratio réel voix aiguë/voix courante entre 0,96× et 1,19×.",
+    "verdict": "PARTIEL",
+    "evidence": "Le code et les tests utilisent WindowSize = 256 (PitchDetectorTests.cs:26, ADR-0004:102). Les « 46 ms » correspondent à windowSize + maxLag = 256 + 115 = 371 échantillons = 46,4 ms (PitchDetector.cs:67), pas à la fenêtre seule. Le Decimator travaille en flux (Decimator.cs:110-113) : il traite le pas de trame (160 sorties à 8 kHz, 240 à 12 kHz), pas la fenêtre de 46 ms. Recalcul : base 160×81×2 + 29 440×3 = 114 240 flops ; 12 kHz, médiane 300 Hz (maxLag 80), fenêtre 384 → 131 040 (×1,15), fenêtre 256 → 100 320 (×0,88). La conclusion (≈1×, pas 2,25×) tient ; les totaux du rapport sont faux (368×81×2 + 115×368×3 = 186 576). ADR-0004:226-228 avait déjà corrigé en « ~1,8× et non 2,25× », ce que le rapport ne cite pas, et ce 1,8× n'est pas reproductible non plus."
+   },
+   {
+    "source": "performance-analyst F2",
+    "claim": "Un joueur grave recadré à 70 Hz en 8 kHz peut coûter plus cher en YIN seul (115×368) qu'un joueur aigu à la frontière 12 kHz (80×552).",
+    "verdict": "RÉFUTÉ",
+    "evidence": "115×368 = 42 320 < 80×552 = 44 160 ; son propre tableau donne 127 000 < 132 500 flops. L'affirmation n'est vraie que face à une médiane de 450 Hz (54×552 = 29 808)."
+   },
+   {
+    "source": "performance-analyst F2 / F10",
+    "claim": "C'est le Decimator, pas YIN, qui porte la plus grosse part du surcoût à 12 kHz.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Dans le modèle recalculé (pas de trame, fenêtre 256 ou 384) : Decimator +12 960 flops (160 → 240 sorties × 81 × 2) ; YIN +3 840 (fenêtre 384) ou −26 880 (fenêtre 256)."
+   },
+   {
+    "source": "performance-analyst F3",
+    "claim": "Le calcul DSP coûte ~38 à ~226 µs par trame, soit 5 à 25× sous le budget de 1 ms.",
+    "verdict": "PARTIEL",
+    "evidence": "L'arithmétique sur ses propres flops est juste (191 000/1e9 = 191 µs ; /3e9 = 64 ; /5e9 = 38 ; 1000/191 = 5,2 ; 1000/38 = 26). Mais les flops sont gonflés d'environ 1,6× (voir la ligne F2 sur le tableau chiffré) : ≈ 23–131 µs en réalité. ADR-0004:212 donne 60–120 µs pour YIN seul. La conclusion (très loin sous 1 ms) est inchangée ; rien n'est mesuré."
+   },
+   {
+    "source": "performance-analyst F4",
+    "claim": "La remise au thread principal porte sur une readonly struct d'environ 20 octets.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "VoiceFrame.cs:45-89 : 3 float (12 o) + bool (1 o, aligné à 4) + uint (4 o) = 20 o en disposition séquentielle. « ~centaine de ns » : NON VÉRIFIABLE, mais plausible."
+   },
+   {
+    "source": "performance-analyst F5",
+    "claim": "Échéance d'OnAudioFilterRead : 10 ms pour 480 échantillons, 21,3 ms pour 1024, à 48 kHz.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "480/48 000 = 10,0 ms ; 1024/48 000 = 21,33 ms."
+   },
+   {
+    "source": "performance-analyst F6",
+    "claim": "La latence structurelle vaut ~80–150 ms, soit 23–43 % du budget de 350 ms du système 11 (fenêtre 46 ms + groupe de délai FIR 0,83 ms + attaque 10–20 ms + ~80 ms d'amorçage + réseau 33–50 ms).",
+    "verdict": "PARTIEL",
+    "evidence": "Pourcentages et groupe de délai justes (80/350 = 22,9 % ; 150/350 = 42,9 % ; 40/48 000 = 0,83 ms). Quatre problèmes : (a) la somme de ses propres postes fait 89,8–196,8 ms, pas 80–150 ; (b) le poste « ~80 ms d'amorçage » contredit la ligne citée, puisque GDD:440-443 fait passer le jitter par défaut précisément pour éviter ces 80 ms et qu'OQ-1 option A fait tourner la médiane dès la deuxième trame (GDD:1254-1265) ; (c) le système 11 consomme Loudness (voice-object-effect.md:799), dont le chemin passe par la fenêtre de 21 ms sans Decimator ni fenêtre de 46 ms (GDD:124-128), soit 21 + 10–20 + 33–50 = 64–91 ms (18–26 %) ; (d) les 350 ms sont un délai de charge mesuré au banc (voice-object-effect.md:606-614), pas un budget de latence."
+   },
+   {
+    "source": "performance-analyst F8",
+    "claim": "L'allocation à la bascule de profil est triviale : « quelques centaines d'octets ».",
+    "verdict": "PARTIEL",
+    "evidence": "Decimator : 2 × 81 × 4 = 648 o (Decimator.cs:96-97). PitchDetector : 2 × (maxLag+1) × 4 = 928 o à 8 kHz (maxLag 115), 648 o à 12 kHz (maxLag 80) (PitchDetector.cs:131-132). Total ≈ 1,3–1,6 Ko de données plus les en-têtes de tableaux, soit ~1,5 Ko : c'est négligeable, mais ce n'est pas « quelques centaines »."
+   },
+   {
+    "source": "qa-lead #13",
+    "claim": "Multiplier le coefficient par 1,5 ne donne pas un lissage 1,5× plus lent, car coefficient = exp(−1/(τ·rate)) n'est pas linéaire en τ.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Le rapport sous-estime même le problème. Avec EnvelopeFollower.cs:130 et dt = 20 ms : relâchement τ = 200 ms, c = e^(−0,1) = 0,905, ×1,5 = 1,357 > 1, le filtre (EnvelopeFollower.cs:104) diverge. Attaque τ = 10 ms : c = 0,135, ×1,5 = 0,203, τ équivalent 12,5 ms, soit ×1,25 et non ×1,5."
+   },
+   {
+    "source": "unity-specialist F3",
+    "claim": "La formule par appel sous cadence variable est coefficient = exp(−DeltaSeconds/τ).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Elle équivaut au code exp(−1/(τ·updateRateHz)) (EnvelopeFollower.cs:130) avec DeltaSeconds = 1/updateRateHz. ADR-0007:154-155 donne seulement la règle de recalcul au-delà d'un epsilon, pas la formule."
+   },
+   {
+    "source": "unity-specialist F8",
+    "claim": "Facteurs entiers : 48 000 → 8 000 = 6 ; 16 000 → 12 000 ≈ 1,33, non entier, donc la branche 12 kHz est irréalisable sur un périphérique à 16 kHz.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "48 000/8 000 = 6 ; 16 000/12 000 = 1,333 ; 16 000/8 000 = 2. Ajout : 44 100/12 000 = 3,675 est aussi non entier, donc AC-31 est irréalisable à 44,1 kHz sans rééchantillonnage. Les fréquences HFP (8/16 kHz) viennent de la norme et ne sont pas vérifiables dans le dépôt."
+   },
+   {
+    "source": "accessibility #4",
+    "claim": "Le risque de NaN n'existe qu'à Δ = 0 exactement, et ce cas est déjà couvert séparément par le retournement Floor_dB > Scream_dB.",
+    "verdict": "PARTIEL",
+    "evidence": "Première partie juste : le NaN exige Δ = 0 et Rms_dB = Floor_dB (sinon ±∞, puis clamp à 0 ou 1) ; GDD:490 dit « NaN à l'égalité exacte ». Seconde partie fausse : la règle est stricte, « Floor_dB > Scream_dB » (GDD:508, AC-26 GDD:1072), et n'exclut pas Floor = Scream. Aujourd'hui, seul le plancher dur écarte Δ = 0 ; le correctif proposé (Δ > epsilon) le couvre."
+   },
+   {
+    "source": "accessibility #9",
+    "claim": "Un joueur à 12,1 dB d'écart, juste au-dessus du plancher dur, reçoit le même ×1,5 qu'un joueur à 19,9 dB.",
+    "verdict": "PARTIEL",
+    "evidence": "Avec HardFloor_dB = 13 (voice-calibration.md:466, CAL-16), un écart de 12,1 dB est REFUSÉ, pas marqué LowRange. L'exemple ne tient qu'avec la borne basse ~12 du GDD:488. L'argument (palier binaire sur toute la bande) reste valable, par exemple entre 13,1 et 19,9 dB."
+   },
+   {
+    "source": "accessibility #8",
+    "claim": "Pitch est borné à −12…+12 par construction ; au-delà d'une octave, le détecteur accroche une sous-harmonique ; un cri dépasse couramment une octave.",
+    "verdict": "PARTIEL",
+    "evidence": "L'accrochage une octave en dessous quand la vraie F0 dépasse maxHz est confirmé (PitchDetector.cs:78-83). Les bornes réelles sont légèrement asymétriques : minLag = ⌊SR/maxHz⌋ et un décalage d'interpolation jusqu'à −1 donnent, pour une médiane de 200 Hz, F0 max = 8000/19 = 421 Hz, soit +12,9 demi-tons. « Un cri dépasse couramment une octave » : NON VÉRIFIABLE."
+   },
+   {
+    "source": "systems-designer §4.1",
+    "claim": "Le document compte 13 valeurs PROVISOIRE (ni 5 ni 10), dont 7 déjà introduites avant la phrase des « cinq » (GDD:449).",
+    "verdict": "PARTIEL",
+    "evidence": "En comptant le mot PROVISOIRE, 13 est exact (GDD:289, 314, 385, 386, 426, 428, 429, 488, 491, 605, 838 ×2, 846), et 7 le précèdent bien. Mais la table des Tuning Knobs (GDD:787-802), dans sa colonne intitulée « Provisoire », porte aussi la taille de l'anneau (5) et la cadence de décimation (8/12 kHz) : 15 selon ce critère. Le « total réel » dépend du critère retenu."
+   },
+   {
+    "source": "qa-lead #4a / #4b",
+    "claim": "« Cinq » est périmé : la révision a ajouté quatre valeurs (HardFloor, QualityBand, attaque, relâchement), d'où dix. N est une onzième valeur orpheline, absente des dix comme de l'ancienne liste des cinq.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : « cinq » est périmé (7 PROVISOIRE avant GDD:449) et N manque à la liste des dix (GDD:1138-1141), donc AC-43 ne le couvre pas. Mais 5 + 4 = 9 ≠ 10, et la liste des ajouts selon qa-lead diffère du GDD, pour qui « les quatre dernières » sont bande de qualité, attaque, relâchement et gel (GDD:1140-1141). L'incohérence de comptage est d'abord dans le GDD. « Absent de l'ancienne liste des cinq » : NON VÉRIFIABLE, ces cinq ne sont énumérés nulle part."
+   },
+   {
+    "source": "systems-designer §4.2",
+    "claim": "HardFloor_dB et QualityBand_dB sont comptés deux fois : il y a 22 valeurs distinctes, pas 24. Leur provenance « Protocole A du système 1 » est fausse.",
+    "verdict": "PARTIEL",
+    "evidence": "Double compte confirmé : les deux figurent dans les quatorze (voice-calibration.md:1444) et dans les dix (GDD:1138-1140), d'où 24 − 2 = 22. Provenance fausse confirmée : le Protocole A (GDD:452-455) ne fixe que CrestMinDb et CrestMaxDb. Mais voice-calibration.md se contredit (« Dix valeurs… s'ajoutent aux dix du système 1 », l.529, contre « Quatorze », l.1438), ce qui donnerait 18. Et le renforcement LowRange est déjà compté dans les quatorze (l.1448) : l'ajouter aux 13 du système 1, comme le propose §4.1, créerait un nouveau double compte."
+   },
+   {
+    "source": "systems-designer §5.1",
+    "claim": "Recaler γ de 0,65 à 0,5 relève tous les seuils d'objets d'environ 11 % (L_repos 0,637 → 0,707 ; Seuil 0,446 → 0,495 à T_objet = 0,7).",
+    "verdict": "PARTIEL",
+    "evidence": "L'arithmétique est exacte à r = 0,5 : 0,5^0,65 = 0,6373 et 0,5^0,5 = 0,7071, soit ×1,1096 (formule voice-object-effect.md:514-515). Mais le rapport vaut r^(0,5−0,65) = r^(−0,15) et dépend donc de r : +27 % à r = 0,2, +3,4 % à r = 0,8. La hausse n'est pas uniforme. Le couplage lui-même est confirmé."
+   },
+   {
+    "source": "qa-lead #10",
+    "claim": "AC-31 est atteignable : médiane × 2 > 600 exige médiane > 300 Hz, qu'on mesure avec la plage par défaut 70–600 (témoin : F0_habituel ≈ 350 Hz).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "350 Hz est dans la plage détectable non calibrée [69,6 ; 666,7] Hz. Le cri à 700 Hz reste sous la limite ~900 Hz à 12 kHz (GDD:540) et sous 6 000 Hz (Nyquist, PitchDetector.cs:105). Nuance : seulement avec une entrée à 48 kHz (facteur 4) ; voir la ligne unity-specialist F8. Qu'un enfant ait une F0 de repos de 350 Hz relève de la littérature, NON VÉRIFIABLE."
+   },
+   {
+    "source": "systems-designer §3.3",
+    "claim": "Rien ne couvre le cas où la F0 de repos elle-même dépasse 300 Hz (médiane × 2 > 600 au repos, pas seulement au cri).",
+    "verdict": "RÉFUTÉ",
+    "evidence": "C'est exactement la condition de déclenchement de la règle documentée, qui porte sur la médiane de repos : « Si médiane × 2 > 600 Hz → décimation à 12 kHz » (GDD:539, AC-31 GDD:1078)."
+   }
+  ],
+  "cross_report_conflicts": [
+   "Place du chuchotement par rapport au plancher. Pour game-designer #1, déplacer le zéro à Floor+Margin rend muet tout chuchotement à moins de 7 dB au-dessus du plancher, au détriment de la Promesse 1. Pour audio-director #1 et systems-designer §1.6, le chuchotement vit à 15–25 dB au-dessus du plancher et la bande 0–7 dB n'est que souffle et bruit. Aucune des deux positions n'est vérifiable ; la déduction de l'audio-director est incompatible avec RestMax = 0,70 pour Δ ≈ 40 (chuchotement au plus à Floor+13 dB). Le GDD penche du côté du game-designer (Tuning Knobs GDD:792, AC-36).",
+   "Facteur de coût des voix aiguës. GDD:1121-1122 et ADR-0007:249-250 disent 2,25×, ADR-0004:226-228 dit ~1,8×, performance-analyst F2 dit 0,96–1,19×. Le recalcul (fenêtre réelle de 256, Decimator en flux) donne ≈ 0,88–1,15×. Performance-analyst ne cite pas la correction d'ADR-0004, et le document porte donc aujourd'hui trois chiffres différents.",
+   "Comptage des valeurs provisoires. qa-lead en compte 11 (les dix + N), systems-designer 13 (+ N, MinDb, LowRange), et la colonne « Provisoire » des Tuning Knobs en donne 15 (+ taille d'anneau et cadence de décimation). voice-calibration.md se contredit en plus (10 à la l.529, 14 à la l.1438), si bien que le « 22 au lieu de 24 » de systems-designer dépend de la ligne retenue.",
+   "Garde de dénormalisation. audio-director #9 veut la supprimer comme rameau mort ; performance-analyst F11 veut nommer une constante de 1e-15f dans EnvelopeFollower ; unity-specialist F14 veut documenter l'écart Mono/IL2CPP pour cette garde. Le recalcul donne raison à l'audio-director : en dB, aucune valeur ne devient dénormalisée, et « forcer à 0f » voudrait dire forcer à 0 dBFS, la pleine échelle.",
+   "Voix de repos au-dessus de 300 Hz. qa-lead #10 y voit un témoin concret (un enfant à ~350 Hz) ; systems-designer §3.3 dit qu'il n'existe pas de témoin concret d'une voix de repos à cette hauteur ; audio-director #5 dit que la F0 de repos dépasse rarement 400 Hz, même chez l'enfant. voice-calibration.md fixe F0Max = 500 Hz, à « passer par de vraies voix d'enfant ».",
+   "Voix graves sous 70 Hz. Selon audio-director #5, le décalage est constant (−12 persistant) ; selon systems-designer §3.2, c'est une oscillation 0/−12 d'une trame à l'autre parce que [55, 220] réadmettrait 55 Hz. Les deux descriptions sont incompatibles entre elles, et toutes deux sont contredites par le recadrage [70, médiane×2] (GDD:536-537, AC-30). Tous deux attribuent aussi la sévérité aux voix de 85–140 Hz, que leur mécanisme (F0 < 70 Hz) ne touche pas.",
+   "Atteignabilité d'AC-31. qa-lead #10 la juge « atteignable sans changement » ; unity-specialist F8 montre que la branche 12 kHz est irréalisable à 16 kHz (facteur 1,33). C'est vrai aussi à 44,1 kHz (facteur 3,675) : l'atteignabilité ne vaut que pour une entrée à 48 kHz.",
+   "Latence d'amorçage. performance-analyst F6 compte ~80 ms d'amorçage de l'anneau et la fenêtre de hauteur de 46 ms dans la latence vue par le système 11. Or systems-designer §C/§D et le GDD (GDD:440-443, OQ-1 option A) établissent que l'amorçage ne retarde pas la sortie, et le chemin Loudness n'utilise que la fenêtre de 21 ms.",
+   "Pitch = 0 sur trame non voisée. qa-lead #1 et systems-designer §2 recommandent tous deux de garder AC-34 (Pitch gèle) et de supprimer la phrase de Formulas §2, en supposant que rien ne force Pitch à 0. Or VoiceFrame.cs:101-103, type public déjà livré, implémente justement Formulas §2. Ce n'est pas un conflit entre eux mais une prémisse commune fausse, qui change le coût du correctif."
+  ]
+ },
+ {
+  "domain": "Cohérence documentaire : contradictions internes de design/gdd/voice-analysis.md, passages périmés après décision, comptes, critères manquants ou en double, et contradictions avec voice-calibration.md, voice-object-effect.md, systems-index.md, game-concept.md et les ADR cités",
+  "claims": [
+   {
+    "source": "game-designer #1 / audio-director #1 / systems-designer §1 / accessibility #5",
+    "claim": "La formule de Loudness ramène x à 0 sous Floor_dB, pas sous Floor_dB + Margin_dB. La porte de voisement exige Floor_dB + Margin_dB, et Loudness n'est pas conditionnée par Voiced. Cela contredit la Promesse 4 (« ni souffle »).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "voice-analysis.md:280 `x = clamp((Rms_dB − Floor_dB)/(Scream_dB − Floor_dB),0,1)` ; :291 « Sous le plancher → 0 » ; :417 `Rms_dB > Floor_dB + Margin_dB` (porte seulement) ; AC-36 :1099 « Loudness > 0 même si Voiced = false » ; Promesse 4 :71-72 « Aucune entrée fantôme — ni bruit ambiant, ni clavier, ni souffle ». La contradiction interne entre Player Fantasy et Formulas est réelle."
+   },
+   {
+    "source": "game-designer #1 / audio-director #1",
+    "claim": "Le correctif « Loudness vaut 0 sous Floor + Margin » est déjà arbitré dans la revue du système 11 (arbitrage b), mais il n'est pas appliqué ici.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "reviews/voice-object-effect-2026-09-14.md:138-140 « `Loudness` doit valoir 0 sous `Floor + Margin`, pas seulement sous `Floor` (passe groupée) » ; :16 « Rien n'est appliqué ». voice-analysis.md:280 inchangé."
+   },
+   {
+    "source": "game-designer #1 / systems-designer §1.5",
+    "claim": "Aucun critère ne couvre la bande Rms_dB ∈ (Floor_dB, Floor_dB+Margin_dB). AC-36 ne teste qu'au-dessus de la marge, AC-40 seulement sous le plancher.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-02 :1023 teste `Rms_dB = Floor_dB` → 0 ; AC-36 :1099 « au-dessus de Floor_dB + Margin_dB » ; AC-40 :1103 « sous Floor_dB », et il n'asserte que Voiced. Rien entre les deux. Remarque : un AC-40b « Loudness = 0 » échouerait aujourd'hui avec la formule de :280. Il suppose le correctif appliqué."
+   },
+   {
+    "source": "game-designer #1",
+    "claim": "Les Tuning Knobs ne traitent Margin_dB que du point de vue de la porte de voisement, jamais comme plancher de Loudness ni comme arbitrage chuchotement / silence.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":792 « Margin_dB — porte de volume … le bruit de fond franchit la porte ». Aucune ligne ne documente l'effet sur Loudness. Le paragraphe d'interaction :817-819 (voir l'entrée suivante) présuppose au contraire une troncature."
+   },
+   {
+    "source": "systems-designer §1.2",
+    "claim": "La phrase des Tuning Knobs « la marge de la porte coupe [le registre bas] … Étirer une zone qu'on vient de tronquer ne sert à rien » suppose que Margin_dB tronque Loudness, ce que la formule ne fait pas.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":817-819 texte exact ; :280 ne tronque que contre Floor_dB. La prose et la formule divergent."
+   },
+   {
+    "source": "systems-designer §1.1 / §1.2 / game-designer #1",
+    "claim": "Arithmétique. Bruit à Floor+2 dB : Loudness ≈ 0,143 avec Δ=40 et ≈ 0,296 avec Δ=13. Une porte appliquée après coup à Floor+7 dB crée un saut de 0 à ≈ 0,322 avec Δ=40.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Calcul node : 0,05^0,65 = 0,1427 ; (2/13)^0,65 = 0,2962 ; (7/40)^0,65 = 0,3221."
+   },
+   {
+    "source": "systems-designer §1.4",
+    "claim": "L'exemple de la ligne 498 (0,148 → 0,286 pour une oscillation de 2 dB à Δ=20) est arithmétiquement juste.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "0,148^(1/0,65)·20 = 1,06 dB ; 0,286^(1/0,65)·20 = 2,92 dB. L'écart vaut 1,86 dB et le ratio 1,93."
+   },
+   {
+    "source": "game-designer #2",
+    "claim": "« Portée future » affirme que le souffle est écarté du MVP. C'est une affirmation périmée, puisque le souffle agit déjà sur Loudness.",
+    "verdict": "PARTIEL",
+    "evidence": ":99-102 écarte un *cadrage* (« le jeu écoute un corps »), pas une fuite de mesure. Le fait sous-jacent est vrai (:280 laisse passer le souffle au-dessus de Floor_dB). La vraie contradiction est avec la Promesse 4 (:71-72) plus qu'avec Portée future. Parler de « surclaim » est une interprétation."
+   },
+   {
+    "source": "game-designer #3 / accessibility #11",
+    "claim": "Le tableau « Ce que le joueur doit voir de sa mesure » (Loudness → Permanent, le sonomètre) contredit l'encadré du 2026-09-11 placé juste au-dessus : on ne lit jamais son propre sonomètre. Le joueur en Degraded n'a donc aucun canal vers lui-même.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":933 « Loudness | Permanent — le sonomètre du système 19 | Seule valeur dont l'attribution dépend en continu » contre :897-900 « On lit celui des autres, jamais le sien. Le joueur n'a donc aucun retour visuel sur sa propre voix ». Le même défaut se trouve à :865-866 (« ce que le joueur doit voir de sa propre mesure ») et à :988-991 (UI Requirements). :922 « Le sonomètre doit afficher un état visuellement distinct » (lu par les autres) ; :924 alerte sonore seulement « recommandée en complément »."
+   },
+   {
+    "source": "game-designer #4",
+    "claim": "« Même effort, même résultat » est prouvé comme formule (AC-37) et ordinalement (AC-38). Rien dans le document ne borne la promesse à la fidélité de Scream_dB.",
+    "verdict": "PARTIEL",
+    "evidence": "AC-38 est bien purement ordinal : reviews/voice-analysis-2026-09-07.md:211-212 « monotonic + non-crossing is ordinal-only ». En revanche le document documente déjà la limite, à :1182-1187 : « Ce qu'il ne prouve pas, c'est que deux humains produisant le même effort ressenti atteignent la même position relative — cela dépend de la qualité du protocole de calibration ». Aucun AC ne teste un Scream_dB sous-mesuré (vrai)."
+   },
+   {
+    "source": "game-designer #5 / qa-lead #13 / accessibility #9",
+    "claim": "Le facteur LowRange ×1,5 n'a aucun critère d'acceptation. Son report ne remplit pas la règle des trois conditions. Le point « réouvrir l'exclusion d'accessibilité » est listé ouvert dans la revue du 2026-09-07.",
+    "verdict": "PARTIEL",
+    "evidence": "Aucun AC ne vérifie le facteur : AC-25 :1071 dit seulement « avec lissage renforcé ». Revue 2026-09-07:279, Reste ouvert #7 : CONFIRMÉ. Par contre, le ×1,5 n'est pas présenté comme un « report » : la règle :854-859 ne vise que γ, les constantes d'enveloppe et le TTL, et le facteur porte une valeur PROVISOIRE (:846). voice-calibration.md:1448 (OQ-C4, « Croisé ») lui donne un lieu de réglage : « Se règle avec le système 1 ». qa-lead dit « ni où il s'applique » : la prose le dit (:340 « constantes du domaine dB », :845 « multiplier ses constantes d'attaque et de relâchement »), mais aucun test ne le vérifie."
+   },
+   {
+    "source": "game-designer #6 / accessibility #12",
+    "claim": "OQ-8 (même pièce) n'apparaît pas dans les Design Risks ni les Technical Risks de game-concept.md, alors que la cible est « groupes d'amis » et streamers. OQ-8 exige un playtest même-pièce avant les GDD 3 et 12.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "game-concept.md:293-307 : aucune mention de même pièce, de bleed ou de casque ; :34 « Créateurs de contenu (Twitch/YouTube), groupes d'amis ». voice-analysis.md:1408-1411 « avant l'écriture des GDD des systèmes 3 et 12 ». systems-index.md:228-231 ne le liste pas non plus."
+   },
+   {
+    "source": "game-designer #6",
+    "claim": "Le document distingue correctement la fuite haut-parleur (réglée par le casque) du brouillage même-pièce (non réglé). Le risque n'est qu'une proximité de lecture. E3 a été reporté dans mvp-scope.md.",
+    "verdict": "PARTIEL",
+    "evidence": "L'encadré :956 dit « le casque est un prérequis du jeu », mais le passage même-pièce :966-967 et OQ-8 :1405-1406 disent « Casque recommandé en attendant ». Cela présente le casque comme palliatif au cas même-pièce et contredit « prérequis » (ADR-0003:17-19 « condition de fonctionnement »). La confusion est donc dans le texte, pas seulement dans la lecture. La clause E3 est arbitrée (revue sys11:147-151) mais absente de design/mvp-scope.md (grep E3 / « sonore » / « humain » sans résultat), et la revue :16 dit « Rien n'est appliqué ». Le prototype à voix simulées est confirmé (voice-object-effect.md:1426 ; revue sys11:89)."
+   },
+   {
+    "source": "qa-lead #1 / systems-designer §2",
+    "claim": "Formulas §2 (« quand Voiced est faux, VoiceFrame force Pitch à 0 ») et AC-34 (« Pitch conserve sa dernière valeur lissée — il ne retombe pas à 0 ») sont mutuellement exclusifs. Les Edge Cases soutiennent AC-34.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":370-371 contre :1089 ; Edge Cases :630 « le F0 rejeté n'entre pas dans l'anneau, qui gèle ». La question sœur était classée nice-to-have : revue 2026-09-07:277 (#5 « Pitch court-circuité ou masqué »). Pitch = 0 signifie bien F0 = F0_habituel (:349, :367 « 120 → 0 (sa voix normale) »)."
+   },
+   {
+    "source": "qa-lead #2",
+    "claim": "AC-40 teste le mauvais champ : il n'asserte que Voiced (retour joueur : aucun), alors que la promesse porte sur Loudness, qui n'est pas conditionnée par Voiced.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-40 :1103 « THEN Voiced = false sur 100 % des trames » ; :936 « Voiced | Aucun » ; AC-36 :1099 ; système 11 consomme Loudness (voice-object-effect.md:799)."
+   },
+   {
+    "source": "qa-lead #3 / unity-specialist F3",
+    "claim": "ADR-0007 (Accepted) exige un « nouveau test de cadence variable » dans ses Validation Criteria. Le GDD n'a aucun AC pour ce test et ne donne aucune formule de coefficient par appel.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "adr-0007:5 « Accepted — élargi le 2026-09-08 » ; :256-257 (Migration Plan, point 3) ; :264 « Le nouveau test de cadence variable ci-dessus ». GDD AC-14…14d (:1045-1048) : aucun ne porte sur deux cadences ; grep « exp( » ou « DeltaSeconds » ne trouve que :704. Nuance : ADR-0007:154-155 ne donne pas non plus la formule, seulement la règle de recalcul par epsilon."
+   },
+   {
+    "source": "qa-lead #3 / unity-specialist F2",
+    "claim": "EnvelopeFollower.cs prend encore updateRateHz au constructeur (étape 1 de la migration ADR-0007 non faite), et le GDD ne le signale pas.",
+    "verdict": "PARTIEL",
+    "evidence": "Code confirmé : EnvelopeFollower.cs:69 ctor(attackSeconds, releaseSeconds, updateRateHz) ; :87-88 CoefficientFor ; :96 Process(float input) ; :130 exp(-1/(τ·rate)). 36 [Test] + 5 [TestCase] = 41, cohérent avec :1436. Côté GDD, « État du code » :1433-1441 n'en parle pas, mais OQ-3 :1306-1308 dit « Tant qu'il n'est pas appliqué, AC-14 vérifie… ». C'est signalé, mais formulé comme si l'ADR restait « à écrire »."
+   },
+   {
+    "source": "qa-lead #3 (secondaire) / unity-specialist F4",
+    "claim": "N (fenêtre de jitter) est un int sans unité et le TTL est « à définir », alors qu'ADR-0007 les classe parmi les horloges à exprimer en secondes. Le document ne dit pas si N compte des trames ou des périodes.",
+    "verdict": "PARTIEL",
+    "evidence": "Le désalignement avec l'ADR est confirmé : adr-0007:150-151 « Un compte de trames → Exprimée en secondes » ; GDD :429 « N | int | 3…5 » et :798 « TTL à définir », sans seconde. Mais « le document ne le dit pas » est inexact : il dit les deux. :148 « sur les 3 à 5 dernières **trames** », contre :420 « sur les N dernières **périodes acceptées** » ; :441 « ~80 ms » (4 × 20 ms) implique des trames. C'est une contradiction interne, pas un silence."
+   },
+   {
+    "source": "unity-specialist F5",
+    "claim": "La fenêtre de gel sur écrêtage (~250 ms) ne précise pas si elle s'accumule en DeltaSeconds ou en trames, alors qu'ADR-0007 la range parmi les horloges.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "GDD :605 et :801 « ~250 ms » sans mode d'accumulation ; adr-0007:152 « 250 ms, comptés sans référence → DeltaSeconds »."
+   },
+   {
+    "source": "qa-lead #4a / systems-designer §4.1",
+    "claim": "Formulas dit encore « Les cinq valeurs marquées PROVISOIRE » alors que la section I et OQ-4 disent « dix ». Au point de la ligne 449, sept valeurs PROVISOIRE ont déjà été introduites.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":449 « cinq » ; :1138 et :1314 « dix ». Avant :449 on trouve γ :289, MinDb :314, CrestMinDb :385, CrestMaxDb :386, Margin_dB :426, JitterMin :428, N :429, soit 7. Nuance sur qa-lead : il nomme les quatre ajouts comme « HardFloor, QualityBand, attaque, relâchement », mais le document (:1141, « Les quatre dernières ») désigne bande de qualité, attaque, relâchement et fenêtre de gel. Et 5 + 4 = 9 ≠ 10 : l'historique donné par le document est lui-même incohérent."
+   },
+   {
+    "source": "qa-lead #4b / systems-designer §4.1",
+    "claim": "Trois valeurs sont marquées PROVISOIRE mais absentes de la liste des « dix » d'AC-43, de la section I et d'OQ-4 : N (qa-lead) ; N, MinDb et le multiplicateur LowRange (systems-designer, 13 valeurs au total).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "grep PROVISOIRE : 289, 314, 385, 386, 426, 428, 429, 488, 491, 605, 838 (×2 : attaque et relâchement), 846, soit 13 valeurs. La liste :1138-1141 et OQ-4 :1316-1318 omettent N, MinDb et ×1,5 ; AC-43 :1150 ne couvre que « les dix ». Nuances : la table d'ordre d'OQ-4 inclut N (rang 3, :1333) et le TTL (rang 4, :1334), et voice-calibration.md:1448 compte le « Renforcement LowRange » dans ses quatorze. Les trois valeurs restent hors du filet d'AC-43."
+   },
+   {
+    "source": "systems-designer §4.2",
+    "claim": "voice-calibration.md attribue HardFloor_dB et QualityBand_dB au « Protocole A du système 1 », alors que le Protocole A ne fixe que CrestMinDb et CrestMaxDb.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "voice-calibration.md:538-539 « Protocole A du système 1 » ; :1444 « Partagé avec le système 1 | HardFloor_dB, QualityBand_dB | Protocole A ». voice-analysis.md:452-455 « Protocole A — bornes de crête … → Fixe CrestMinDb et CrestMaxDb ». Aucun protocole ne produit ces deux valeurs."
+   },
+   {
+    "source": "systems-designer §4.2",
+    "claim": "HardFloor_dB et QualityBand_dB sont comptés deux fois dans le total « vingt-quatre » (14 + 10) : il y a 22 valeurs distinctes.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "voice-analysis.md:1139-1140 les inclut dans ses dix ; :1325 « Avec les quatorze valeurs du système 6, cela fait vingt-quatre ». voice-calibration.md:1444 et :529-541 les inclut aussi (table des « Dix valeurs »). 10 + 14 − 2 = 22. Nuances : voice-calibration se contredit elle-même (:529 « Dix valeurs » contre :1438 « Quatorze ») ; N et MinDb ne figurent dans aucune des deux listes. Écart de valeur non signalé : système 1 « ~12–15 dB » (:488, :799, plage « — ») contre système 6 « 13 », plage 10–16 (:466, :849)."
+   },
+   {
+    "source": "systems-designer §5.1",
+    "claim": "γ est consommé par le système 11 (L_repos) sans que la fiche Tuning Knobs de γ du système 1 le mentionne. Le recaler de 0,65 à 0,5 relèverait les seuils d'environ 11 %.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "voice-object-effect.md:514-515 `L_repos = (…)^γ`, `Seuil = T_objet × L_repos` ; :868 reconnaît le partage de γ. voice-analysis.md:789 ne parle que de l'effet perceptif. Calcul : 0,7·0,5^0,65 = 0,4461 ; 0,7·0,5^0,5 = 0,4950 ; ratio 1,1096."
+   },
+   {
+    "source": "systems-designer §5.2",
+    "claim": "voice-object-effect.md déclare une dépendance dure sur le système 1, mais le tableau Dependencies de voice-analysis.md ne liste pas le système 11 (règle de bidirectionnalité).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "voice-object-effect.md:799 « 1. Analyse vocale | DURE — exécution | il nous fournit | Loudness » ; voice-analysis.md:673-680 ne liste que 6, 2, 3, 12, 5, 19. Aggravant : :699 « Aucun système voisin n'a de GDD à ce jour » est périmé. Nuance : systems-index.md:50 ne fait pas non plus dépendre 11 de 1 (« 3, 9, 6, 10 »). L'index et voice-object-effect se contredisent donc aussi."
+   },
+   {
+    "source": "systems-designer §3.1",
+    "claim": "Le témoin d'AC-27 (F0_habituel = 0,01 Hz) n'est pas atteignable par la voie de calibration, et il manque une garde sur le nombre de trames voisées.",
+    "verdict": "PARTIEL",
+    "evidence": "Inatteignabilité confirmée : recherche 70–600 Hz non calibrée (:127) ; voice-calibration.md:397 F0_habituel = médiane(F0) sur V ; :496-497 V4 F0Min = 20 Hz. La justification de voice-analysis.md:517-518 (« aucune période voisée captée ») est contredite par le système 6. En revanche, la « garde manquante » existe déjà : voice-calibration.md:533 VoicedMin = 100 trames, CAL-07 :1251 « |V| < VoicedMin → l'étape est rejouée sans écrire F0_habituel ». Le témoin de repli « reçu du réseau » est contesté (voir qa-lead #9)."
+   },
+   {
+    "source": "systems-designer §3.2",
+    "claim": "Mode d'échec supplémentaire : après calibration à F0_habituel = 110 Hz (biais d'octave), la plage en jeu devient [55, 220] Hz et réadmet la vraie fondamentale à 55 Hz, d'où une oscillation de 12 demi-tons.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "Le document recadre explicitement : :536-537 « Si médiane / 2 < 70 Hz — la plage de recherche est recadrée à [70 Hz, médiane × 2] » ; AC-30 :1077 ; voice-calibration.md:515 « Plage = [max(70, F0_habituel/2), …] ». Avec une médiane à 110, la plage vaut [70, 220] et 55 Hz reste exclu. Le biais d'octave de base (audio-director #5) n'est pas concerné par cette réfutation."
+   },
+   {
+    "source": "audio-director #5",
+    "claim": "Le recadrage documenté arrive après la mesure et aucun Edge Case ne réinterroge F0_habituel après calibration.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":536-538 (recadrage basé sur la médiane déjà mesurée) ; Edge Cases :534-548 : aucune re-vérification. voice-calibration CAL-08 (:1252) ne protège que contre une erreur d'octave isolée."
+   },
+   {
+    "source": "qa-lead #5",
+    "claim": "Le document se contredit : « Sans cette règle écrite, AC-21, AC-41b et CAL-24 ne sont pas testables ». La règle est écrite, mais AC-21 n'a pas été réécrit en critère structurel.",
+    "verdict": "PARTIEL",
+    "evidence": "La règle est bien écrite (:572-576) et AC-21 :1062 reste formulé en propriété d'exécution (« aucune trame ne combine… »). Mais la phrase :578-579 dit seulement que la règle était nécessaire, ce qui n'est pas une contradiction stricte. Le parallèle avec CAL-24 est confirmé : reviews/voice-calibration-2026-09-11.md:146 « CAL-24 réécrit en propriété structurelle ». La règle 3 (:576) n'a aucun AC (vrai)."
+   },
+   {
+    "source": "qa-lead #6",
+    "claim": "AC-24 (calibration atteignable depuis le lobby et en jeu) reste dans le système 1 alors que l'UI a migré vers le système 6. Aucun conflit avec un CAL-xx pour AC-22 et AC-23.",
+    "verdict": "PARTIEL",
+    "evidence": "Migration confirmée (:973-982) ; voice-calibration.md:1048 porte l'exigence UI « Accès à la calibration depuis le menu du lobby et depuis le menu en jeu », sans CAL-xx. En revanche AC-23 (:1064, « sans profil calibré → entrée refusée ») recouvre CAL-32 (voice-calibration.md:1296, « profil rejeté au chargement → le système 8 bloque l'entrée ») : même règle, mots différents. C'est la dérive que qa-lead redoute, déjà présente."
+   },
+   {
+    "source": "qa-lead #7",
+    "claim": "AC-20b conditionne la sortie de Degraded sur des « échantillons valides », jamais définis. L'entrée dans Degraded est un événement de périphérique.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "« valides » apparaît à :195, :1060, :1174, :1272, toujours sans définition. Entrée : :193 « Coupure micro ou changement de périphérique signalé par Audio d'entrée » ; :725-726."
+   },
+   {
+    "source": "qa-lead #9",
+    "claim": "L'Edge Case « profil invalide … reçu du réseau » est une branche morte, puisque le VoiceProfile complet ne quitte jamais la machine (arbitrage f).",
+    "verdict": "PARTIEL",
+    "evidence": "voice-analysis.md:529 « chargé du disque, reçu du réseau, corrompu ». Contredit par CAL-34 (voice-calibration.md:1303, aucun paquet sortant ne contient un champ du VoiceProfile) et par l'arbitrage (f) de la revue sys11 (:164-165). Mais ce n'est pas encore appliqué (revue :16), et ADR-0003:337 dit toujours « La calibration devient une donnée de session à transmettre à l'hôte ». Le passage est donc cohérent avec l'ADR non amendé et contredit par le système 6 et l'arbitrage."
+   },
+   {
+    "source": "qa-lead #11",
+    "claim": "AC-35 figure comme [UNIT] ordinaire dans la table canonique, alors que le document dit deux fois (« Ce que ces critères ne couvrent pas » et Tuning Knobs) qu'il n'est pas exécutable. Même défaut que CAL-04.",
+    "verdict": "PARTIEL",
+    "evidence": "AC-35 :1090 marqué `[UNIT]` sans réserve : confirmé. « non exécutable » se lit à :1165-1166 et à OQ-6 :1357, pas dans les Tuning Knobs (:798 « à définir », :858 « n'en satisfait aucun », sans nommer AC-35). Parallèle CAL-04 confirmé : revue calibration :283 « CAL-04 non exécutable dans la table canonique : le retirer ou le marquer EN ATTENTE »."
+   },
+   {
+    "source": "qa-lead #12",
+    "claim": "Le verrou de la surface publique de Voice.Core, garantie la plus répétée du document, n'a aucun critère d'acceptation.",
+    "verdict": "PARTIEL",
+    "evidence": "Aucun AC-xx en effet (grep « surface » : :217, :228, :247, :620 seulement). Mais le GDD cite lui-même un test existant (:228 « le test de surface publique passe de {VoiceFrame} à … »), et le code l'a : Tests/EditMode/PublicSurfaceTests.cs:32-35, AllowedPublicTypes = {\"SUAC.Voice.VoiceFrame\"}. La garantie est testée en code mais absente de la table AC, et la liste blanche du test est en retard sur :247."
+   },
+   {
+    "source": "qa-lead #14",
+    "claim": "La bande d'accord de forme d'AC-38 a été acceptée à la revue du 2026-09-07 mais n'est toujours pas écrite.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Revue 2026-09-07:276 « Bande d'accord de forme pour AC-38 | Retenu du qa-lead, à formuler » ; AC-38 :1101 reste monotone et sans croisement uniquement."
+   },
+   {
+    "source": "audio-director #2 / unity-specialist F6",
+    "claim": "Six passages décrivent encore une chaîne « post-AEC » ou une « fourche AEC », alors qu'ADR-0003 a rétrogradé l'AEC le 2026-09-08. Le document se contredit avec son propre encadré.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "grep AEC : :124, :208, :676, :722 « post-AEC » ; :870 « fourche AEC (ADR-0003) » ; :1370 « avec l'AEC en amont de la fourche ». Encadré correct à :944-949. ADR-0003:5 « RÉTROGRADÉ le 2026-09-08 » ; :13 « L'exigence « AEC en amont de la fourche » est retirée ». Note : ADR-0003 reste lui-même périmé à :269, :350 et :382."
+   },
+   {
+    "source": "audio-director #2 (second volet)",
+    "claim": "Le contrat de trajet ne liste que les traitements que le jeu ne doit pas ajouter, jamais ceux de l'OS ou du périphérique (AGC Windows, APO, Bluetooth HFP), déjà classés BLOQUANT à la revue calibration.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":873-878 ne liste qu'AGC, NS, VAD tiers et compression ; grep Windows, APO, Bluetooth, HFP : seulement :1371 (OQ-7, sans rapport). Revue voice-calibration-2026-09-11.md:340 « BLOQUANT — le contrat de trajet ne couvre pas l'AGC Windows, les APO, l'AGC matériel, le Bluetooth HFP »."
+   },
+   {
+    "source": "audio-director #8 / systems-designer §G",
+    "claim": "L'étape 5 du tableau Core Rules (EnvelopeFollower.Process(Rms) → RMS lissé, en linéaire) contredit l'ajout du 2026-09-08 (conversion dB insérée avant le lissage, enveloppe lissée en dB). Le tableau des dix étapes n'a pas été mis à jour.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":128 contre :310-311 « insérée entre la mesure de niveau et le lissage » et :321 « l'enveloppe lisse en dB ». :307-308 admet que « la chaîne de dix étapes n'en comportait aucune » ; le tableau :122-133 compte toujours 10 étapes sans conversion. Aussi :129 « RMS lissé au-dessus du plancher calibré » contre :417 `Rms_dB`, et :286 donne `Rms_dB` « −∞ … 0 » alors que :314 le borne à −120."
+   },
+   {
+    "source": "audio-director #9",
+    "claim": "Le garde-fou de dénormalisation (Edge Case + AC-15) n'a plus de témoin une fois l'enveloppe en dB, puisqu'aucune valeur en dB ne devient dénormalisée.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":634-636 « forcée à zéro … décroissance asymptotique » et AC-15 :1049 « vaut exactement 0f — pas un résidu 1e-40 » décrivent un risque linéaire ; :321-325 enveloppe en dB, et :314 borne l'entrée à ≥ −120 dBFS. Aggravant non relevé : en domaine dB, « forcer à 0 » vaut 0 dBFS (plein niveau), l'inverse de l'intention."
+   },
+   {
+    "source": "audio-director #10",
+    "claim": "Le seuil d'écrêtage n'est défini ni en valeur ni en nombre d'échantillons, donc AC-32 n'est pas exécutable.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":597 « le seuil d'écrêtage sur plusieurs échantillons consécutifs » ; AC-32 :1084 « saturé sur plusieurs échantillons consécutifs », sans nombre. Incohérence supplémentaire : Peak est une valeur unique par fenêtre de 21 ms (:125 RawLoudness{Rms, Peak, CrestFactor}), et ne peut pas « atteindre le seuil sur plusieurs échantillons »."
+   },
+   {
+    "source": "audio-director #11",
+    "claim": "ADR-0003 interdit explicitement tout filtre en amont de l'analyse (« soustraire un signal connu, jamais filtrer »), et l'AEC y a été acceptée comme exception à cette règle.",
+    "verdict": "PARTIEL",
+    "evidence": "La citation est exacte (adr-0003:270-273), mais elle est rattachée à la puce « L'AEC est obligatoire et vit en amont de la fourche » (:269), dont la prémisse est retirée par le statut (:13). L'AEC n'est donc plus une exception sur la branche d'analyse (:10-11 « absent de la branche d'analyse »). Le finding s'appuie sur un passage périmé de l'ADR."
+   },
+   {
+    "source": "audio-director #4 / accessibility #1 / #2",
+    "claim": "Les correctifs proposent de dériver JitterMin et le seuil d'apériodicité par joueur à partir de la voyelle tenue « déjà enregistrée pendant la calibration pour CrestMinDb/CrestMaxDb ».",
+    "verdict": "RÉFUTÉ",
+    "evidence": "CrestMinDb et CrestMaxDb sont des constantes globales fixées une fois par le Protocole A, une mesure de réglage d'environ 3 min (voice-analysis.md:452-455, :385-386), pas par la calibration du joueur. La calibration n'a que trois étapes (silence, parole normale, montée : voice-calibration.md:170-173, :898) et aucune voyelle tenue. Le correctif exige donc une nouvelle étape de calibration, contrairement à « aucune étape supplémentaire »."
+   },
+   {
+    "source": "accessibility #1",
+    "claim": "Le seuil d'apériodicité YIN (0,15) est non personnalisable (arbitré en ADR-0004), et le document n'a aucune protection au bout « voix soufflée ».",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : :425, :833-834 « Le toucher, c'est rouvrir un ADR » ; ADR-0004:101-102 « seuil d'apériodicité 0,15 ». Mais le document nomme le cas à :151-154 (« Le cas à surveiller est le chuchotement chanté, voix soufflée conservant un reste de périodicité »). Il est identifié et non protégé, pas ignoré."
+   },
+   {
+    "source": "accessibility #2",
+    "claim": "Le document a résolu la symétrie côté haut (pas de JitterMax) sans reconnaître le même problème côté bas (JitterMin).",
+    "verdict": "PARTIEL",
+    "evidence": ":646-653 « Décision documentée — pas de JitterMax ». Mais les Tuning Knobs :793 nomment le risque bas : « JitterMin trop haut : une voix très stable, tenue et posée, est rejetée comme un bourdonnement ». Le risque est reconnu comme compromis de réglage, pas traité avec la logique « décision documentée »."
+   },
+   {
+    "source": "accessibility #4",
+    "claim": "Le plancher dur (~12–15 dB) est justifié par le risque de NaN, lequel n'existe qu'à Δ=0, déjà couvert séparément par le retournement Floor_dB > Scream_dB.",
+    "verdict": "PARTIEL",
+    "evidence": "Justification NaN confirmée (:489-490 « Loudness devient NaN à l'égalité exacte »). Mais la règle du système 1 (:508) est stricte (Floor > Scream) et ne couvre pas Δ = 0 : dans ce document, seul le plancher dur la couvre. C'est le système 6 qui la couvre (voice-calibration.md:447-453, V1 « ordre strict Floor < Rest < Scream », « Absorbe le contrôle Floor_dB > Scream_dB du système 1 et le renforce »)."
+   },
+   {
+    "source": "accessibility #5",
+    "claim": "Correctif : dériver Margin_dB d'une respiration audible mesurée, « quelques secondes de silence étant déjà enregistrées pour Rest_dB ».",
+    "verdict": "PARTIEL",
+    "evidence": "Une étape de silence existe (voice-calibration.md:210, durée 3 s :842), mais elle produit Floor_dB (:170). Rest_dB se mesure sur la parole normale, étape 2 (:171). L'attribution au mauvais champ est fausse, la ressource existe."
+   },
+   {
+    "source": "accessibility #8",
+    "claim": "La plage de recherche est « médiane ± 1 octave » et Pitch est borné à −12…+12 par construction. La montée de décimation pour voix aiguës est la logique d'ADR-0004.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":127, :357-359 ; :545-546 citation d'ADR-0004. À noter : AC-31 (:1078) et :541-542 prévoient déjà explicitement un cri jusqu'à F0_habituel × 2."
+   },
+   {
+    "source": "accessibility #9",
+    "claim": "Le lissage LowRange est un palier binaire : ×1,5 uniforme sur toute la bande, un joueur à 12,1 dB comme un à 19,9 dB.",
+    "verdict": "PARTIEL",
+    "evidence": "Palier binaire confirmé (:491-493, :845-846 ; voice-calibration.md:463 booléen). L'exemple à 12,1 dB dépend du document : « ~12–15 dB » pour le système 1 (:488), mais 13 pour le système 6 (:466). À 12,1 dB le profil est REFUSÉ selon le système 6, et non marqué LowRange."
+   },
+   {
+    "source": "accessibility #10",
+    "claim": "Sidetone refusé et sonomètre lu seulement par les autres : aucun canal de retour sur soi. Le casque fermé est présenté comme prérequis.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : :884-891 (sidetone « Non ») ; :897-902 « On lit celui des autres, jamais le sien … aucun retour visuel sur sa propre voix ». « Casque fermé » est inexact : le document dit « le casque » (:956), sans « fermé » (grep), et ADR-0003:51-53 envisage le casque « ouvert » comme cas toléré à surveiller."
+   },
+   {
+    "source": "accessibility #7",
+    "claim": "Le système 1 doit signaler dans Dependencies que Continuity ne porte pas l'accessibilité motrice du système 13 consommateur. Le système 13 est absent de Dependencies.",
+    "verdict": "PARTIEL",
+    "evidence": "Le système 13 est bien absent (:673-680). Mais systems-index.md:53 fait dépendre 13 de « 3, 11 », pas de 1 : la règle de bidirectionnalité ne l'impose pas selon l'index. Aucun consommateur explicite de Continuity ou Pitch n'est nommé."
+   },
+   {
+    "source": "unity-specialist F1",
+    "claim": "Le corps du GDD présente encore la cadence comme fixe et contractuelle (:114, :128, :703-704, :828-829, :1195-1206), alors qu'ADR-0007 (Accepted) et OQ-3 (TRANCHÉ) disent l'inverse. La section AC redit « pas de bonne réponse en l'état ».",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Passages confirmés, auxquels s'ajoutent :676 (« à cadence fixe ») et :689 (« il suffit d'exiger des échantillons à cadence fixe »). :703-704 mêle même « cadence fixe » et `AnalysisTiming{DeltaSeconds}`. :1195 « Pas de bonne réponse en l'état » contre :1289 « TRANCHÉ ». OQ-3 lui-même est périmé à :1306 (« → ADR-0007. À écrire avant le VoiceAnalyzer »), alors qu'adr-0007:5 le dit Accepted."
+   },
+   {
+    "source": "unity-specialist F7",
+    "claim": "OQ-7 ignore ADR-0008 (Accepted, Dissonance retenu) et la file réelle de vérifications de VENDORING.md (compiler, puis authentification, puis canal, puis seulement le partage de périphérique).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "adr-0008:5 « Accepted — backend retenu : Dissonance » ; VENDORING.md:150-155 points 6 à 9 ; :132-133 FishNet 4.7.2R / Dissonance 9.0.7 contre 4 / 8 (avril 2024). GDD :1388-1389 présente encore « établir quels SDK acceptent du PCM externe et lequel on retient → ADR-0008 » comme une étape future, et :1370 cite l'AEC en amont."
+   },
+   {
+    "source": "unity-specialist F8",
+    "claim": "Le document ne dit pas explicitement que le rééchantillonnage est permis sur la branche d'analyse.",
+    "verdict": "PARTIEL",
+    "evidence": ":706-707 « Le rééchantillonnage appartient au système 2, pas à Voice.Core » en fait une obligation du contrat du système 2, donc une autorisation implicite. Il n'est pas non plus dans la liste des interdits (:873-878). Aucune exigence de qualité (vrai)."
+   },
+   {
+    "source": "unity-specialist F10 / performance-analyst #5",
+    "claim": "« L'analyse ne tourne pas sur le thread principal » n'est adossé à aucune décision : aucun document ne tranche le thread d'exécution.",
+    "verdict": "PARTIEL",
+    "evidence": "GDD :1125 affirmation sans mécanisme ; asmdef :13 `noEngineReferences: true` confirmé. Mais ADR-0007:199-204 (Alternative 3) tranche le principe : « partiellement retenue : l'analyse tourne bien hors du thread principal ». Le mécanisme (callback audio ou worker) n'est pas tranché, comme le dit performance-analyst. L'option (b) d'unity-specialist, assumer le thread principal, contredirait un ADR Accepted."
+   },
+   {
+    "source": "unity-specialist F12 / performance-analyst #9",
+    "claim": "AC-42b exige un compteur ProfilerRecorder dans la section qui documente SUAC.Voice.Core, assembly en noEngineReferences, sans préciser la séparation Core / Capture.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-42b :1134 ; SUAC.Voice.Core.asmdef:13 `\"noEngineReferences\": true` ; GDD :1001 « SUAC.Voice.Core ne référence pas UnityEngine ». ADR-0007:160 lie le compteur à AC-42b, et :166-167 attribue à Capture « le droit de connaître Unity », sans que le GDD en fasse état."
+   },
+   {
+    "source": "unity-specialist F13",
+    "claim": "Le crochet AudioSettings.OnAudioConfigurationChanged est affirmé sans source ni marque « à vérifier ».",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":732-733, sans citation. Il provient d'une recommandation de revue (voice-analysis-2026-09-07.md:227-228), non vérifiée. Le Knowledge Risk d'ADR-0007:56-59 ne couvre pas cet événement."
+   },
+   {
+    "source": "performance-analyst #2",
+    "claim": "« YIN en O(fenêtre²), donc 2,25× » est faux : le code est en O(windowSize × maxLag). L'erreur est répétée dans ADR-0007.",
+    "verdict": "PARTIEL",
+    "evidence": "Duplication confirmée (GDD :1121-1122 ; adr-0007:248-250 ; origine : revue 2026-09-07:235). Le modèle « fenêtre² » est inexact (PitchDetector.cs:181-189, boucles lag×windowSize ; :121 maxLag = SR/minHz). Mais pour un même joueur (minHz constant), passer de 8 à 12 kHz multiplie windowSize et maxLag par 1,5 chacun, soit ×2,25 sur YIN. Le « jamais 2,25× » tient seulement si l'on compare des joueurs différents. Incohérence non relevée : ADR-0004:102 fixe la fenêtre YIN à 256 échantillons (32 ms à 8 kHz), le GDD :124 à ~46 ms (368 échantillons)."
+   },
+   {
+    "source": "performance-analyst #4",
+    "claim": "AC-42 mesure un seul analyseur isolé et ne couvre jamais la charge partagée (Dissonance, FMOD, FishNet, système 11).",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-42 :1133 « GIVEN un analyseur sur le profil de charge nominal » ; :1113-1123 définit la charge nominale comme une instance. Aucune mention de charge concurrente. Le jugement de sévérité relève d'un autre domaine."
+   },
+   {
+    "source": "performance-analyst #6",
+    "claim": "Aucun document ne budgète la latence de bout en bout contre les 350 ms du système 11. Dans l'estimation, l'anneau médian ajoute ~80 ms « cf. ligne 441-443 ».",
+    "verdict": "PARTIEL",
+    "evidence": "Absence de budget confirmée ; le GDD l'exclut explicitement (:1215-1216 « La latence perçue bout en bout … ne se mesure pas sur Voice.Core seul ») ; 350 ms confirmé (voice-object-effect.md:459, :606) ; game-concept.md:306 liste le risque sans budget. Erreur d'attribution : :440-443 porte sur l'amorçage du **test de jitter** (N=4), pas sur l'anneau médian. Le poste de 80 ms est mal étiqueté."
+   },
+   {
+    "source": "performance-analyst #7",
+    "claim": "AC-41b ne tranche pas « dans ou hors » du périmètre d'AC-41, donc n'est pas testable.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "AC-41b :1132 « est explicitement dans ou hors du périmètre ». Aucun choix nulle part. Recommandation d'origine : revue 2026-09-07:230-231 « explicitly scope the profile hot-swap in or out ». Numéros de ligne de PA légèrement faux : « ces objets sont à état » est à :555 et non :578 ; « le fil qui commite ne doit jamais y toucher » est à :569-570 et non :576."
+   },
+   {
+    "source": "performance-analyst #8",
+    "claim": "Le backend de scripting (IL2CPP) et le mode du GC ne sont nommés nulle part, et le nombre de trames Silence produites pendant une bascule n'est pas borné.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "grep IL2CPP : aucun résultat dans voice-analysis.md ; :576 « Aucune trame n'est produite pendant la reconstruction : elle renvoie Silence », sans borne. L'écart Mono/IL2CPP est déjà listé non traité (revue 2026-09-07:278, #6)."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "OQ-4 renvoie aux « deux protocoles décrits en Edge Cases », alors qu'ils sont dans Formulas.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":1318 « Les deux protocoles décrits en *Edge Cases* » ; les protocoles A et B sont à :447-461 (section Formulas, « Porte de mesure »)."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "« Ce qui reste hors de portée d'une machine » dit encore que les constantes d'enveloppe sont « laissées à mesurer », alors que Tuning Knobs et OQ-5 disent qu'elles ont désormais des valeurs PROVISOIRES.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":1213-1214 contre :836-841 et :1349-1351 (« là où elles étaient laissées à mesurer »)."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "« Quatre trous subsistent, dont le premier est un défaut de spécification » : le premier est marqué RÉSOLU et le quatrième retiré, il n'en reste que deux.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":1157-1158 contre :1160 (« ~~…~~ RÉSOLU ») et :1172 (« Un quatrième trou a été signalé … puis retiré »)."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "L'en-tête et la section Dependencies sont périmés : « Last Updated 2026-09-07 », et « Aucun système voisin n'a de GDD à ce jour ».",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":5 « Last Updated: 2026-09-07 », alors que le corps porte des corrections datées 2026-09-08 (:231, :302, :709, :843, :944) et 2026-09-11 (:893). :667-669 et :699 « Aucun système voisin n'a de GDD à ce jour », alors que voice-calibration.md et voice-object-effect.md existent (systems-index.md:322)."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "systems-index.md décrit le système 1 comme « construit, testé et figé », alors que voice-analysis.md dit que rien ne produit encore de VoiceFrame et que le document est une spécification à écrire.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "systems-index.md:28 « système 1, qui est déjà construit, testé et figé » ; :112 « implémentée et testée » ; :339 « Rétro-documentation du code déjà implémenté ». Contre voice-analysis.md:1436-1440 « Rien ne produit encore de VoiceFrame … une spécification à écrire, pas une description de l'existant »."
+   },
+   {
+    "source": "vérificateur (ajout, non relevé par les spécialistes)",
+    "claim": "La garde de conversion dB nomme sa constante de deux façons : MinAmp (linéaire) dans la formule, MinDb (dB) dans le commentaire et dans AC-14b.",
+    "verdict": "CONFIRMÉ",
+    "evidence": ":314 `max(Rms , MinAmp)` suivi de « MinDb PROVISOIRE −120 dBFS » ; AC-14b :1046 « vaut le plancher MinDb ». L'unité de la constante (amplitude ou dB) n'est pas tranchée."
+   }
+  ],
+  "cross_report_conflicts": [
+   "systems-designer §3.1 retient « profil … reçu du réseau » (voice-analysis.md:529) comme témoin valide d'AC-27. qa-lead #9 déclare cette branche morte, puisque le VoiceProfile ne quitte jamais la machine (arbitrage f, CAL-34). Vérifié : l'arbitrage (f) et CAL-34 donnent raison à qa-lead, mais ADR-0003:337 non amendé dit encore que la calibration est transmise à l'hôte. Il faut trancher dans la passe groupée.",
+   "systems-designer §3.2 affirme qu'après calibration à 110 Hz la plage devient [55, 220] Hz. audio-director #5 reconnaît au contraire le recadrage [70, médiane×2]. Vérifié : le document (:536-537, AC-30) et voice-calibration.md:515 donnent raison à audio-director ; le mode d'échec supplémentaire de systems-designer est réfuté.",
+   "Compte des valeurs PROVISOIRE hors liste : qa-lead #4 dit « onze » (dix + N), systems-designer §4.1 dit « treize » (+ N, MinDb, ×1,5). audio-director #10 et performance-analyst #2 veulent en ajouter d'autres (ClipThreshold/ClipRunLength, facteur 2,25×). Vérifié : 13 occurrences distinctes du label PROVISOIRE ; qa-lead en sous-compte deux (MinDb, ×1,5).",
+   "audio-director #9 déclare le garde-fou de dénormalisation mort, puisque l'enveloppe lisse en dB et qu'aucune valeur en dB ne devient dénormalisée. performance-analyst #11 propose un seuil `1e-15f` dans EnvelopeFollower et unity-specialist F14 demande de vérifier le flush Mono/IL2CPP : tous deux supposent une enveloppe linéaire. Vérifié : le GDD (:321-325, :314) donne raison à audio-director ; « forcer à 0 » en dB vaudrait 0 dBFS.",
+   "Forme du correctif du zéro de Loudness : audio-director #1 (« reporter le clamp à Floor_dB + Margin_dB ») et game-designer #1 (constante ajoutée dans la formule) contre systems-designer §1.2, pour qui une porte appliquée après coup crée un saut de 0 à ≈ 0,32 et qui exige de décaler le domaine. L'arithmétique de systems-designer est vérifiée (0,175^0,65 = 0,322). L'arbitrage (b) ne dit que « vaut 0 sous Floor + Margin » et ne tranche pas la forme.",
+   "Thread d'exécution : unity-specialist F10 affirme qu'aucun document ne tranche et envisage d'assumer le thread principal (option b). performance-analyst #5 lit ADR-0007 comme ayant retenu « hors du thread principal » sans trancher callback ou worker. Vérifié : ADR-0007:201 « l'analyse tourne bien hors du thread principal ». L'option (b) d'unity-specialist contredirait un ADR Accepted.",
+   "Fenêtre du jitter N : qa-lead #3 dit que le document ne précise pas si N compte des trames ou des périodes. unity-specialist F4 le lit comme un compte d'observations implicite. Vérifié : le document dit les deux, :148 « trames » et :420 « périodes acceptées », et ADR-0007:150 dit « trames ». C'est une contradiction interne, pas une omission.",
+   "Plancher dur : accessibility #4 et #9 raisonnent sur « ~12–15 dB », valeur de voice-analysis.md:488. systems-designer §1.3 et §4.2 utilisent 13, valeur de voice-calibration.md:466. Les deux GDD divergent sur la valeur (système 1 « ~12–15 », plage sûre « — » ; système 6 « 13 », plage sûre 10–16). L'exemple à 12,1 dB d'accessibility #9 est refusé selon le système 6 et accepté LowRange selon la borne basse du système 1.",
+   "Voyelle tenue en calibration : accessibility #1/#2 et audio-director #4 supposent une étape de voyelle tenue déjà enregistrée par joueur. Le Protocole A (voice-analysis.md:452-455) est une mesure de réglage globale, et voice-calibration.md n'a que trois étapes (silence, parole, montée). Leurs correctifs « sans étape supplémentaire » reposent sur une prémisse fausse."
+  ]
+ },
+ {
+  "domain": "Code C# (Unity/Shut_up_and_carry/Assets/_Project), moteur Unity 6.3 (docs locales de l'install 6000.3.18f1, ProjectSettings, csproj) et ADR (docs/architecture/, VENDORING.md)",
+  "claims": [
+   {
+    "source": "unity-specialist F1",
+    "claim": "Cinq emplacements du GDD (114-120, 128, 703-704, 828-829, 1195-1206) contredisent ADR-0007, qui établit qu'une cadence fixe n'est pas un contrat tenable.",
+    "verdict": "PARTIEL",
+    "evidence": "ADR-0007:10-11 et 116-124 confirment qu'aucun mécanisme Unity ne donne 50 Hz fixes ; GDD:118-120 (« Une cadence variable casse le lissage en silence ») et 1195-1206 (« Pas de bonne réponse en l'état ») sont bien périmés face à OQ-3:1289-1308. MAIS GDD:703-704 cite déjà AnalysisTiming (ADR-0007), et ADR-0007:273 dit lui-même du contrat « Pousser les échantillons à cadence fixe et connue » : « Le contrat subsiste, mais l'analyse cesse d'en dépendre aveuglément ». ADR-0007:271 reprend la ligne Tuning Knobs 828-829 comme exigence satisfaite. AC-14c/14d (GDD:1047-1048) propagent déjà ADR-0007. Deux ou trois emplacements sur cinq sont vraiment contradictoires."
+   },
+   {
+    "source": "unity-specialist F2 ; qa-lead #3",
+    "claim": "EnvelopeFollower.cs n'applique pas ADR-0007 : updateRateHz passé au constructeur, coefficients figés, Process sans paramètre de temps.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "EnvelopeFollower.cs:69 ctor(attackSeconds, releaseSeconds, updateRateHz) ; :87-88 coefficients calculés une fois ; :118-131 CoefficientFor, formule :130 `Math.Exp(-1.0 / (timeConstantSeconds * updateRateHz))` ; :96 `Process(float input)`. EnvelopeFollowerTests.cs:16 UpdateRateHz = 50f. Étape 1 du Migration Plan d'ADR-0007:254 non faite ; ADR-0007:67 « Le VoiceAnalyzer ne doit pas être écrit avant application de cet ADR ». Total des tests = 41 (9+7+9+13+3), comme l'annonce le GDD."
+   },
+   {
+    "source": "unity-specialist F2",
+    "claim": "Le GDD ne signale pas que le code n'implémente pas encore ADR-0007.",
+    "verdict": "PARTIEL",
+    "evidence": "« État du code aujourd'hui » (GDD:1433-1441) est bien muet. Mais GDD:1195-1197 et 1284-1285 décrivent le constructeur à updateRateHz, et 1306-1308 écrit « Tant qu'il n'est pas appliqué, AC-14 vérifie que le lissage est correct quand la cadence est correcte ». L'information existe, elle n'est simplement pas dans la section d'état."
+   },
+   {
+    "source": "unity-specialist F2 (reprend ADR-0007:74 et EnvelopeFollower.cs:13)",
+    "claim": "EnvelopeFollower est le seul type à état déjà écrit et testé.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "Decimator.cs:31-36 : « Cette classe a une vraie mémoire, et pas seulement des tampons de travail ». Champs d'état _history, _writeIndex et _phase (:46-50). GDD:555 et 568 le disent aussi. Aucun impact sur la conclusion d'ADR-0007 : l'état du Decimator se compte en échantillons, pas en temps."
+   },
+   {
+    "source": "unity-specialist F3",
+    "claim": "ADR-0007 (154-155) exige un recalcul par appel avec la formule coefficient = exp(-DeltaSeconds/tau).",
+    "verdict": "PARTIEL",
+    "evidence": "ADR-0007:154-155 écrit seulement « Les coefficients sont recalculés lorsque l'intervalle s'écarte du précédent au-delà d'un epsilon » : aucune formule. Elle se déduit du code : exp(-1/(τ·rate)) (EnvelopeFollower.cs:130) = exp(-Δt/τ) avec Δt = 1/rate."
+   },
+   {
+    "source": "unity-specialist F3 ; qa-lead #3",
+    "claim": "Le GDD ne donne aucune formule de coefficient sous cadence variable, et aucun AC ne porte le « test de cadence variable » exigé par ADR-0007.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Recherche de « exp( » dans voice-analysis.md : aucune occurrence. AC-14 (1045) « à la cadence nominale » ; AC-14b/c/d (1046-1048) couvrent MinDb, le facteur entier et l'intervalle aberrant, mais aucun ne compare deux cadences. ADR-0007:256-257 (Migration Plan 3) et :264 (Validation Criteria) exigent ce test."
+   },
+   {
+    "source": "unity-specialist F4 ; qa-lead #3 (secondaire)",
+    "claim": "ADR-0007 exige que la fenêtre de jitter N et le TTL de l'anneau soient exprimés en secondes ; le GDD garde N en int et le TTL « à définir ».",
+    "verdict": "CONFIRMÉ",
+    "evidence": "ADR-0007:150-151 ; GDD:429 (`N` | int | 3…5 · PROVISOIRE 4) ; GDD:798 (TTL *à définir*). Aggravant, qui valide la question de qa-lead : le GDD emploie deux unités pour N, « sur les 3 à 5 dernières trames » (148) et « tant que moins de N périodes » (440)."
+   },
+   {
+    "source": "unity-specialist F5",
+    "claim": "ADR-0007 range la fenêtre de gel sur écrêtage parmi les horloges qui consomment DeltaSeconds ; le GDD ne précise pas comment elle s'accumule.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "ADR-0007:152 (« 250 ms, comptés sans référence » → DeltaSeconds) ; GDD:605 et 801 donnent « ~250 ms » sans mode d'accumulation."
+   },
+   {
+    "source": "unity-specialist F6 ; audio-director #2",
+    "claim": "Six passages du GDD (124, 208, 676, 722, 870, 1370) parlent encore de signal post-AEC ou de fourche AEC, alors qu'ADR-0003 a retiré l'AEC en amont le 2026-09-08.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "ADR-0003:9-15 : AEC « absente de la branche d'analyse », exigence « AEC en amont de la fourche » retirée. Les six lignes du GDD sont vérifiées, l'encart corrigé est en GDD:944-956. Réserve : la même obsolescence existe dans les ADR. Le corps d'ADR-0003 (189-217, 269-273, 350, 382-384) et ADR-0008:33-34, 55, 93-98 (« post-AEC uniquement », AEC « positionnable en amont de la fourche ») n'ont pas été amendés. Le correctif ne peut pas se limiter au GDD."
+   },
+   {
+    "source": "audio-director #11",
+    "claim": "ADR-0003 fait de l'AEC « le seul traitement autorisé en amont de l'analyse » ; un passe-haut serait une seconde exception, au même titre que l'AEC.",
+    "verdict": "PARTIEL",
+    "evidence": "La citation est exacte (ADR-0003:271-273). Mais elle se trouve dans la ligne directrice « L'AEC est obligatoire et vit en amont de la fourche » (269), rétrogradée par le statut du 2026-09-08 (ADR-0003:9-15). Le précédent invoqué n'existe donc plus sur la branche d'analyse : aujourd'hui, aucun traitement amont n'y est autorisé, et l'amendement proposé serait une première exception, pas une seconde."
+   },
+   {
+    "source": "unity-specialist F7",
+    "claim": "ADR-0008 est Accepted, Dissonance est retenu et l'intégration vendorisée. Le seul vrai inconnu est la compilation contre Dissonance 9.0.7 / FishNet 4.7.2R (dernier alignement amont : FishNet 4 / Dissonance 8, avril 2024). Ordre imposé : compiler → corriger l'auth (#12) → vérifier le canal → test OQ-7. OQ-7 ne présente le risque que sous l'angle du partage.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : ADR-0008:5-9, 263, 289-300, 383, 463-464 ; VENDORING.md:128-139. L'ordre auth → canal vient de VENDORING.md:152-155 (points 6-9), mais ADR-0008:383-388 donne compiler → canal → auth → OQ-7 : les deux sources divergent. Le « uniquement » est faux : GDD:1377-1394 intègre déjà le recadrage vers ADR-0008 (ingestion PCM). Ce qui manque à OQ-7, c'est le choix de Dissonance et cette file de vérifications."
+   },
+   {
+    "source": "unity-specialist F8",
+    "claim": "Decimator n'accepte qu'un facteur entier : 44 100 → 8 000 = 5,5125 impossible, 16 000 → 12 000 ≈ 1,33 impossible.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Decimator.cs:74 `Decimator(int factor, ...)`. Calculs exacts : 44100/8000 = 5,5125 ; 16000/12000 = 1,333 ; 16000/8000 = 2. Nuance : Decimator ne connaît pas de fréquence cible (aucun paramètre) et ne peut donc pas refuser lui-même un couple SampleRate/cadence non entier. Le refus explicite d'AC-14c / ADR-0007:171-175 devra vivre dans le VoiceAnalyzer, qui n'existe pas."
+   },
+   {
+    "source": "unity-specialist F9",
+    "claim": "ADR-0008 décrit IMicrophoneCapture comme acceptant « Mono, float, n'importe quelle fréquence, livré à cadence temps réel ».",
+    "verdict": "CONFIRMÉ",
+    "evidence": "ADR-0008:161, sourcé sur la doc éditeur (ADR-0008:477)."
+   },
+   {
+    "source": "unity-specialist F9",
+    "claim": "Le codec de Dissonance pourrait imposer une fréquence ou une taille de trame qui remonte jusqu'à IMicrophoneCapture.",
+    "verdict": "NON VÉRIFIABLE",
+    "evidence": "Aucune source Dissonance dans le projet : Assets/ ne contient aucun .cs Dissonance hors de ThirdParty/DissonanceFishNet~, qui n'est que l'intégration FishNet (sans référence à Microphone ni à un codec). manifest.json : aucun paquet réseau ni vocal."
+   },
+   {
+    "source": "unity-specialist F10",
+    "claim": "`noEngineReferences: true` empêche Voice.Core de décider de son thread ; aucun document du projet ne prend la décision de thread.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : SUAC.Voice.Core.asmdef:13, et SUAC.Voice.Core.csproj ne référence aucun UnityEngine (netstandard2.1, :22, :149-150). Aucune décision de thread dans les ADR ni le GDD : ADR-0004:189 « Si l'analyse passe un jour sur un worker », ADR-0007:201 « hors du thread principal » sans nommer le fil, GDD:1125. MAIS l'inférence est fausse : netstandard2.1 fournit System.Threading, et noEngineReferences n'empêche pas Core de créer un thread. Ce qui cadre, c'est ADR-0004:124-125 (un objet d'analyse n'est jamais partagé entre threads), pas l'asmdef."
+   },
+   {
+    "source": "unity-specialist F10",
+    "claim": "BasicMicrophoneCapture de Dissonance repose sur la classe Microphone d'Unity, dont la lecture se fait en pratique depuis le thread principal ; le projet ne documente aucune alternative native.",
+    "verdict": "NON VÉRIFIABLE",
+    "evidence": "Dissonance est absent du projet. La doc locale Unity 6.3 (ScriptReference/Microphone.html) dit « record to an AudioClip », API d'interrogation via GetPosition, et rien sur les threads. « Aucune alternative documentée » est par ailleurs inexact : ADR-0008:163 documente une capture micro via FMOD (motif de l'intégration ODIN), et ADR-0003:51-53 et :107 un plugin natif WebRTC-APM."
+   },
+   {
+    "source": "unity-specialist F11 ; performance-analyst F7",
+    "claim": "Reconstruire Decimator et PitchDetector à la bascule de profil alloue forcément.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Decimator.cs:96-97 `new float[tapCount]` ×2 ; PitchDetector.cs:130-131 `new float[_maxLag + 1]` ×2. AC-41b (GDD:1132) le dit déjà ; reconstruction sur le fil d'analyse en GDD:574-575. Les numéros de ligne de performance-analyst sont décalés : PitchDetector 131-132 → 130-131, « ligne 578 » → 555, « ligne 576 » → 570."
+   },
+   {
+    "source": "performance-analyst F7",
+    "claim": "coding-standards.md exige que les critères d'acceptation soient testables par un testeur QA.",
+    "verdict": "PARTIEL",
+    "evidence": "La citation « Acceptance criteria must be testable — a QA tester must be able to verify pass/fail » vient de .claude/rules/design-docs.md, pas de coding-standards.md, qui dit seulement « Acceptance Criteria -- testable success conditions ». Le fond est inchangé."
+   },
+   {
+    "source": "unity-specialist F12 ; performance-analyst F9",
+    "claim": "Le compteur ProfilerRecorder d'AC-42b ne peut pas vivre dans SUAC.Voice.Core (noEngineReferences) ; il faut une scission entre Core (Stopwatch) et Capture (compteur), que ni le GDD ni l'ADR n'écrivent.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "asmdef:13, et le csproj de Voice.Core ne référence aucun UnityEngine. UnityEngine.CoreModule.xml de l'install 6000.3.18f1 contient T:Unity.Profiling.ProfilerRecorder (l.66424), T:Unity.Profiling.ProfilerMarker (66270) et T:UnityEngine.Profiling.CustomSampler (32234). « Stopwatch » est présent dans NetStandard/ref/2.1.0/netstandard.dll. GDD:1134 et ADR-0007:159-160 ne disent pas où vit le compteur. Correction pour performance-analyst : ProfilerCounterValue<T> n'est pas dans UnityEngine.CoreModule mais dans le paquet com.unity.profiling.core 1.0.3 (assembly Unity.Profiling.Core, absent de manifest.json), dont la source utilise Unity.Profiling.LowLevel.Unsafe. De même, AnalysisTiming ne « porte » pas l'écart au nominal : il ne contient que DeltaSeconds et SampleRate (ADR-0007:138-141), l'écart est calculé puis exposé (159-160). La conclusion ne change pas."
+   },
+   {
+    "source": "unity-specialist F13",
+    "claim": "AudioSettings.OnAudioConfigurationChanged n'est documenté que pour la sortie audio, pas pour le périphérique de capture ; le GDD ne cite aucune source et engine-reference ne couvre pas le sujet.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Doc locale 6.3, ScriptReference/AudioSettings.OnAudioConfigurationChanged.html : « The user changes the default output device », paramètre « true if the user changes the audio output device ». UnityEngine.AudioModule.xml:2289 et 2364 disent la même chose, sans mention d'entrée ou de micro. Aucune occurrence dans docs/engine-reference/unity/. GDD:732-733 sans source. ADR-0007:59 marque bien dspBufferSize/Reset comme à vérifier. Un déclenchement réel sur changement de micro n'est pas documenté."
+   },
+   {
+    "source": "performance-analyst F2",
+    "claim": "Le facteur 2,25× (GDD:1121, ADR-0007:249) est faux : YIN coûte O(windowSize×maxLag), maxLag baisse quand minHz monte avec la calibration, le ratio réel est de 0,96 à 1,19×, et c'est le Decimator qui porte l'écart.",
+    "verdict": "PARTIEL",
+    "evidence": "Modèle confirmé : double boucle PitchDetector.cs:178-187, maxLag = ⌈SR/minHz⌉ en :120. 2,25× périmé, confirmé, mais DÉJÀ corrigé ailleurs, ce que le rapport ne cite pas : revue TD 2026-09-08 §G (l.127-133) et ADR-0004:226-228 donnent « ~1,8× et non 2,25× », jamais propagé au GDD ni à ADR-0007:249. Hypothèses de calcul erronées : 1) la fenêtre YIN fait 256 échantillons à 8 kHz (ADR-0004:102 et 219, PitchDetectorTests.cs:26), pas 368 ; 368 ≈ RequiredSampleCount = 256 + 115, soit le tampon de 46 ms. 2) Le Decimator travaille en flux (Decimator.cs:31-36, 114) : 160 sorties par trame de 20 ms à 8 kHz (×81 = 12 960), 240 à 12 kHz (19 440), pas 368/552. Recalcul à la frontière (médiane 300 Hz, maxLag 80) : YIN 29 440 → 30 720 à 37 760 selon la fenêtre non spécifiée à 12 kHz, soit ×1,04 à ×1,28 ; YIN + Decimator ×1,18 à ×1,35. La conclusion « très en dessous de 2,25× » tient, mais contredit aussi le ~1,8× d'ADR-0004. Les totaux du rapport sont légèrement faux (186 576 / 221 904, pas 191 000 / 226 400). Le code couple fenêtre et maxLag par une borne (windowSize ≥ 2·maxLag, PitchDetector.cs:122-127) : « le code ne le fait pas » est trop fort."
+   },
+   {
+    "source": "performance-analyst F3",
+    "claim": "La chaîne coûte de quelques dizaines à ~200 µs par trame ; elle n'est pas en Burst d'après ADR-0003.",
+    "verdict": "PARTIEL",
+    "evidence": "L'ordre de grandeur est cohérent avec ADR-0004:211-212 (~6 µs de décimation, 60 à 120 µs de YIN, non mesurés), mais le nombre de flops YIN est surestimé d'un facteur ~1,44 (fenêtre de 368 au lieu de 256). ADR-0003 ne mentionne jamais Burst : c'est noEngineReferences qui l'exclut (le csproj ne référence pas Unity.Burst)."
+   },
+   {
+    "source": "performance-analyst F4",
+    "claim": "Remettre une VoiceFrame d'environ 20 octets au thread principal est trivial ; en jeu, Dissonance (encodage Opus sur son propre thread), FMOD et FishNet/FishyFacepunch tournent sur les mêmes cœurs.",
+    "verdict": "PARTIEL",
+    "evidence": "Taille confirmée : VoiceFrame.cs:45-89 = 3 float + bool + uint = 17 octets, 20 après alignement. FMOD (restitution : ADR-0003:261, ADR-0008:204-205) et FishNet/FishyFacepunch (ADR-0008:236, 312) sont prévus mais pas installés (absents de manifest.json). « Opus sur son propre thread audio » est invérifiable : Dissonance est absent du projet."
+   },
+   {
+    "source": "performance-analyst F5",
+    "claim": "L'alternative 3 d'ADR-0007 retient partiellement le thread audio sans trancher entre callback et worker. Deadline de 10 ms à 480 échantillons et 21,3 ms à 1024. Un dépassement dans OnAudioFilterRead produit un artefact audible sur tout le son du jeu.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : ADR-0007:199-204 (« l'analyse tourne bien hors du thread principal », fil non nommé) ; 480/48 000 = 10 ms et 1024/48 000 = 21,33 ms. La doc locale MonoBehaviour.OnAudioFilterRead.html confirme l'exécution sur le thread audio et qu'un filtre trop lent affame le mixeur (« the mixer will be starved of audio data »). En revanche, « tout le son du jeu » n'est pas documenté et dépend de l'endroit où le filtre est inséré. Et OnAudioFilterRead n'est pas le chemin de capture retenu : selon ADR-0008, c'est IMicrophoneCapture, alimenté par le système 2."
+   },
+   {
+    "source": "performance-analyst F7",
+    "claim": "Un GC déclenché pendant OnAudioFilterRead peut geler tout le pipeline audio.",
+    "verdict": "NON VÉRIFIABLE",
+    "evidence": "La doc locale d'OnAudioFilterRead ne parle ni d'allocation ni de GC, et aucun document du projet ne couvre ce point."
+   },
+   {
+    "source": "performance-analyst F6",
+    "claim": "La latence structurelle, de 80 à 150 ms, cumule fenêtre pitch (46 ms), FIR (0,83 ms), attaque, anneau médian à l'amorçage (~80 ms) et réseau (33-50 ms), face aux 350 ms du système 11.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : délai de groupe du FIR à phase linéaire (81−1)/2 = 40 échantillons à 48 kHz = 0,833 ms (Decimator.cs:196, centre (n−1)/2) ; 1/30 à 1/20 s = 33 à 50 ms. Mais le système 11 consomme Loudness, et Loudness ne passe ni par la fenêtre pitch ni par l'anneau médian (étapes 2, 5, 8 en GDD:125-131 ; AC-36 en 1099 : Loudness non conditionnée par Voiced). Les « ~80 ms » cités (GDD:441-443) sont le coût que le GDD ÉVITE en laissant passer le test de jitter par défaut, pas une latence de l'anneau."
+   },
+   {
+    "source": "performance-analyst F8",
+    "claim": "Aucun document ne fixe le backend (IL2CPP probable) ; le GC est Boehm, avec un mode incrémental à activer explicitement dans les Player Settings.",
+    "verdict": "PARTIEL",
+    "evidence": "Confirmé : backend non épinglé (ProjectSettings.asset:832-833 ne fixe scriptingBackend que pour Android ; aucun ADR ni GDD ne tranche, ADR-0004:223 dit « Mono ou IL2CPP ») ; Boehm (Manual/performance-garbage-collector.html). RÉFUTÉ sur le mode incrémental : Manual 6.3 performance-incremental-garbage-collection.html « Incremental garbage collection: Enabled by default », et le projet l'a déjà activé (ProjectSettings.asset:844 `gcIncremental: 1`)."
+   },
+   {
+    "source": "qa-lead #1 ; systems-designer §2",
+    "claim": "Formulas §2 (Pitch forcé à 0 hors voisement) et AC-34 (Pitch garde sa dernière valeur) sont incompatibles.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "GDD:370 contre 1089. Fait de code qu'aucun des deux rapports ne relève : le type public existant implémente déjà Formulas §2. VoiceFrame.cs:101-103 `Pitch = voiced ? pitch : 0f;`, remarques :52-55 « Sur un son non-voisé, elle est à zéro et doit être ignorée » ; RawPitch.cs:47 fait de même pour F0Hz. AC-34 est donc insatisfiable sans modifier le constructeur de VoiceFrame, contrat public (ADR-0004)."
+   },
+   {
+    "source": "systems-designer §2",
+    "claim": "Rien dans la chaîne ne produit activement Pitch = 0 ; le gel de l'anneau donne déjà le comportement d'AC-34, et la phrase de Formulas décrit un comportement que l'implémentation ne produit pas.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "VoiceFrame.cs:101-103 met Pitch à 0 dès que voiced vaut false, quel que soit l'état de l'anneau. Le gel (GDD:630) concerne l'anneau des F0, pas le champ Pitch de la trame. Retenir AC-34 impose de changer le contrat public VoiceFrame et sa documentation, coût que le rapport ne mentionne pas."
+   },
+   {
+    "source": "systems-designer §3.2",
+    "claim": "Une fois calibré à 110 Hz, la plage de recherche passe à [55, 220] Hz et réadmet la vraie fondamentale à 55 Hz, d'où une oscillation de 12 demi-tons d'une trame à l'autre.",
+    "verdict": "RÉFUTÉ",
+    "evidence": "GDD:536-537 et AC-30 (1077) : si médiane/2 < 70 Hz, la plage devient [70, médiane×2], soit [70, 220]. Côté code, minHz = 70 à 8 kHz donne maxLag = ⌈8000/70⌉ = 115, inférieur à la période de 55 Hz (145,5 échantillons) : la vraie fondamentale reste hors recherche (PitchDetector.cs:120, boucle :232). Ce mode d'échec supplémentaire n'a pas de témoin."
+   },
+   {
+    "source": "audio-director #5 ; systems-designer §3.2 (biais)",
+    "claim": "Pour une F0 réelle sous 70 Hz, YIN accroche systématiquement ~2×F0 à chaque trame, et la médiane reste biaisée.",
+    "verdict": "PARTIEL",
+    "evidence": "Hors plage, confirmé (maxLag 115 < 145). Mais le code peut aussi rendre Unvoiced si aucun creux ne passe sous 0,15 entre minLag et maxLag (PitchDetector.cs Detect :141-158, FindFirstDipBelowThreshold renvoie −1). « Systématiquement 2×F0 » dépend du contenu harmonique et n'est pas établi. Le correctif proposé (minHz à 50 Hz pendant la calibration) a en outre un coût de code non mentionné : maxLag 160, donc windowSize ≥ 320 exigé (PitchDetector.cs:122-127). La fenêtre de 256 d'ADR-0004 serait refusée, le coût YIN multiplié par ~1,74 (160×320 contre 115×256) et le tampon porté à 480 échantillons, soit 60 ms au lieu des 46 ms spécifiés."
+   },
+   {
+    "source": "audio-director #8 ; systems-designer §G",
+    "claim": "L'étape 5 des Core Rules lit Process(Rms) en linéaire, alors que Formulas impose le lissage en dB ; aucune conversion en dB n'existe dans le code.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "GDD:128 contre 310-320. Recherche de log10/Log dans Runtime/ : aucune occurrence. EnvelopeFollower.Process(float) ne dépend d'aucun domaine (:96-104)."
+   },
+   {
+    "source": "audio-director #9",
+    "claim": "Une fois l'enveloppe en dB, aucune valeur ne peut devenir dénormale ; ni le Decimator (FIR) ni le PitchDetector n'ont d'état à décroissance, donc l'edge case et AC-15 sont une branche morte.",
+    "verdict": "PARTIEL",
+    "evidence": "Récurrence d'EnvelopeFollower.cs:104 : `_value = input + (_value - input) * coefficient`. Pour une cible I ≠ 0, l'écart s'arrondit à zéro par pas de ULP(I) (≈7,6e-6 à −120), jamais dénormal. Seul témoin : I == 0f exactement (0 dBFS, borne haute de Rms_dB en GDD:286), atteignable seulement si l'implémentation écrête Rms_dB à 0 en saturation. FIR non récursif confirmé (Decimator.cs:143-160). Le PitchDetector a des accumulateurs (sum, runningSum), mais remis à zéro à chaque appel. En revanche, le code linéaire actuel a un témoin réel : une entrée à 0f (silence) fait décroître _value géométriquement jusqu'aux dénormaux. L'edge case n'est mort que pour la spec en dB, pas pour le code existant."
+   },
+   {
+    "source": "audio-director #7",
+    "claim": "Après un squelch matériel à −120 dB, l'enveloppe ajoute plusieurs dizaines de millisecondes avant de franchir la porte.",
+    "verdict": "PARTIEL",
+    "evidence": "Calcul sur EnvelopeFollower.cs:104 et 130 à 50 Hz, cible −30 dBFS, porte à −43 dB (Floor −50 + Margin 7). En continu, le surcoût vaut τ·ln(90/20) ≈ 1,5τ, soit 15 ms (τ = 10 ms) à 30 ms (τ = 20 ms). Discrétisé à 50 Hz : pour τ = 20 ms (c = e⁻¹), franchissement à la trame 2 au lieu de la trame 1, soit +20 ms ; pour τ = 10 ms (c = e⁻²), trame 1 dans les deux cas, soit +0 ms. L'effet est réel mais tient en une trame au plus, pas en « plusieurs dizaines » de ms. Le comportement du matériel est invérifiable."
+   },
+   {
+    "source": "audio-director #10",
+    "claim": "Un flux int16 normalisé écrête exactement à ±1,0 (32767/32768).",
+    "verdict": "PARTIEL",
+    "evidence": "Avec la division par 32768, +32767 donne 0,999969 et −32768 donne exactement −1,0. Le ±1,0 symétrique n'existe qu'avec la division par 32767, où −32768 donne −1,00003. Le seuil de 0,998 proposé couvre les deux conventions. Aucun code de détection d'écrêtage n'existe : LoudnessMeter.cs:61-77 ne calcule que RMS et crête."
+   },
+   {
+    "source": "audio-director #3 ; accessibility-specialist #6",
+    "claim": "Une fenêtre de crête de 21 ms couvre 1,8 période à 85 Hz et 8,4 périodes à 400 Hz, donc la crête dépend de l'alignement pour les voix graves.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "1/85 = 11,76 ms et 21/11,76 = 1,79 ; 21 × 0,4 = 8,4. LoudnessMeter.cs:61-77 prend le maximum absolu sur la fenêtre, sans pondération. LoudnessMeterTests.cs:22-23 : 1024 échantillons à 48 kHz = 21,3 ms."
+   },
+   {
+    "source": "accessibility-specialist #6",
+    "claim": "Adapter la fenêtre de crête par joueur suppose que le système 6 fournisse F0_habituel avant la construction du LoudnessMeter.",
+    "verdict": "PARTIEL",
+    "evidence": "LoudnessMeter est une classe statique, sans constructeur (LoudnessMeter.cs:25 `internal static class`, :48 `Measure(ReadOnlySpan<float>)`). L'appelant choisit la longueur de fenêtre à chaque appel : une fenêtre par joueur ne demande aucune reconstruction, contrairement au PitchDetector."
+   },
+   {
+    "source": "accessibility-specialist #1",
+    "claim": "Le seuil d'apériodicité YIN de 0,15 n'est pas personnalisable, par construction.",
+    "verdict": "PARTIEL",
+    "evidence": "Il est fixé par décision : ADR-0004:101-102, GDD:833-834 (« Le toucher, c'est rouvrir un ADR »). Mais le code le prend en paramètre de constructeur (PitchDetector.cs:93, doc :83-88 « autant un réglage de ressenti que de traitement du signal ») et le PitchDetector est déjà reconstruit à chaque profil (GDD:552-553). Un seuil par joueur ne coûte rien techniquement : le verrou est une décision d'ADR, pas une contrainte de construction."
+   },
+   {
+    "source": "accessibility-specialist #8",
+    "claim": "Au-delà d'une octave, le détecteur ne trouve rien ou accroche une sous-harmonique dans la fenêtre.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "Pour le cas aigu, la doc du paramètre maxHz le dit (PitchDetector.cs:76-82) : « Si la vraie hauteur est au-dessus... l'algorithme retourne le meilleur creux de ce qui reste — c'est-à-dire une octave en dessous ». Idem ADR-0004:156-160. La recherche est bornée à [minLag, maxLag] (:232)."
+   },
+   {
+    "source": "accessibility-specialist #10 et #11",
+    "claim": "Le système 1 expose déjà Loudness/Voiced localement, ainsi que l'état AnalyzerState.",
+    "verdict": "PARTIEL",
+    "evidence": "Loudness et Voiced sont bien publics (VoiceFrame.cs:45, 83). AnalyzerState n'existe qu'en spec (GDD:242-247) : aucun type dans Runtime/Voice.Core, et PublicSurfaceTests.cs:32-35 n'autorise toujours que { VoiceFrame }."
+   },
+   {
+    "source": "qa-lead #12",
+    "claim": "Aucun critère ne teste le verrou de surface publique ; RawLoudness, RawPitch, EnvelopeFollower, Decimator et PitchDetector restent internal.",
+    "verdict": "PARTIEL",
+    "evidence": "Aucun AC, confirmé. Types bien internal : RawLoudness.cs:27, RawPitch.cs:16, EnvelopeFollower.cs:45, Decimator.cs:43, PitchDetector.cs:51, LoudnessMeter.cs:25. MAIS un test automatisé existe déjà : PublicSurfaceTests.cs:37-59 (GetExportedTypes, liste blanche), cité par ADR-0004:86 et 248 et par GDD:228. Il est périmé (liste réduite à { VoiceFrame }) face aux trois types de GDD:247. L'AC à écrire doit adopter et mettre à jour ce test, pas en créer un."
+   },
+   {
+    "source": "qa-lead #13",
+    "claim": "Appliquer le facteur LowRange au coefficient au lieu des secondes ne donne pas un lissage 1,5× plus lent, car exp(-1/(τ·rate)) n'est pas linéaire en τ.",
+    "verdict": "CONFIRMÉ",
+    "evidence": "EnvelopeFollower.cs:130. Multiplier τ par k donne c^(1/k). Pire que non linéaire : pour un relâchement de 200 ms à 50 Hz, c = e^(−0,1) = 0,905, et 1,5 × c = 1,357 > 1, soit un filtre divergent. La valeur correcte est c^(1/1,5) = 0,936."
+   },
+   {
+    "source": "qa-lead #5 (AC-21a)",
+    "claim": "Des champs de VoiceProfile en lecture seule rendent sa publication par affectation de référence atomique sans verrou.",
+    "verdict": "PARTIEL",
+    "evidence": "L'atomicité vient de l'affectation d'une référence, et le GDD lui-même (558-566) oppose classe publiée par référence et readonly struct copiée. Des champs readonly garantissent seulement que l'instance publiée n'est plus modifiée ensuite (cohérence), pas l'atomicité. Un test par réflexion vérifie l'immutabilité, pas le mécanisme Interlocked.Exchange / Volatile.Read."
+   }
+  ],
+  "cross_report_conflicts": [
+   "Pitch non voisé : systems-designer §2 affirme que rien ne produit Pitch = 0 et recommande AC-34 ; qa-lead laisse les deux options ouvertes. Le code tranche dans l'autre sens : VoiceFrame.cs:101-103 force Pitch à 0 (Formulas §2). Aucun des deux rapports ne voit que retenir AC-34 impose de modifier le contrat public VoiceFrame.",
+   "Plage de recherche des voix graves : systems-designer §3.2 écrit [55, 220] Hz, alors qu'audio-director #5 et performance-analyst F2 citent correctement le recadrage [70, médiane×2] (GDD:536-537, AC-30).",
+   "Surcoût du profil à 12 kHz : trois chiffres incompatibles et aucun mesuré. 2,25× (GDD:1121, ADR-0007:249) ; ~1,8× (ADR-0004:226-228, revue TD §G) ; 0,96 à 1,19× (performance-analyst F2). Le recalcul ici, avec la fenêtre de 256 et un Decimator en flux, donne ≈1,04 à 1,35×.",
+   "Dénormaux : audio-director #9 veut supprimer l'edge case et AC-15 (branche morte en dB) ; performance-analyst F11 veut ajouter une constante 1e-15f dans EnvelopeFollower ; unity-specialist F14 veut vérifier le flush sous IL2CPP. Dans un domaine −120…0 dB, un plancher à 1e-15 n'a pas de sens ; le témoin n'existe que pour le code linéaire actuel, ou pour une cible exactement à 0 dB.",
+   "Thread d'analyse : unity-specialist F10 juge probable une analyse sur le thread principal (capture via Microphone) et propose de requalifier le budget de 1 ms en budget DSP ; performance-analyst F4/F5 ne raisonne que sur thread audio ou worker et juge la remise triviale. Aucun ADR ne tranche (ADR-0004:189, ADR-0007:201).",
+   "ProfilerRecorder dans Voice.Core : même fait, sévérité BLOQUANT chez unity-specialist F12 et RECOMMANDÉ chez performance-analyst F9, qui place en outre à tort ProfilerCounterValue<T> dans UnityEngine.CoreModule (il est dans le paquet com.unity.profiling.core).",
+   "AEC : unity-specialist F6 lit ADR-0003 comme ayant retiré tout traitement amont ; audio-director #11 s'appuie sur la règle « seul traitement autorisé en amont » (ADR-0003:271-273) comme si elle était en vigueur pour justifier une « seconde exception ». Chacun lit une moitié d'ADR-0003, dont le corps n'a pas été mis à jour depuis le statut du 2026-09-08 (ADR-0008:93-98 non plus).",
+   "Ordre d'activation Dissonance : unity-specialist F7, d'après VENDORING.md:152-155, place l'auth #12 avant la vérification du canal ; ADR-0008:383-388 place le canal avant l'auth. Les deux documents du projet se contredisent.",
+   "GC et backend : performance-analyst F8 demande d'activer le GC incrémental et, comme unity-specialist F14, suppose IL2CPP. ProjectSettings.asset:844 a déjà gcIncremental: 1 (activé par défaut selon le manuel Unity 6.3) et ne fixe aucun backend Standalone (832-833)."
+  ]
+ }
+]
