@@ -4,7 +4,7 @@
 
 **Accepted** — amendé le 2026-09-08 (aucune AEC sur la branche d'analyse, casque prérequis)
 et le 2026-09-16 (seul `r'` quitte le client, règle de traitement unique en amont de
-l'analyse). Historique en fin de document.
+l'analyse, décimation et expiration des paquets à l'hôte). Historique en fin de document.
 
 ## Last Verified
 
@@ -120,7 +120,11 @@ la cause. C'est une exigence de la section *UI Requirements* de `voice-calibrati
 1. Client : capture micro **brute**, sans traitement
 2. Client : analyse locale (RMS, fréquence fondamentale par YIN, facteur de crête)
 3. Client : **normalisation sur son profil de calibration personnel**
-4. Client → Hôte : paquet de features à cadence fixe (~20–30 Hz)
+4. Client → Hôte : paquet de features à cadence fixe (~20–30 Hz), **décimé en conservant le
+   maximum de `Loudness` de l'intervalle**. L'hôte **date chaque paquet à sa réception** et le
+   tient pour **expiré** au-delà d'un délai court : une trame expirée vaut silence (valeur :
+   `design/gdd/voice-object-effect.md`, liste canonique). Sans cette horloge, un paquet
+   « silence » perdu laisserait un objet charger sur le dernier cri reçu
 5. Client → Hôte : **`r'`, un seul nombre dérivé du profil**, à la connexion et à chaque
    recalibration — la place de la voix posée du joueur entre sa porte de volume et son cri
    (`design/gdd/voice-analysis.md`, *Formulas* §1). **Le `VoiceProfile` ne quitte jamais le
@@ -337,6 +341,7 @@ priorité absolue du POC audio, avant toute conception de système en dépendant
 - [ ] Le signal lu par l'analyse est bien brut — ni VAD, ni AGC, ni suppression de bruit, ni AEC en amont
 - [ ] **Avec un casque, la voix d'un coéquipier restituée au casque ne franchit pas la porte de volume du joueur** — mesure de fuite au POC audio
 - [ ] **Aucun paquet sortant ne contient un champ du `VoiceProfile`** ; seul `r'` en est dérivé
+- [ ] Un paquet de features plus vieux que le délai d'expiration ne pèse plus sur aucun objet ; la décimation conserve le maximum de `Loudness` de l'intervalle
 - [ ] Un chuchotement produit des features exploitables (non écrasées par un seuil)
 - [ ] Un claquement de langue est distingué d'un son tenu par le crest factor
 - [ ] La charge CPU client mesurée respecte le budget

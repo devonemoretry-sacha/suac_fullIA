@@ -50,6 +50,10 @@ comprises.
 
 **Les dix recommandations du §6 sont acceptées telles quelles** (« d'accord sur tout »), ainsi que les points tranchés par le creative-director sans décision (Pitch = 0 hors voisement, pas de passe-haut avant mesure, voix < 70 Hz documentées, reformulation d'ADR-0003). La passe groupée démarre dans l'ordre du §4 : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`.
 
+### Révision appliquée — 2026-09-16
+
+`voice-calibration.md` réécrit à l'étape 3 de la passe groupée : B1 à B6 et « Important, non bloquant » appliqués ; « Différé sciemment » renvoyé ici depuis *Open Questions*. Re-revue à faire.
+
 ---
 
 ## Le constat central — sur six bornes de validation, deux fonctionnent

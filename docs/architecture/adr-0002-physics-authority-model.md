@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+**Accepted** — amendé le 2026-09-16 (ce que chaque client connaît pour prédire). Historique en
+fin de document.
 
 ## Date
 
@@ -144,6 +145,18 @@ La chute de l'objet, le réveil d'un habitant, le ragdoll collectif, la mort : c
 viennent **exclusivement** de l'hôte. Un « tu as lâché le canapé » prédit puis annulé est
 infiniment pire qu'un verdict tardif de 100 ms.
 
+#### Ce que chaque client connaît pour prédire
+
+**Un client ne prédit qu'à partir de sa propre voix.** Il ne reçoit ni les features vocales
+ni le `r'` des autres joueurs (ADR-0003) : la contribution de ses coéquipiers lui arrive
+**par l'état que publie l'hôte**, au rythme où leur voix lui parvient par le chat. Le
+décalage local et l'avertissement d'un objet porté sont donc prédits à partir **du dernier
+état publié par l'hôte et de la seule voix locale** ; la règle de charge vit dans
+`design/gdd/voice-object-effect.md`.
+
+Ce déséquilibre est voulu : chacun est immédiatement redevable de sa voix, et découvre
+celle des autres avec la même latence que le chat.
+
 #### Portage solo
 
 Même mécanisme, même chemin de code. Ne pas traiter le portage solo en cas particulier :
@@ -241,6 +254,7 @@ au porteur unique pour le portage solo, (2) un modèle hybride prédiction + ré
 - [ ] **Le joueur qui crie perçoit une réaction de son objet en moins de 50 ms** (couche locale)
 - [ ] **Aucune correction visible (snap) quand l'état autoritaire arrive** — le décalage local s'est amorti
 - [ ] **Aucun verdict n'est prédit** : chute, réveil d'habitant et ragdoll viennent exclusivement de l'hôte
+- [ ] **Aucun client ne reçoit les features vocales ni le `r'` d'un autre joueur** ; la prédiction locale ne lit que la voix locale et l'état publié par l'hôte
 - [ ] Le ressenti du portage collectif est jugé acceptable en playtest à 4 joueurs
 - [ ] Aucune désynchronisation observée sur une session complète
 
@@ -251,6 +265,7 @@ au porteur unique pour le portage solo, (2) un modèle hybride prédiction + ré
 | `design/gdd/game-concept.md` | Pillar 1 — Voice-Physics | « Le poids, la texture et le comportement des objets réagissent en temps réel à la voix » | Définit qui calcule cette réaction et diffuse le résultat |
 | `design/gdd/game-concept.md` | Technical Risks | « Physique répliquée à propriétaire partagé » | Tranche le modèle d'autorité, condition préalable à toute implémentation |
 | `design/mvp-scope.md` | Systèmes 2, 3, 4 | Effet de la voix sur les objets, portage collectif, mobilier réactif | Fixe où ces calculs vivent |
+| `design/gdd/voice-object-effect.md` | Système 11 | Prédire l'avertissement de sa propre voix, jamais le poids ; la charge calculée par l'hôte seul | Couche de retour local ; « Ce que chaque client connaît pour prédire » |
 
 > TR-ID stables à attribuer par `/architecture-review`.
 
@@ -259,3 +274,12 @@ au porteur unique pour le portage solo, (2) un modèle hybride prédiction + ré
 - **ADR-0001** — Framework et topologie réseau : prérequis
 - **ADR-0003** — Pipeline d'analyse vocale : **corrige** la partie « l'hôte calcule la FFT » de la décision d'origine
 - Source : `LOG - Décisions techniques.md`, entrée du 2026-07-03 « Où calculer les effets physiques : Server (Host) only », corrigée par l'entrée du 2026-07-27 sur la séparation des voies audio
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-07-03 | Décision d'origine : effets physiques calculés par l'hôte seul | `LOG - Décisions techniques.md` |
+| 2026-07-27 | Correction : l'analyse vocale est locale, l'hôte ne calcule plus la FFT | idem ; ADR-0003 |
+| 2026-09-03 | Formalisation en ADR ; couche de retour local non autoritaire | Revue directeurs du 2026-09-03 |
+| 2026-09-16 | **Amendement** : un client ne prédit qu'à partir de sa propre voix et de l'état publié par l'hôte ; il ne reçoit ni les features ni le `r'` des autres. Critère de validation et ligne du système 11 ajoutés | `design/gdd/reviews/voice-object-effect-2026-09-14.md`, arbitrage (f) ; passe groupée, étape 4 |

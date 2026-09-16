@@ -46,6 +46,10 @@ revue du système 6.
 
 **Les dix recommandations du §6 sont acceptées telles quelles** (« d'accord sur tout »), ainsi que les points tranchés par le creative-director sans décision (Pitch = 0 hors voisement, pas de passe-haut avant mesure, voix < 70 Hz documentées, reformulation d'ADR-0003). La passe groupée démarre dans l'ordre du §4 : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`.
 
+### Révision appliquée — 2026-09-16
+
+`voice-object-effect.md` révisé à l'étape 4 de la passe groupée : listes A et C (réseau, point d'extension, épisode, lot critères) appliquées ; D appliquée sauf le suivi en playtest ; E versée en questions ouvertes. ADR-0002 et ADR-0003 amendés. Re-revue à faire.
+
 ---
 
 ## Trois constats ajoutés par le creative-director

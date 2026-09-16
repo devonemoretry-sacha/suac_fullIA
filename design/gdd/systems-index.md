@@ -48,7 +48,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **Needs Revision** | `voice-object-effect.md` | **1**, 3, 9, **6, 10** ⚠️ |
+| 11 | Effet voix → objets | Gameplay | MVP | **Needs Revision** | `voice-object-effect.md` | **1**, 3, **5**, 9, **6, 10** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -133,8 +133,9 @@ Vertical Slice / Alpha / Full Vision existent comme vision dans le GDD source ma
 11. **Effet voix → objets** — dépend de 3, 9, **6** *(ajouté le 2026-09-09)* et **10**
     *(ajouté le 2026-09-11 : la **zizanie se compte par pièce**, il lui faut donc une
     partition de l'appartement et la requête « dans quelle pièce est ce point »)*. Ses seuils
-    sont **personnels** : `Seuil,i = T_objet × L_repos,i`, où `L_repos` dérive du profil de
-    calibration. Sans profil, ce système n'a plus de seuil du tout. **Arête manquante par
+    sont **personnels** : des positions comparées à `T_objet · r'_i`, où `r'` est le seul nombre
+    dérivé du profil de calibration qui atteint l'hôte — d'où la dépendance à **5** *(ajoutée le
+    2026-09-16)*. Sans profil, ce système n'a plus de seuil du tout. **Arête manquante par
     ailleurs : 11 → 16/18**, la zizanie produisant des épisodes comptés destinés à la
     résolution de fin de contrat, alors que l'index ne fait dépendre 18 que de 16.
     Voir `voice-object-effect.md`, *Dependencies*.
@@ -173,8 +174,8 @@ Vide au MVP.
 | 9 | **Portage d'objets** | MVP | Feature | systems-designer, gameplay-programmer | L |
 | 10 | Appartement | MVP | Feature | level-designer | M |
 | 11 | **Effet voix → objets** | MVP | Feature | systems-designer, game-designer | L |
-| 12 | Couche de retour local | MVP | Feature | gameplay-programmer, technical-artist | M |
-| 13 | Mobilier réactif | MVP | Feature | systems-designer, game-designer | M |
+| 12 | Couche de retour local | MVP | Feature | gameplay-programmer, technical-artist, audio-director | M |
+| 13 | Mobilier réactif | MVP | Feature | systems-designer, game-designer, audio-director | M |
 | 14 | Chat vocal de proximité | MVP | Feature | audio-director, network-programmer | M |
 | 15 | Habitant | MVP | Feature | ai-programmer, game-designer | L |
 | 16 | Boucle de contrat | MVP | Feature | game-designer | M |
@@ -321,7 +322,7 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
-| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 3, re-revue à faire)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED**, révision groupée en attente)* |
+| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 3, re-revue à faire)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 4, re-revue à faire)* |
 | Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |

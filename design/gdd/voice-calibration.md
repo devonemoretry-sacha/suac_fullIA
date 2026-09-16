@@ -966,10 +966,9 @@ Cohérence bidirectionnelle exigée par les règles du projet. Les systèmes 2, 
   difficulté » —, plutôt qu'un silence qui se lit comme un plantage.
 - Trancher si le groupe peut démarrer sans le joueur en calibration (OQ-C10).
 
-**Système 11 — Effet voix → objets** *(porté, `voice-object-effect.md`, révision à l'étape 4 de
-la passe groupée)*
-- Consommer `r'` et rien d'autre du profil. Toute mention de `L_repos` ou de `Rest_dB` comme
-  entrée d'un seuil disparaît.
+**Système 11 — Effet voix → objets** *(porté, `voice-object-effect.md`)*
+- Consommer `r'` et rien d'autre du profil, en comparant des positions : aucun seuil ne lit
+  `Rest_dB` ni un champ en décibels.
 
 **Système 14 — Chat vocal**
 - **Pendant la calibration, rien ne part et rien n'arrive** : aucune diffusion de ce que le

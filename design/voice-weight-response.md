@@ -153,11 +153,17 @@ secondes, c'est beaucoup trop long »* — et a laissé le choix des délais au 
 
 | Phase | Valeur | Ce qui se passe |
 |---|---|---|
-| **Amorçage** | **350 ms** — *mesuré au banc, 2026-09-08* | Le signal d'avertissement apparaît. Le poids a commencé à bouger, **imperceptiblement** — le joueur est très légèrement ralenti, et ce ralentissement **fait partie de l'avertissement** |
+| **Amorçage** | **350 ms** — *mesuré au banc, 2026-09-08 et 09, **sous le modèle du banc*** | Le signal d'avertissement apparaît. Le poids a commencé à bouger, **imperceptiblement** — le joueur est très légèrement ralenti, et ce ralentissement **fait partie de l'avertissement** |
 | **Montée** | **jusqu'à ~1,5 s** *(remplissage aimé : 1,00 à 1,50 s)* | Le poids devient franchement gênant, progressivement et linéairement |
 | **Retour** | **~1,0 à 1,5 s** — non isolé | Symétrique, au silence |
 
-> ### La seule valeur réellement mesurée : l'amorçage à 350 ms
+> ### La seule valeur mesurée — sous le modèle du banc : l'amorçage à 350 ms
+>
+> **Provenance.** Au banc, l'avertissement était un **état** allumé dès la première trame
+> au-dessus d'un seuil en dB réglé à la main, la charge montait avec un plancher de 35 %, et
+> les 350 ms fixaient **le début du poids principal**. Le GDD du système 11 spécifie un
+> **événement** et des seuils personnels : la valeur y est provisoire, écarts listés dans
+> `design/gdd/voice-object-effect.md`, *Formulas* §6.
 >
 > Balayage à variable unique, remplissage 1,50 s, amorçage 15 % :
 >
@@ -231,3 +237,10 @@ nommer ce qu'il a fait de travers.
   s'additionnent-elles, prend-on la plus forte ?
 - Tout ce qui relève de l'apparence du signal d'avertissement, qui appartient à l'art et à
   l'audio.
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-09-08 | Création de la note de cadrage | — |
+| 2026-09-16 | Provenance des 350 ms : mesurés sous le modèle du banc, non sous celui du GDD du système 11 | Règle de provenance ; passe groupée, étape 4 |
