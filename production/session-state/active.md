@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Passe groupee — etapes 1 a 4 faites (systemes 1, 6, 11 + ADR) ; etape 5 : mvp-scope et game-concept
+Task: Passe groupee terminee (etapes 1 a 5) ; prochaine etape du plan : prototype etendu dans le navigateur
 <!-- /STATUS -->
 
 ---
@@ -165,7 +165,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 
 1. [x] Archiver la revue du système 6, règle de méthode « atteignabilité + témoin »
 2. [x] Revue full du système 11 → re-revue full du système 1 (NEEDS REVISION)
-3. [~] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées.** Étape 1 (système 1), étape 2 (ADR-0003/0004/0005/0007/0008, index, `mvp-scope.md`) , étape 3 (système 6, `voice-calibration.md` réécrit, CAL-40 à 66, OQ-C12 à C16) et étape 4 (système 11, `voice-object-effect.md` révisé ; ADR-0002 et ADR-0003 amendés ; note `voice-weight-response.md` : provenance) **faites le 2026-09-16** ; impacts transverses dans `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json`. (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
+3. [x] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées.** Étape 1 (système 1), étape 2 (ADR-0003/0004/0005/0007/0008, index, `mvp-scope.md`) , étape 3 (système 6, `voice-calibration.md` réécrit, CAL-40 à 66, OQ-C12 à C16) et étape 4 (système 11, `voice-object-effect.md` révisé ; ADR-0002 et ADR-0003 amendés ; note `voice-weight-response.md` : provenance), puis étape 5 (`mvp-scope.md` : conditions bloquantes des tests à plusieurs ; `game-concept.md` : risques ; index : gel des systèmes 3 et 12) **faites le 2026-09-16** ; impacts transverses dans `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json`. (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
 4. [ ] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
 5. [ ] Test à plusieurs humains — **dont au moins une session dans la même pièce** (OQ-8)
 6. [ ] Puis les GDD suivants

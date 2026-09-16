@@ -136,6 +136,40 @@ la mécanique centrale. La question « moduler sa voix sous la panique est-il am
 n'empêche de la tester tôt à l'intérieur de ce périmètre : les systèmes 1 à 4
 suffisent à un test de plaisir, avant même l'habitant et l'extraction.
 
+## Conditions bloquantes des tests à plusieurs humains
+
+**Décidées le 2026-09-15** (décision 10 de `design/gdd/reviews/voice-analysis-2026-09-14.md`, §6).
+Elles valent pour **tout** test à plusieurs humains — le test qui suit le prototype navigateur
+étendu, le critère de réussite du palier « Bac à sable Voice-Physics », et le MVP.
+
+### (a) Aucun verdict sur le plaisir sans une tâche qui exige du son
+
+Le système 11 punit le bruit ; pris seul, **il rend le silence optimal**. Une équipe muette
+gagne, et le test **paraît réussi** : le mode d'échec ressemble à de la maîtrise.
+
+- **Condition** : le test comporte **au moins une tâche qui ne se réussit qu'en émettant** — une
+  porte grossière qui ne s'ouvre que sur une **note tenue** suffit.
+- **Sans elle**, la session peut mesurer, mais **ne se prononce pas sur le plaisir**.
+- **Ce n'est pas un mécanisme du système 11**, qu'on ne rééquilibre pas en l'adoucissant. La tâche
+  préfigure l'objet à demande sonore du système 13.
+- Le prototype navigateur, **test de ressenti en solo**, n'en a pas besoin.
+
+### (b) Une session dans la même pièce, avant les GDD des systèmes 3 et 12
+
+Le jeu vise les groupes d'amis, les streamers et leurs invités, le parent assis à côté d'un
+enfant, l'aidant assis à côté d'un joueur. Dans la même pièce, **le micro de l'un capte la voix de
+l'autre, par l'air** : le casque ne règle pas ce cas, et aucun traitement ne sépare deux voix
+captées par un même micro (`design/gdd/voice-analysis.md`, OQ-8).
+
+- **Condition** : au moins une session **à deux dans la même pièce, casque sur les deux**, chacun
+  calibré dans cette pièce.
+- **La mesure — 30 secondes** : A parle, puis hausse la voix ; B se tait. **La voix de A, captée par
+  le micro de B, franchit-elle la porte `Gate_dB` de B ?** Puis les rôles s'inversent.
+- **Tant qu'elle n'est pas faite, aucun GDD pour les systèmes 3 (propagation) et 12 (couche de
+  retour local)** : tous deux encoderaient l'hypothèse « une voix par trame ».
+- **Ce qui n'est pas décidé** : la réponse si la voix franchit la porte. Il ne faut pas en
+  improviser une avant d'avoir les données.
+
 ---
 
 ## Revision History
@@ -148,3 +182,4 @@ suffisent à un test de plaisir, avant même l'habitant et l'extraction.
 | 2026-09-03 | **Ajout du système 14 — session / lobby.** Révélé par `/map-systems` : sans flux « créer / rejoindre une partie », aucun test à 4 joueurs n'est possible. Le périmètre passe de 13 à 14 entrées. | Utilisateur |
 | 2026-09-03 | **Ajout du palier intermédiaire « Bac à sable Voice-Physics »** (gate PR-SCOPE). Le MVP monolithique n'offrait aucun point d'arrêt montrable ; les deux coupes probables sous pression étaient cassantes. Aucun retrait de périmètre. | Utilisateur |
 | 2026-09-03 | **Décision Dissonance reportée au POC audio** (et non plus « jusqu'au système 14 »). Le palier bac à sable n'a pas besoin d'occlusion : voix native Steam suffit. La vraie décision se prend quand l'habitant et les pièces à contourner arrivent. | Utilisateur |
+| 2026-09-16 | **Conditions bloquantes des tests à plusieurs humains** : une tâche qui exige du son avant tout verdict sur le plaisir ; une session en même pièce, 30 s de mesure, avant les GDD des systèmes 3 et 12 | Utilisateur — décision 10 du 2026-09-15 |

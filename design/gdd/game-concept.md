@@ -295,7 +295,16 @@ choisir celle qui force le plus ce décalage entre ressenti et voix produite.
 - La Voice-Physics n'a jamais été validée en jeu avec plusieurs joueurs qui
   paniquent réellement — le pari central du jeu n'a pas de preuve de plaisir.
 - Le silence pourrait rester la stratégie dominante si l'obligation de produire
-  du son (Pilier 1) est mal calibrée par contrat.
+  du son (Pilier 1) est mal calibrée par contrat. **Le mode d'échec ressemble à de la
+  maîtrise** : une équipe muette gagne et paraît avoir bien joué. Aucun test à plusieurs
+  ne vaut verdict sur le plaisir sans une tâche qui exige du son (`design/mvp-scope.md`,
+  « Conditions bloquantes »).
+- **La configuration même pièce** — amis sur le même canapé, streamer et invités, parent à
+  côté d'un enfant, aidant à côté d'un joueur. Le micro de l'un capte la voix de l'autre
+  par l'air ; ni le casque ni aucun traitement ne sépare deux voix captées par un même
+  micro. Si cela brouille l'attribution, le public visé est touché au cœur. Une session
+  de mesure en même pièce est bloquante avant les GDD des systèmes 3 et 12
+  (`design/mvp-scope.md`, « Conditions bloquantes »).
 
 ### Technical Risks
 

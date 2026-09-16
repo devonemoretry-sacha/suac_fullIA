@@ -194,6 +194,11 @@ un mur alors que le monstre l'a entendu en clair, et il accuse le jeu d'être in
 **Les ordres 2 et 3 peuvent être menés en parallèle** — aucune dépendance entre eux,
 et ce sont les deux plus gros porteurs de risque.
 
+**Gel conditionnel des systèmes 3 et 12** *(décision du 2026-09-15)* : aucun GDD de la
+propagation ni de la couche de retour local avant la **session de mesure en même pièce**
+(`design/mvp-scope.md`, « Conditions bloquantes », (b)). Les deux encoderaient l'hypothèse
+« une voix par trame ».
+
 ---
 
 ## Circular Dependencies
