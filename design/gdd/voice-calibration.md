@@ -1,19 +1,28 @@
 # Calibration vocale
 
-> **Status**: In Design
+> **Status**: In Design — révisé le 2026-09-16 après la revue du 2026-09-11 (verdict MAJOR
+> REVISION NEEDED), selon les décisions du propriétaire du 2026-09-15 ; troisième document de
+> la passe groupée
 > **Author**: Sacha (devonemoretry-sacha) + Claude
-> **Last Updated**: 2026-09-07
+> **Last Updated**: 2026-09-16
 > **Enables Pillar**: Pilier 1 — « La Voice-Physics récompense le contrôle, pas le silence ».
 > Comme le système 1, celui-ci ne réalise pas le pilier : **il le rend possible.** Sans lui,
 > le jeu récompenserait le matériel et la physiologie.
 > **System**: #6 dans `design/gdd/systems-index.md` · Core · MVP
 > **Périmètre MVP**: entrée #13 de `design/mvp-scope.md`
+> **Revue**: `design/gdd/reviews/voice-calibration-2026-09-11.md` ; décisions consolidées dans
+> `design/gdd/reviews/voice-analysis-2026-09-14.md` §6
 
 > Titres de sections en anglais (lus par les skills), corps en français.
 >
 > **Portée** : ce document couvre la production, la validation, la persistance et la
 > reprise du `VoiceProfile`, ainsi que le parcours joueur qui l'accompagne. Rien n'en est
 > implémenté à ce jour.
+>
+> **Ce qu'il ne redéfinit pas.** Les grandeurs du système 1 — `Gate_dB`, `r'`, la règle
+> « un détecteur ne refuse jamais seul », la table des domaines atteignables et la liste
+> canonique de ses valeurs provisoires — vivent dans `voice-analysis.md`. Ce document les
+> **cite** et ne les recopie pas.
 
 ## Overview
 
@@ -27,19 +36,27 @@ et personne ne saurait pourquoi.
 
 Ce système résout cela en mesurant, une fois par joueur, les bornes de sa propre échelle :
 le bruit de fond de sa pièce, sa voix au repos, sa hauteur habituelle et son cri. Il en
-produit un **`VoiceProfile`** — quatre valeurs plus un drapeau de qualité — contre lequel
-le système 1 normalise toutes ses mesures. Après quoi « fort » ne veut plus dire *un
-certain nombre de décibels*, mais **fort pour cette personne, dans cette pièce, sur ce
-micro**.
+produit un **`VoiceProfile`** contre lequel le système 1 normalise toutes ses mesures. Après
+quoi « fort » ne veut plus dire *un certain nombre de décibels*, mais **fort pour cette
+personne, dans cette pièce, sur ce micro**.
+
+**Les seuils sont personnels, et c'est tout l'objet du système.** Une constante de la
+calibration n'a le droit de détecter qu'une **mesure physiquement cassée** — ordre inversé,
+plage inexploitable, trop peu de voix captée, micro coupé. Elle ne juge jamais une **voix
+inhabituelle** : une voix aiguë, grave, soufflée, étroite ou très stable est acceptée, au
+besoin signalée (`LowRange`, « hauteur indisponible »), jamais refusée.
 
 Sa portée dépasse la mesure. Trois traits le distinguent des autres systèmes :
 
-- **Il est bloquant.** Sans profil valide, l'analyse vocale renvoie du silence et le joueur
-  ne peut pas rejoindre une partie. C'est le seul système du MVP qui puisse refuser
-  l'entrée.
+- **On le traverse une fois, et il se termine toujours.** Sans profil valide, l'analyse
+  vocale renvoie du silence et le joueur ne peut pas rejoindre une partie : c'est le seul
+  système du MVP qui puisse retenir l'entrée. Mais la porte ne peut pas rester fermée à
+  quelqu'un qui a coopéré : après deux refus, un **profil approximatif** consenti lui ouvre
+  le jeu.
 - **Il appartient au joueur, pas à la session.** Le profil persiste entre les parties et
-  entre les sessions. On le crée une fois ; on rejoint ensuite n'importe quelle partie, y
-  compris en cours, sans rien refaire.
+  entre les sessions, **sur la machine du joueur**. On le crée une fois ; on rejoint ensuite
+  n'importe quelle partie, y compris en cours, sans rien refaire. Un seul nombre en est
+  dérivé vers l'hôte, `r'` ; le profil lui-même ne quitte jamais la machine.
 - **Il porte l'onboarding.** C'est le premier moment où le jeu demande au joueur de faire
   quelque chose avec sa voix — et donc l'endroit où il comprend, ou non, que sa voix est
   une manette.
@@ -61,15 +78,11 @@ problème de calibration.
 Mais contrairement au système 1, le joueur la traverse — et pendant deux minutes, elle
 est le jeu tout entier.**
 
-C'est ce qui rend cette section différente de son homologue dans `voice-analysis.md`.
 L'analyse doit être invisible ; la calibration est vue, vécue, et jugée.
 
 ### Le meilleur moment d'apprentissage du jeu, et le seul
 
 La calibration est **le premier instant où le joueur voit sa voix agir sur quelque chose**.
-La jauge qui répond en temps réel pendant qu'il monte en puissance n'est pas un
-accessoire de mesure : c'est la promesse centrale du jeu, livrée avant que le jeu commence.
-
 Ce moment ne se représentera pas. Si la calibration se donne l'air d'un formulaire de
 réglages, on aura gaspillé la meilleure occasion d'onboarding qu'on aura jamais — et il
 faudra réexpliquer plus tard, moins bien, dans une situation où le joueur est occupé à
@@ -79,19 +92,31 @@ autre chose.
 > Le joueur doit sortir de la calibration en ayant compris ce qu'est ce jeu, sans qu'on
 > le lui ait dit.
 
-### Les deux métiers se renforcent, et c'est la clé du système
+**Et il doit comprendre la bonne chose.** Dans le jeu, la voix qui monte **alourdit** le
+meuble qu'on porte. Une jauge qui monte quand on pousse enseignerait l'inverse — « fort,
+c'est bien » —, dans le seul moment d'apprentissage que le jeu se donne. C'est pourquoi
+l'étape de montée ne montre pas un niveau mais **une conséquence** : un objet qui
+s'alourdit, frémit, devient récalcitrant à mesure que la voix monte (*Visual/Audio
+Requirements*). Le joueur apprend « ma voix fait bouger le truc », et il apprend dans quel
+sens.
 
-La calibration doit **mesurer juste** et **enseigner**. Ces deux exigences pourraient se
-contredire — elles s'alimentent :
+### Mesurer et enseigner — ensemble à l'étape de montée, en tension ailleurs
 
-- Un joueur qui voit la jauge répondre **pousse plus loin**, ce qui donne une meilleure
+La calibration doit **mesurer juste** et **enseigner**. À l'étape de montée, ces deux
+exigences s'alimentent :
+
+- Un joueur qui voit l'objet réagir **pousse plus loin**, ce qui donne une meilleure
   mesure de son registre haut.
 - Un joueur qui ne voit rien **se retient**, ce qui donne un registre écrasé et un profil
   médiocre.
 
-**L'enseignement est donc la technique de mesure**, pas une couche ajoutée par-dessus. Le
-retour visuel temps réel n'est pas de l'habillage : c'est l'instrument qui obtient du
-joueur l'amplitude dont il a besoin.
+Là, **l'enseignement est la technique de mesure**, pas une couche ajoutée par-dessus.
+
+**Ce n'est pas une loi générale, et l'étape de silence en est le contre-exemple.** Y montrer
+un retour de la voix inviterait le joueur à le faire bouger — exactement ce qui ruine la
+mesure du plancher. Là, enseigner nuirait à mesurer, et c'est la mesure qui gagne : aucun
+indicateur de niveau. Un futur lecteur ne doit pas étendre la doctrine « montrer, c'est
+mesurer » aux autres étapes au nom de la pédagogie.
 
 ### Ce que le joueur ne doit jamais ressentir
 
@@ -102,7 +127,10 @@ joueur l'amplitude dont il a besoin.
   mécaniquement un profil dégradé, et le défaut se manifestera plus tard comme un jeu qui
   ne réagit pas.
 - **« Le jeu juge ma voix. »** Un refus de profil doit se lire comme un problème de micro
-  ou de pièce, **jamais** comme un verdict sur la personne.
+  ou de pièce, **jamais** comme un verdict sur la personne. Et une voix inhabituelle ne
+  produit pas de refus du tout.
+- **« Je suis coincé. »** Un joueur qui a coopéré deux fois ne se voit pas redemander la même
+  chose une troisième : le jeu lui propose d'entrer.
 - **« C'est un réglage, je verrai plus tard. »** La calibration est obligatoire ; elle ne
   doit pas ressembler à un panneau d'options qu'on peut remettre à demain.
 
@@ -122,30 +150,34 @@ pas plus.
 > **La bonne direction est inverse : rendre la mesure tolérante plutôt que le joueur plus
 > fort.**
 
-C'est la raison d'être du drapeau **`LowRange`** — décidé en revue le 2026-09-07 et
-formalisé dans les *Edge Cases* du système 1. Un joueur qui ne veut pas, ou ne peut pas,
+C'est la raison d'être du drapeau **`LowRange`**. Un joueur qui ne veut pas, ou ne peut pas,
 crier **joue quand même** : son profil est accepté, marqué, et son lissage renforcé. Sa
-mesure est plus molle, honnêtement signalée comme telle, et il n'est pas exclu.
+mesure est plus molle, honnêtement signalée comme telle, et il n'est pas exclu. **Elle
+convertit un problème social insoluble en un problème technique gradué.**
 
-Ce qui était une décision technique trouve ici sa raison : **elle convertit un problème
-social insoluble en un problème technique gradué.**
+`LowRange` recouvre deux causes différentes, et une seule appelle un lissage durable. Un
+registre **physiologiquement ou matériellement étroit** est une vraie propriété du joueur.
+Une **retenue passagère**, par gêne, ne l'est pas : le joueur qui s'est retenu doit pouvoir
+refaire sa mesure plus tard, seul, sans prétexte technique (*UI Requirements*, « Refaire ma
+mesure »).
 
 ### Il y a deux calibrations, et elles n'ont pas le même fantasme
 
-La même mécanique sert deux situations opposées, ce que le parcours doit refléter.
-
 | | **La première** | **Les suivantes** |
 |---|---|---|
-| Situation | Le joueur découvre le jeu | Le joueur sent que le jeu ne l'écoute plus |
+| Situation | Le joueur découvre le jeu | Le joueur sent que le jeu ne l'écoute plus, ou veut refaire sa mesure |
 | Fantasme | **La découverte** — « ma voix fait bouger le truc » | **La reprise de contrôle** — « je répare, et je retourne jouer » |
 | Ce qu'il veut | Comprendre, prendre son temps | Que ce soit fini |
 | Ce qu'il faut lui donner | De la démonstration, du retour visuel, aucune hâte | De la vitesse, aucune pédagogie, aucune cérémonie |
 
 **Traiter la seconde comme la première est une faute de conception.** Un joueur qui
 recalibre en pleine partie parce que sa voix ne porte plus n'a aucune envie qu'on lui
-réexplique le principe : il a un problème et il veut le régler. Le contrat de voisinage du
-système 1 exige déjà que la calibration soit relançable à tout moment ; ce tableau dit
-qu'être *relançable* ne suffit pas — il faut être **relançable vite**.
+réexplique le principe : il a un problème et il veut le régler. Être *relançable* ne suffit
+pas — il faut être **relançable vite**.
+
+**Et l'inverse aussi est une faute** : un refus survenu **pendant la toute première
+calibration** garde le ton de la découverte. C'est le moment où l'anxiété est la plus haute ;
+la sécheresse du mode réparation y serait lue comme un verdict.
 
 ### Portée future
 
@@ -158,92 +190,125 @@ Deux idées écartées du MVP, notées pour ne pas les réinventer :
   rouvrir que si l'on trouve comment le rendre **visible**.
 - **Profils multiples par joueur** — casque du soir, micro de portable en déplacement. Vrai
   besoin, mais qui suppose un gestionnaire de profils et une logique de sélection.
-  Différé : le contrat actuel dit qu'un changement de périphérique ne force jamais de
-  recalibration, ce qui suffit au MVP.
+  Différé : un changement de périphérique ne force jamais de recalibration, ce qui suffit
+  au MVP.
 
 ## Detailed Rules
 
 ### Le produit : `VoiceProfile`
 
-| Champ | Type | Mesuré par | Rôle |
+| Champ | Type | Mesuré ou décidé par | Rôle |
 |---|---|---|---|
-| `Floor_dB` | float | **Étape 1 — silence** | Plancher de bruit : pièce + bruit propre du micro. Borne basse de l'échelle de `Loudness` |
-| `Rest_dB` | float | **Étape 2 — parole normale** | Niveau de la voix posée. **Point d'ancrage de validation** — voir plus bas |
-| `F0_habituel` | float | **Étape 2 — parole normale** | Médiane de hauteur. Référence de `Pitch`, et décide la cadence de décimation |
+| `Floor_dB` | float | **Étape 1 — silence** | Plancher de bruit : pièce, bruit propre du micro, respiration normale. Base de la porte `Gate_dB = Floor_dB + Margin_dB` du système 1 |
+| `Rest_dB` | float | **Étape 2 — parole posée** | Niveau de la voix posée. Point d'ancrage de la validation **et** de `r'`, donc des seuils du système 11 |
+| `F0_habituel` | float, **absent si `PitchStatus = Unavailable`** | **Étape 2 — parole posée** | Médiane de hauteur. Référence de `Pitch`, et décide la cadence de décimation |
 | `Scream_dB` | float | **Étape 3 — montée** | Borne haute de l'échelle de `Loudness` |
-| `LowRange` | bool | Validation | Registre étroit mais exploitable : profil accepté, lissage renforcé |
+| `LowRange` | bool | Validation | Registre étroit mais exploitable : profil accepté, lissage renforcé par le système 1 |
+| `PitchStatus` | `Full` · `NoJitter` · `Unavailable` | Étape 2 | Ce que les détecteurs du système 1 ont pu lire de cette voix — `voice-analysis.md`, *Formulas* §4. Lève le drapeau visible **« hauteur indisponible »** hors `Full` |
+| `Approximate` | bool | Sortie de boucle de refus | **Profil approximatif consenti** après deux refus. Accepté, marqué, et accompagné d'une invitation durable à refaire la mesure |
+| `SchemaVersion` | int | Format | Permet de migrer ou d'écarter un profil d'un format antérieur |
 
-Le profil **appartient au joueur**, persiste entre les sessions, et n'est jamais lié à une
-partie.
+**Grandeur dérivée, pas un champ : `r'`.** Calculée au commit, sur le client, par la formule
+du système 1 (`voice-analysis.md`, *Formulas* §1, « Position, repos, et où chaque grandeur
+existe »). C'est **le seul nombre tiré du profil qui quitte la machine** : envoyé à l'hôte à
+la connexion et à chaque recalibration (ADR-0003, *Decision*, chaîne d'analyse, étape 5).
 
-> ### ⚠️ Correction d'un défaut hérité — il faut **trois** étapes, pas deux
->
-> La section *UI Requirements* de `voice-analysis.md` décrit un parcours en deux temps dont
-> la première étape, « parle normalement », est censée fournir `Floor_dB` **et**
-> `F0_habituel`. **C'est impossible :** `Floor_dB` est le plancher de bruit, il se mesure
-> quand le joueur **ne parle pas**. Le mesurer pendant qu'il parle donnerait un plancher
-> situé au niveau de sa voix posée — après quoi `Loudness` vaudrait 0 sur toute parole
-> normale, et le jeu ne réagirait qu'aux cris.
->
-> Le parcours correct compte donc **trois mesures**. La bonne nouvelle est que l'étape
-> ajoutée est la **plus** neutre socialement de toutes : ne rien dire pendant quelques
-> secondes. L'intention de l'UX — commencer par un geste qui n'expose pas — est préservée
-> et même renforcée.
+Le profil **appartient au joueur**, persiste entre les sessions sur sa machine, et n'est
+jamais lié à une partie.
 
-> ### ⚠️ Deuxième correction — `Rest_dB` ne servait à rien
->
-> Le contrat de voisinage réclame un champ « repos » dans le profil. Or **aucune formule du
-> système 1 ne l'utilise** : `Loudness` ne connaît que `Floor_dB` et `Scream_dB`, `Pitch` ne
-> connaît que `F0_habituel`. Un champ mesuré, persisté et transmis sans consommateur est du
-> poids mort — ou le symptôme d'un besoin non formulé.
->
-> **Il en a un, et c'est la validation.** Deux points ne permettent de vérifier qu'une
-> chose : que l'écart est suffisant. Trois points permettent de vérifier que la mesure est
-> **plausible** — `Rest_dB` doit tomber franchement entre les deux autres. C'est ce
-> troisième point qui distingue une calibration honnête d'une calibration dégénérée que le
-> contrôle d'écart laisserait passer. Voir *Formulas*.
+**Pourquoi trois mesures et non deux.** `Floor_dB` se mesure quand le joueur **ne parle
+pas** : le mesurer pendant qu'il parle poserait le plancher au niveau de sa voix posée, et le
+jeu ne réagirait plus qu'aux cris. Et `Rest_dB` a deux métiers. Il **valide** : deux points
+ne vérifient qu'un écart, trois points vérifient que la mesure est **plausible** et ordonnée.
+Et il **ancre le jeu** : `r'` situe la voix posée entre la porte et le cri, et le système 11 y
+pose ses seuils. Un `Rest_dB` mal mesuré ne produit donc plus seulement un profil douteux —
+il déplace le seuil de déclenchement du joueur.
 
 ---
 
-### Les trois mesures
+### Le parcours : une préparation, puis trois mesures
 
-**Étape 1 — le silence.** *« Ne dis rien pendant quelques secondes. »*
-On mesure le niveau ambiant, micro ouvert, joueur muet. Produit `Floor_dB`.
+**Étape 0 — la préparation.** *Pas une mesure : rien n'est écrit dans le profil.*
 
-Cette valeur ne peut pas être le minimum brut observé : un creux instantané descendrait
-sous le bruit réel de la pièce et placerait le plancher trop bas. **`Floor_dB` est un
-niveau haut de la distribution du bruit**, avec une marge déclarée au-dessus du bruit
-propre du micro — c'est l'exigence que le système 1 nous adresse nommément, et c'est elle,
-et non le seuil d'écart dynamique, qui empêche une oscillation de 2 dB de faire doubler
-`Loudness`. Formule en *Formulas*.
+1. **La permission micro** est demandée sur un écran dédié, **avant** l'étape de silence :
+   la fenêtre du système ne doit jamais tomber sur l'écran délibérément inerte de l'étape 1.
+   Un refus de permission est un cas de blocage à part entière, avec un renvoi aux réglages
+   du système (*UI Requirements*).
+2. **Le périphérique est vérifié par un geste actif** : « dis un mot ». Si rien n'arrive sur
+   le périphérique sélectionné dans le délai `DeviceCheck_s`, le sélecteur de périphérique
+   s'affiche. Sans ce test, un micro mort traverserait l'étape de silence — le silence d'un
+   micro mort ressemble à du silence — et échouerait deux étapes plus loin avec le mauvais
+   message.
+3. **L'amorce sociale** : une phrase qui prévient, sans détailler la mesure, qu'il faudra
+   parler puis hausser un peu la voix — pour laisser le temps de fermer une porte ou de
+   prévenir quelqu'un.
+4. **Le casque** : au premier lancement, rappel du prérequis et de sa raison (*UI
+   Requirements*, « Le casque et les améliorations micro »).
+
+**Étape 1 — le silence.** *« Ne dis rien pendant quelques secondes, respire normalement. »*
+On mesure le niveau ambiant, micro ouvert, joueur muet, **respiration comprise**. Produit
+`Floor_dB`.
+
+- **Durée : 6 à 8 secondes.** Trois secondes ne donnaient que ~150 trames : un centile haut
+  repose alors sur les 7 à 8 échantillons de queue, et deux calibrations de la même pièce
+  différaient de plusieurs décibels par pur tirage.
+- **La respiration fait partie du plancher, et c'est voulu.** Un plancher mesuré en apnée se
+  poserait sous la respiration réelle du joueur, que le jeu entendrait ensuite comme de la
+  voix. Mesuré en respirant, il la range sous la porte.
+- **La mesure porte sur le `Rms_dB` lissé du système 1** — le même que la porte et que
+  `Rest_dB` —, après un temps de chauffe de l'enveloppe (`WarmUp_s`), qui part de `MinDb`.
+- **Détecter une parole sans plancher.** Le plancher n'existe pas encore pendant qu'on le
+  mesure : la porte de sonie ne peut donc pas servir à reconnaître une parole. L'étape la
+  reconnaît par les deux composantes de la porte de voisement qui n'en dépendent pas —
+  **périodicité YIN ET jitter au-dessus de `JitterMin`** —, sur `SpeechRun` trames
+  consécutives. Une voix, même chuchotée chantée, est alors reconnue quel que soit son
+  niveau ; un bourdonnement stable, sans jitter, ne l'est pas et entre légitimement dans le
+  plancher.
 
 **Étape 2 — la parole posée.** *« Parle normalement, comme si tu discutais. »*
-Produit `Rest_dB` et `F0_habituel`. La hauteur est prise comme **médiane** des trames
-voisées, jamais comme moyenne : une seule erreur d'octave de YIN déplacerait une moyenne,
-elle ne déplace pas une médiane.
+Produit `Rest_dB`, `F0_habituel` et `PitchStatus`.
 
-Il faut un **minimum de trames voisées** pour que la médiane ait un sens. En dessous,
-l'étape n'a pas abouti et se rejoue — le joueur a peut-être chuchoté, ou parlé hors axe du
-micro.
+- **Trois ensembles de trames**, sur le `Rms_dB` lissé et la porte `Gate_dB` du profil en
+  cours : `G` (au-dessus de la porte), `Y` (`G` et périodique), `V` (`Y` et jitter
+  suffisant). Leur définition et la règle qui en tire `PitchStatus` sont celles du système 1
+  (`voice-analysis.md`, *Formulas* §4, « Une voix que les détecteurs lisent mal — jamais un
+  refus seul »). Ce document fixe `VoicedMin`, le délai de l'étape et le parcours.
+- **L'étape se termine** dès que `n(V) ≥ VoicedMin`, ou à l'expiration de `Step2Timeout_s`.
+  À l'expiration, la table du système 1 décide : `Full`, `NoJitter`, `Unavailable`, ou —
+  si `n(G) < VoicedMin` — l'étape se rejoue.
+- **Un profil `Unavailable` n'est accepté qu'à la deuxième tentative consécutive.** Un
+  chuchotement par erreur donne le même ensemble qu'une voix réellement apériodique. La
+  première fois, le parcours redemande une voix posée (« parle à voix normale, pas en
+  chuchotant ») ; la seconde, il accepte, et le drapeau « hauteur indisponible » se lève.
+- **La hauteur est prise sous la configuration non calibrée**, recalibration comprise : 8 kHz,
+  plage par défaut. Un profil existant ne resserre jamais la recherche pendant qu'on le
+  remesure, sans quoi une erreur d'octave de l'ancien profil se reproduirait dans le nouveau.
+- **Médiane, jamais moyenne**, pour `Rest_dB` comme pour `F0_habituel` : une erreur d'octave
+  ou une toux déplace une moyenne, pas une médiane.
+- **Une pulsation « on t'entend »**, non quantitative, s'allume sur chaque trame de `G`. Elle
+  n'a pas d'amplitude — ce n'est pas un niveau, et elle ne pose aucune cible. Elle répond à
+  trois besoins que rien d'autre ne couvre : le joueur sourd ou malentendant n'aurait sinon
+  aucun retour sur deux étapes sur trois ; tout joueur se demande « est-ce que ça marche » ; et
+  un périphérique qui décroche se voit tout de suite.
 
 **Étape 3 — la montée.** *« Monte progressivement, à ton rythme. »*
-Produit `Scream_dB`. Le joueur pousse ; une jauge répond en temps réel. **Aucune
-injonction à crier fort** — la section *Player Fantasy* explique pourquoi l'insistance
-produit moins d'amplitude, pas plus.
+Produit `Scream_dB`. Le joueur pousse ; un objet réagit en temps réel. **Aucune injonction à
+crier fort.**
 
-L'étape se termine de trois façons : **plateau détecté**, **arrêt demandé par le joueur**,
-ou **expiration du délai**. Dans tous les cas, la valeur retenue est le maximum atteint, et
-c'est la validation qui décide ensuite si le profil est bon, `LowRange`, ou refusé.
+L'étape se termine de trois façons : **plateau détecté**, **arrêt demandé par le joueur** —
+un bouton toujours visible, jamais présenté comme un objectif —, ou **expiration du délai**.
+Dans tous les cas, la valeur retenue est le maximum atteint, et c'est la validation qui
+décide ensuite si le profil est bon, `LowRange`, ou refusé.
 
 #### La détection de plateau, et son calage obligatoire
 
 Un plateau est déclaré quand le maximum courant **cesse de progresser** de plus de
 `PlateauDelta_dB` pendant `PlateauHold_s`.
 
-> **Mais il ne peut pas être déclaré tant que le profil ne validerait pas.** Tant que
-> `max − Floor_dB` reste sous le **plancher dur**, aucun plateau n'est reconnu : l'étape
-> continue. C'est le calage exigé par le système 1, et sa raison est entièrement humaine —
-> un plateau reconnu trop tôt ferait refuser le profil d'un joueur **qui a coopéré**.
+> **Mais il ne peut pas être déclaré tant que le profil ne validerait pas.** Tant que la
+> plage utile atteinte `M(t) − Gate_dB` reste sous le **plancher dur**, aucun plateau n'est
+> reconnu : l'étape continue. Un plateau reconnu trop tôt ferait refuser le profil d'un
+> joueur **qui a coopéré**.
 >
 > Au-dessus du plancher dur mais sous la bande de qualité, le plateau **est** reconnu et le
 > profil sera marqué `LowRange`. Le joueur discret est mesuré, signalé, et joue.
@@ -253,18 +318,22 @@ Un plateau est déclaré quand le maximum courant **cesse de progresser** de plu
 ### States and Transitions
 
 ```
-Idle → MeasuringFloor → MeasuringRest → MeasuringPeak → Validating → Committed
-                                                             ↓
-                                                          Rejected → (retour à l'étape en cause)
+Idle → Preparing → MeasuringFloor → MeasuringRest → MeasuringPeak → Validating → Committed
+                                                                         │
+                                                                         └→ Rejected → (retour à l'étape en cause)
+                                                                                 │
+                                                                                 └→ (2ᵉ refus) OfferingApproximate → Committed | Idle
 ```
 
 | Transition | Règle |
 |---|---|
-| `Idle → MeasuringFloor` | Lancement explicite. Le profil existant, s'il y en a un, **reste actif** |
+| `Idle → Preparing` | Lancement explicite. Le profil existant, s'il y en a un, **reste actif** |
+| `Preparing → MeasuringFloor` | Permission accordée **et** signal reçu du périphérique sélectionné. Sinon, écran de blocage ou sélecteur de périphérique |
 | entre étapes | Chaque étape produit ses valeurs dans un **tampon**, jamais dans le profil actif |
-| `→ Validating` | Les trois étapes ont abouti. La validation est décrite en *Formulas* |
-| `Validating → Committed` | **Bascule atomique.** Le profil complet remplace l'ancien en une opération — aucune trame ne peut lire un `Floor_dB` neuf avec un `Scream_dB` ancien. **Mécanisme précisé le 2026-09-08, voir ci-dessous** |
+| `→ Validating` | Les trois mesures ont abouti. Validation décrite en *Formulas* |
+| `Validating → Committed` | **Bascule atomique** : le profil complet remplace l'ancien en une opération — voir ci-dessous. `r'` est calculé et remis au système 5 |
 | `Validating → Rejected` | Aucune écriture. Le parcours revient à **l'étape en cause**, jamais au début |
+| `Rejected → OfferingApproximate` | **Deuxième refus consécutif** dans la même calibration. Le joueur choisit : entrer avec un profil approximatif, ou recommencer. Voir *Formulas* §6 |
 | n'importe où → `Idle` | Annulation, ou coupure micro. **Le tampon est jeté en entier ; le profil actif est intact** |
 
 **Une étape interrompue ne se conserve pas partiellement.** Si le micro coupe pendant la
@@ -273,50 +342,45 @@ fabrique les profils dégénérés que la validation existe pour refuser.
 
 #### Comment la bascule est atomique, concrètement
 
-*(Ajouté le 2026-09-08. Les deux GDD exigeaient l'atomicité sans jamais dire par quel
-mécanisme — une garantie dont personne ne connaissait la mise en œuvre.)*
-
 Le `VoiceProfile` est une **classe immuable**. Le commit se réduit alors à **publier une
-référence**, ce qui est atomique par construction en .NET : `Interlocked.Exchange` ici,
-`Volatile.Read` côté analyse.
+référence**, ce qui est atomique par construction en .NET : `Interlocked.Exchange` côté
+commit, `Volatile.Read` côté analyse.
 
 > **Le profil est une classe, et c'est délibéré.** Le transformer en `readonly struct` pour
-> économiser une allocation **casserait l'atomicité** : écrire cinq champs n'est pas une
-> opération indivisible, et on obtiendrait précisément la trame mixte que cette règle
-> existe pour empêcher.
+> économiser une allocation **casserait l'atomicité** : écrire ses champs n'est pas une
+> opération indivisible, et on obtiendrait précisément la trame mixte que cette règle existe
+> pour empêcher.
 
 **Nous ne touchons à rien d'autre.** Le `Decimator` et le `PitchDetector` doivent être
 reconstruits puisque la cadence de décimation dépend du profil — mais ils sont à état, et
 c'est **le fil d'analyse** qui s'en charge, en constatant le changement de référence en tête
-de trame. Le détail de cette règle vit dans `voice-analysis.md`, *Detailed Rules*, puisqu'il
-concerne ses objets.
+de trame. La règle vit dans `voice-analysis.md`, *Edge Cases*, « Conséquence
+d'implémentation — et la règle de fils d'exécution qui va avec ».
 
-#### Pendant la calibration, la voix du joueur ne joue plus
+#### Pendant la calibration, la voix du joueur ne joue plus — et le chat se tait
 
-**Règle non négociable, et elle manquait :** tant que la calibration est en cours, la
-sortie du joueur vers le jeu est **forcée au silence**.
+**Tant que la calibration est en cours, la sortie du joueur vers le jeu est forcée à
+`Silence`.** Sans cette règle, une recalibration en pleine partie ferait agir les cris de
+calibration sur le monde.
 
-Sans elle, une recalibration en pleine partie ferait agir les cris de calibration sur le
-monde — le joueur mesurerait son registre en projetant les meubles à travers la pièce. Le
-système 1 nomme déjà `VoiceFrame.Silence` comme sortie d'un état non exploitable ; c'est le
-même mécanisme.
+**Le chat vocal se tait dans les deux sens**, au lobby comme en jeu : rien de ce que le
+joueur produit n'est diffusé, et **rien de ce que disent les autres ne lui est restitué**.
+Une voix de coéquipier entendue pendant l'étape de silence — par la fuite d'un casque —
+entrerait dans le plancher et gonflerait `Floor_dB`, le pire mode d'échec du système, que
+les validations ne voient pas. **Ce silence n'est pas un effet de la pause** : ouvrir un menu
+ne gèle que le client local, et la première calibration a lieu au lobby, qui n'est pas en
+pause. C'est une exigence adressée au système 14 (*Dependencies*).
 
-> ### ✅ Le coût de cette règle est tranché — décision du 2026-09-08
->
-> On craignait qu'un joueur recalibrant en portant un meuble à plusieurs devienne une charge
-> muette accrochée à l'objet. **Ce cas n'existe pas.** La recalibration se lance depuis le
-> menu ; ouvrir le menu immobilise le personnage, et **un personnage immobilisé pose ce
-> qu'il porte**.
->
-> La force de cette réponse est qu'elle **n'invente aucun cas particulier**. La calibration
-> ne demande pas au portage un comportement spécial : elle emprunte un chemin que le
-> système 9 doit gérer de toute façon — celui d'un porteur qui lâche, volontairement ou non.
-> Ce qui advient de l'objet est donc une question de portage, pas de calibration.
->
-> Il reste une conséquence sociale, et elle est acceptable : les coéquipiers voient un
-> joueur poser sa moitié de canapé et se figer. C'est visible, lisible, et sans ambiguïté —
-> à condition que l'UI dise **pourquoi**, ce qui est déjà une exigence de la section *UI
-> Requirements*.
+#### La recalibration en cours de partie
+
+La recalibration se lance **depuis le menu** ; ouvrir le menu immobilise le personnage, et
+**un personnage immobilisé pose ce qu'il porte**. Aucun objet porté ne change donc de poids
+en pleine manipulation, et la calibration n'invente aucun cas particulier : elle emprunte
+le chemin qu'un porteur qui lâche emprunte de toute façon (système 9).
+
+Il reste une conséquence sociale, et elle est acceptable : les coéquipiers voient un joueur
+poser sa moitié de canapé et se figer. C'est lisible **à condition que l'UI dise pourquoi**
+(*UI Requirements*).
 
 ---
 
@@ -324,18 +388,19 @@ même mécanisme.
 
 | Système | Ce qu'il attend de nous | Ce qu'on attend de lui |
 |---|---|---|
-| **1. Analyse vocale** | Un `VoiceProfile` valide, ou rien. Jamais un profil partiel | Les règles de validation et les bornes ; il est la raison d'être de chaque champ |
-| **2. Audio d'entrée** | Rien — nous ne possédons pas le micro | Les échantillons, à la même cadence fixe qu'en jeu ; et le signalement d'une coupure |
-| **5. Réseau** | Rien. **La calibration est strictement locale** | Rien. Le profil ne traverse jamais le réseau — voir ci-dessous |
-| **8. Session / lobby** | Le verdict « ce joueur a un profil valide » | Le point de blocage à l'entrée, et un état visible par les autres joueurs pendant l'attente |
-| **14. Chat vocal** | Rien | **Aucune diffusion pendant la calibration.** C'est un moment privé, même en multijoueur |
-| **19. UI diégétique** | La jauge de l'étape 3, en temps réel | Un affichage qui ne soit pas le sonomètre de jeu — le contexte est différent |
+| **1. Analyse vocale** | Un `VoiceProfile` valide, ou rien. Jamais un profil partiel | `Gate_dB`, `r'`, la règle `PitchStatus`, la table des domaines, la liste canonique de ses valeurs — `voice-analysis.md` |
+| **2. Audio d'entrée** | Rien — nous ne possédons pas le micro | Les échantillons **par le même trajet qu'en jeu**, signal brut ; la liste des périphériques ; le signalement d'une coupure et de la reprise |
+| **5. Réseau** | `r'`, à la connexion et à chaque recalibration | L'acheminement de `r'` vers l'hôte. **Le profil ne traverse jamais le réseau** |
+| **8. Session / lobby** | Le verdict « ce joueur a un profil valide » ; son avancement dans le parcours | La porte d'entrée, et un état lisible par les autres joueurs pendant l'attente |
+| **11. Effet voix → objets** | `r'` de chaque joueur, sur l'hôte | Rien — il consomme |
+| **14. Chat vocal** | **Silence dans les deux sens pendant la calibration**, lobby et jeu | Rien d'autre |
+| **19. UI diégétique** | Rien de la jauge de calibration | L'icône « micro coupé » et le sonomètre, hors calibration |
 
-> **Le profil ne part jamais sur le réseau, et ce n'est pas un oubli.** ADR-0003 pose que
-> chaque client analyse sa propre voix en local et ne transmet que des `VoiceFrame` déjà
-> normalisées. Les autres joueurs n'ont donc aucun usage du profil : il resterait sur le
-> fil sans consommateur, en exposant une donnée personnelle — le niveau sonore du domicile
-> et la hauteur de voix — pour rien.
+> **Le profil ne part jamais sur le réseau, et ce n'est pas un oubli.** Il contient le
+> niveau sonore du domicile et la hauteur de voix du joueur. ADR-0003 fait analyser chaque
+> voix en local et ne transmet que des features normalisées. **Un seul scalaire en est
+> dérivé vers l'hôte, `r'`** : sans lui, l'hôte ne peut poser aucun seuil personnel
+> (système 11) ; il ne révèle ni décibels, ni hauteur.
 
 #### Le mode « réparation »
 
@@ -345,201 +410,324 @@ qui ne concernent que les relances :
 - **Aucune étape pédagogique.** Pas de démonstration, pas d'explication du principe.
 - **L'étape en cause se rejoue seule.** Un joueur dont seul le bruit ambiant a changé —
   fenêtre ouverte, ventilateur — rejoue l'étape 1 et rien d'autre. Le profil n'est
-  recommité qu'après une **validation complète** sur les trois valeurs, anciennes et
-  nouvelles mélangées.
-
-Ce dernier point est la seule subtilité : **une étape rejouée seule doit repasser la
-validation entière.** Un `Floor_dB` remesuré peut très bien devenir incompatible avec un
-`Scream_dB` ancien, et l'accepter sans revérifier rouvrirait la porte au retournement
-silencieux que le système 1 traque.
+  recommité qu'après une **validation complète**, valeurs anciennes et nouvelles mélangées :
+  un `Floor_dB` remesuré peut très bien devenir incompatible avec un `Scream_dB` ancien, et
+  l'accepter sans revérifier rouvrirait la porte au retournement silencieux.
+- **« Refaire ma mesure »**, sans prétexte technique, rejoue le parcours complet au rythme du
+  mode réparation. C'est la seconde chance du joueur qui s'est retenu par gêne.
 
 ## Formulas
 
-Toutes les valeurs chiffrées de cette section sont **PROVISOIRES**. Elles sont des paris
-explicites, réglables et testables — pas des mesures. Elles rejoignent la porte de mesure
-du système 1 : rien ailleurs ne doit les citer comme acquises.
+**Chaque valeur provisoire de ce document vit dans une seule liste**, en fin de section
+(« Porte de mesure du système 6 »). Les nombres cités ailleurs sont des **témoins de
+lecture**, calculés avec les valeurs actuelles ; un test lit la constante nommée, jamais le
+nombre recopié. Les valeurs du système 1 — `Margin_dB`, `JitterMin`, `N`, `γ`, `MinDb`, le
+facteur `LowRange` — vivent dans sa propre liste canonique (`voice-analysis.md`, *Formulas*,
+« Porte de mesure »). Les repères **B2, B7 et C9** désignent des mesures — prototype
+navigateur, enregistrements bruts, session hors ligne — classées par la re-revue du système 1
+(`design/gdd/reviews/voice-analysis-2026-09-14.md`, §2, listes B et C).
 
 ### 1. `Floor_dB` — le plancher de bruit, avec sa marge
 
 ```
-Bruit     = P95( Rms_dB(t) )   sur l'étape 1, joueur muet
-Floor_dB  = Bruit + FloorMargin_dB          FloorMargin_dB PROVISOIRE 3
+Bruit     = P95( Rms_dB(t) )     sur l'étape 1, après WarmUp_s, joueur muet respirant normalement
+Floor_dB  = Bruit + FloorMargin_dB
+Gate_dB   = Floor_dB + Margin_dB                       porte du système 1 — voice-analysis.md §1
 ```
 
 | Variable | Description |
 |---|---|
+| `Rms_dB` | Le `Rms_dB` **lissé** du système 1 (*Formulas* §1a) — le même que lisent la porte et `Rest_dB` |
 | `P95` | 95ᵉ centile des niveaux observés pendant l'étape de silence |
-| `FloorMargin_dB` | Marge au-dessus du bruit mesuré, exigée par le contrat du système 1 |
+| `FloorMargin_dB` | Marge au-dessus du bruit mesuré |
+| `WarmUp_s` | Durée écartée en tête d'étape : l'enveloppe part de `MinDb` et doit rejoindre le bruit réel |
 
-**Pourquoi un centile haut et pas le minimum.** Le minimum attrape un creux instantané, en
-dessous du bruit réel de la pièce : le plancher se poserait trop bas et le bruit ambiant
-produirait ensuite une `Loudness` non nulle. Le maximum, lui, attrape une porte qui claque.
-Le P95 dit « le bruit est presque toujours sous cette valeur », ce qui est exactement la
-propriété recherchée.
+**Domaine atteignable** : `Floor_dB ≥ MinDb + FloorMargin_dB` (`voice-analysis.md`, *Formulas*
+§5, ligne `Rms_dB`). Un plancher plus bas n'est produit par aucune calibration.
 
-**Pourquoi une marge au-dessus.** Sans elle, `Floor_dB` tombe *dans* le bruit : les
-fluctuations le franchissent une fois sur vingt et produisent de l'entrée fantôme. Avec
-elle, le bruit ambiant est écrasé à zéro par le `clamp` de `Loudness`. C'est la garantie
-que *Player Fantasy* du système 1 formule ainsi : **« quand je me tais, mon objet cesse de
-réagir. »**
+**Pourquoi un centile haut et pas le minimum.** Le minimum attrape un creux instantané, sous
+le bruit réel de la pièce : le plancher se poserait trop bas. Le maximum, lui, attrape une
+porte qui claque. Le P95 dit « le bruit est presque toujours sous cette valeur ».
 
-> **C'est cette marge, et non le seuil d'écart dynamique, qui empêche une oscillation de
-> 2 dB de faire doubler `Loudness`.** Le système 1 l'a établi en revue ; c'est ici que
-> l'exigence se réalise.
+**Ce que fait la marge, et ce qu'elle ne fait pas.** `FloorMargin_dB` place le bruit
+stationnaire et la respiration **sous** `Floor_dB` ; `Margin_dB` du système 1 ajoute par-dessus
+la marge de la porte. Les deux s'empilent : **le premier niveau que le jeu entend est
+`P95 + FloorMargin_dB + Margin_dB`**, soit une dizaine de décibels au-dessus du bruit avec les
+valeurs actuelles. Sous cette porte, `Loudness` vaut exactement 0 : c'est la garantie « quand
+je me tais, mon objet cesse de réagir ».
 
-**Exemple** : pièce calme, `P95 = −58 dB` → `Floor_dB = −55 dB`.
+**La marge ne traite pas le vacillement d'une voix posée juste au-dessus de la porte** : le
+zéro unique le déplace sans le supprimer, et monter `FloorMargin_dB` rétrécit la plage utile,
+donc l'aggrave (`voice-analysis.md`, *Formulas* §1, « Le vacillement à la porte »).
 
-### 2. `Rest_dB` et `F0_habituel` — la parole posée
+**Exemple** : pièce calme, `P95 = −58 dB` → `Floor_dB = −55 dB` → `Gate_dB = −48 dB`.
+
+#### Reconnaître une parole pendant l'étape de silence
 
 ```
-V         = { trames de l'étape 2 telles que Voiced = true }
-Rest_dB   = médiane( Rms_dB )  sur V
-F0_habituel = médiane( F0 )    sur V
-
-garde obligatoire : |V| ≥ VoicedMin      VoicedMin PROVISOIRE 100 trames
+Parole ⟺ il existe SpeechRun trames consécutives telles que  IsVoiced_YIN ET JitterPct > JitterMin
 ```
+
+Si `Parole` est vraie, l'étape est **rejetée et rejouée**, et aucun `Floor_dB` n'est écrit.
+
+- **Aucune porte de niveau** : `Floor_dB` n'existe pas encore. Les deux composantes de la porte
+  de voisement qui ne dépendent pas du plancher suffisent à reconnaître une voix, même
+  faible — y compris un chuchotement chanté que la porte complète ne verrait pas.
+- **Témoin** : un joueur qui dit « ok » pendant l'étape produit ~10 trames périodiques et
+  jittées → `Parole` vraie avec `SpeechRun = 5`.
+- **Ce que cette garde laisse passer, délibérément** : un bourdonnement stable (sans jitter) et
+  le bruit apériodique. Ils font partie de l'environnement du joueur et entrent dans le
+  plancher, ce qui est juste.
+- **Seconde garde, EN ATTENTE** : une pièce **instable** — ventilateur qui démarre, rue bruyante
+  par intermittence — produit un bruit fort, non voisé, que la première garde laisse passer.
+  Elle se reconnaît à l'écart `P95 − P50 > StabilityMax_dB`, dont la valeur reste à mesurer
+  (OQ-C3).
+
+### 2. `Rest_dB`, `F0_habituel` et `PitchStatus` — la parole posée
+
+```
+G = { trames de l'étape 2 : Rms_dB > Gate_dB }
+Y = { trames de G : IsVoiced_YIN }
+V = { trames de Y : JitterPct > JitterMin }
+
+Fin d'étape :  n(V) ≥ VoicedMin,  ou expiration de Step2Timeout_s
+
+PitchStatus, Rest_dB, F0_habituel :  voice-analysis.md, Formulas §4, avec ce VoicedMin
+    Full         Rest_dB = médiane(Rms_dB) sur V    F0_habituel = médiane(F0) sur V
+    NoJitter     Rest_dB = médiane(Rms_dB) sur G    F0_habituel = médiane(F0) sur Y
+    Unavailable  Rest_dB = médiane(Rms_dB) sur G    pas de F0_habituel
+    n(G) < VoicedMin → l'étape se rejoue
+```
+
+**Ce bloc applique la règle du système 1 ; en cas d'écart, c'est `voice-analysis.md` §4 qui
+fait foi.** Ce document en fixe `VoicedMin`, `Step2Timeout_s`, et le parcours.
+
+**Médianes sur le `Rms_dB` lissé, le même que la porte.** C'est la condition de la garantie
+`Rest_dB > Gate_dB` : toutes les trames de `G` — donc de `V` — sont au-dessus de la porte, leur
+médiane aussi. D'où `r' > 0` sur les trois chemins (`voice-analysis.md`, *Formulas* §5).
 
 **Médiane, jamais moyenne.** Pour `F0`, une seule erreur d'octave de YIN déplacerait une
 moyenne d'une demi-octave ; elle ne déplace pas une médiane. Pour `Rest_dB`, une toux ou un
 raclement de gorge ferait le même dégât.
 
-**Sur les trames voisées seulement.** Inclure les silences entre les mots tirerait
-`Rest_dB` vers le plancher et décrirait les pauses du joueur plutôt que sa voix.
+**`Unavailable` à la deuxième tentative seulement.** Un joueur qui chuchote par erreur produit
+des trames dans `G` et aucune dans `Y`, exactement comme une voix réellement apériodique. La
+première fois, le parcours rejoue l'étape en demandant une voix posée ; la seconde, il
+accepte.
 
-> **Cette formule crée une dépendance d'ordre entre les étapes.** Savoir quelles trames
-> sont voisées exige `Floor_dB`, puisque la porte de voisement du système 1 s'écrit
-> `Rms_dB > Floor_dB + Margin_dB`. **L'étape 1 doit donc précéder l'étape 2 pour une raison
-> arithmétique**, en plus de la raison sociale déjà donnée. Les deux justifications
-> pointent dans le même sens, ce qui est rassurant.
+**Configuration de mesure de la hauteur.** `F0` est toujours mesuré sous la configuration non
+calibrée du système 1 — 8 kHz, plage par défaut —, recalibration comprise. Son domaine est
+celui du détecteur (`voice-analysis.md`, *Formulas* §5, ligne `F0_habituel`).
 
-À `~50 Hz`, `VoicedMin = 100` représente **2 secondes de parole effectivement voisée** —
-soit environ 3 secondes de parole réelle, les pauses comprises. Sous ce seuil, l'étape
-n'a pas abouti et se rejoue.
+**Témoins.** À ~50 trames par seconde, `VoicedMin = 100` représente **2 secondes de parole
+voisée**, environ 3 secondes de parole réelle pauses comprises : atteignable bien avant
+`Step2Timeout_s = 15 s`. Un joueur muet ou un micro mort n'alimente pas `G` : l'étape expire
+et se rejoue, avec un message qui distingue « on ne t'entend pas du tout » (rien au-dessus de la
+porte) de « continue encore un peu ».
+
+**Dépendance d'ordre.** `G` exige `Gate_dB`, donc `Floor_dB` : **l'étape 1 précède l'étape 2
+pour une raison arithmétique**, en plus de la raison sociale.
 
 ### 3. `Scream_dB` — la montée et son plateau
 
 ```
-M(t)      = max( Rms_dB )  sur [début , t]
+M(t)      = max( Rms_dB )  sur [début ; t]
 
-Plateau   ⟺  M(t) − M(t − PlateauHold_s) < PlateauDelta_dB
-          ET  M(t) − Floor_dB ≥ HardFloor_dB          ← le calage, obligatoire
+Plateau   ⟺  t ≥ PlateauHold_s
+          ET  M(t) − M(t − PlateauHold_s) < PlateauDelta_dB
+          ET  M(t) − Gate_dB ≥ HardFloor_dB                     ← le calage, obligatoire
 
-Scream_dB = M(t_fin)
+Scream_dB = M(t_fin)          t_fin = plateau, arrêt demandé, ou PeakTimeout_s
 ```
 
-| Variable | Provisoire | Rôle |
-|---|---|---|
-| `PlateauDelta_dB` | **1,5** | Progression en deçà de laquelle on considère que ça ne monte plus |
-| `PlateauHold_s` | **1,2** | Durée sur laquelle cette stagnation doit tenir |
-| `PeakTimeout_s` | **10** | Au-delà, l'étape se termine sur le maximum atteint |
+| Variable | Rôle |
+|---|---|
+| `PlateauDelta_dB` | Progression en deçà de laquelle on considère que ça ne monte plus |
+| `PlateauHold_s` | Durée sur laquelle cette stagnation doit tenir ; **aucune évaluation avant qu'elle soit écoulée** |
+| `PeakTimeout_s` | Au-delà, l'étape se termine sur le maximum atteint |
 
-**La seconde condition est la plus importante des deux.** Tant que le maximum n'a pas
-franchi le plancher dur, **aucun plateau n'est reconnu** : l'étape continue. Sans ce
-calage, un joueur qui monte lentement verrait son plateau détecté trop tôt, puis son profil
-refusé — **alors qu'il a coopéré**. C'est le défaut nommé par le système 1, et cette ligne
-est sa correction.
+**La troisième condition est la plus importante.** Tant que la plage utile atteinte reste
+sous le plancher dur, **aucun plateau n'est reconnu** : un joueur qui monte lentement ne voit
+pas sa montée coupée puis son profil refusé alors qu'il a coopéré. Au-dessus du plancher dur
+et sous la bande de qualité, le plateau **est** reconnu : le profil part en `LowRange`.
 
-Au-dessus du plancher dur mais sous la bande de qualité, le plateau **est** reconnu : le
-profil part en `LowRange` plutôt qu'au rebut.
+**Témoin** : `Gate_dB = −48`, maximum stable à `−45` pendant 1,2 s → `M − Gate = 3 < 6` → pas de
+plateau, l'étape continue ; le joueur monte à `−36` et s'y tient → `12 ≥ 6` → plateau,
+`Scream_dB = −36`.
 
-### 4. La validation — quatre contrôles, dans cet ordre
+### 4. La validation — deux refus possibles, deux signalements
+
+**Une constante de validation ne détecte qu'une mesure cassée.** Deux contrôles peuvent
+refuser — l'ordre des mesures, et une plage inexploitable. Deux autres ne refusent jamais une
+calibration : ils signalent.
 
 #### V1 — l'ordre strict
 
 ```
-Floor_dB < Rest_dB < Scream_dB          sinon REFUS
+Gate_dB < Rest_dB < Scream_dB           sinon REFUS
 ```
 
-Absorbe le contrôle `Floor_dB > Scream_dB` du système 1 et le renforce : c'est le
-retournement silencieux du dénominateur, celui qui fait *baisser* `Loudness` quand on parle
-plus fort.
+- **`Gate_dB < Rest_dB`** est garanti par construction pour une calibration (§2) ; le contrôle
+  protège un profil chargé ou édité.
+- **`Rest_dB < Scream_dB`** peut échouer en direct : une « montée » restée sous la voix posée.
+  Le parcours rejoue l'étape 3.
+- V1 implique la garde du système 1, `Scream_dB > Gate_dB`, sans laquelle `Loudness` s'inverse
+  ou devient une marche (`voice-analysis.md`, *Formulas* §1, « Garde et plancher dur »).
 
-#### V2 — l'écart dynamique, en deux paliers
-
-```
-Δ = Scream_dB − Floor_dB
-
-Δ <  HardFloor_dB                    → REFUS
-HardFloor_dB ≤ Δ < QualityBand_dB    → ACCEPTÉ, LowRange = true
-Δ ≥ QualityBand_dB                   → ACCEPTÉ, LowRange = false
-
-HardFloor_dB PROVISOIRE 13 · QualityBand_dB PROVISOIRE 20
-```
-
-#### V3 — la plausibilité, par l'ancrage `Rest_dB`
-
-**C'est le contrôle qui justifie l'existence du troisième champ.**
+#### V2 — la plage utile, en deux paliers
 
 ```
-r = (Rest_dB − Floor_dB) / (Scream_dB − Floor_dB)      r ∈ ]0,1[ garanti par V1
+Δ' = Scream_dB − Gate_dB
 
-RestMin ≤ r ≤ RestMax                 sinon REFUS
-RestMin PROVISOIRE 0,15 · RestMax PROVISOIRE 0,70
+Δ' <  HardFloor_dB                     → REFUS — deux niveaux ne sont pas distinguables
+HardFloor_dB ≤ Δ' < QualityBand_dB     → ACCEPTÉ, LowRange = true
+Δ' ≥ QualityBand_dB                    → ACCEPTÉ, LowRange = false
 ```
 
-`r` situe la voix posée dans le registre mesuré. Une calibration honnête la place
-franchement au-dessus du bruit et franchement en dessous du cri.
+- **La plage se mesure au-dessus de la porte**, pas au-dessus du plancher : c'est la seule
+  plage que `Loudness` parcourt. Le système 1 le fixe ainsi (`voice-analysis.md`, *Formulas*
+  §1, « Garde et plancher dur »).
+- **Le plancher dur ne détecte qu'une mesure cassée.** Témoin de sa valeur, à mesurer : environ
+  **deux fois l'oscillation trame à trame de `Rms_dB` sur une voix tenue** — sous cet écart, le
+  joueur ne peut pas produire deux niveaux distincts. Provenance actuelle : **pari de
+  raisonnement, sans protocole** ; la valeur viendra des enregistrements bruts (B7) et de la
+  session hors ligne (C9).
+- **Témoin de refus** : `Gate_dB = −53`, `Scream_dB = −49` → `Δ' = 4 < HardFloor_dB` → REFUS.
+  Cas réel : micro très éloigné ou gain d'entrée très bas.
+- **Témoin `LowRange`** : `Gate_dB = −53`, `Scream_dB = −42` → `Δ' = 11` → ACCEPTÉ, `LowRange`.
 
-**Ce que ce contrôle attrape et que V2 laisse passer** — deux cas réels :
-
-| Cas | Mesures | Δ | `r` | Verdict |
-|---|---|---|---|---|
-| Pièce très calme, faux cri | Floor −70 · Rest −25 · Scream −22 | **48 dB, excellent** | **0,94** | **REFUS** — le « cri » est à peine au-dessus de la conversation ; le grand écart vient du silence de la pièce, pas de l'amplitude vocale |
-| Étape 2 ratée | Floor −50 · Rest −48 · Scream −25 | **25 dB, correct** | **0,08** | **REFUS** — la voix posée colle au plancher : le joueur n'a pas parlé, ou a parlé hors axe du micro |
-
-Dans les deux cas, l'écart dynamique paraît sain et la calibration est inexploitable.
-**Deux points ne mesurent que l'étendue ; trois points mesurent la vraisemblance.**
-
-#### V4 — la hauteur de référence
+#### V3 — la position de repos, qui signale et ne refuse pas
 
 ```
-F0Min ≤ F0_habituel ≤ F0Max           sinon REFUS
-F0Min = 20 Hz · F0Max PROVISOIRE 500 Hz
+r' = (Rest_dB − Gate_dB) / (Scream_dB − Gate_dB)       r' ∈ ]0 ; 1[ garanti par V1
+
+r' ≥ RestMax                           → ACCEPTÉ, LowRange = true
 ```
 
-La borne basse reprend celle du système 1 : à 0,01 Hz, `Pitch` vaudrait +162 demi-tons sans
-jamais diverger. La borne haute attrape une accroche d'harmonique ou une source qui n'est
-pas une voix.
+- **`r'` situe la voix posée dans la plage utile.** Sa formule et son domaine appartiennent au
+  système 1 (`voice-analysis.md`, *Formulas* §1 et §5).
+- **Plus de borne basse.** `r' > 0` par construction : une étape 2 ratée ne produit pas un `r'`
+  proche de 0, elle produit `n(G) < VoicedMin` et se rejoue (§2).
+- **Une voix posée proche de son maximum n'est pas une mesure cassée.** Elle peut venir d'un
+  joueur qui ne peut pas ou ne veut pas crier — logement partagé la nuit, dysphonie,
+  hypophonie, suites d'opération ORL. **Elle est acceptée et marquée `LowRange`** : la plage au
+  dessus de sa voix posée est étroite de fait. Le message **invite** à refaire la montée, il ne
+  l'exige pas.
+- **Témoin** : `Floor_dB = −70`, `Rest_dB = −25`, `Scream_dB = −22` → `Gate_dB = −63`, `Δ' = 41`,
+  `r' = 38 / 41 ≈ 0,93 ≥ RestMax` → ACCEPTÉ, `LowRange`.
+- **Borne incluse** : `r' = RestMax` exactement lève le drapeau.
 
-> **⚠️ `F0Max` est une valeur sensible à l'équité, et elle n'est pas mesurée.** Les voix
-> d'enfant montent couramment à 300–400 Hz de médiane. Une borne mal placée les refuserait
-> — dans un jeu dont la mécanique est de crier, et dont le système 1 a déjà dû corriger un
-> défaut d'équité visant exactement cette population. **Cette valeur ne doit pas être figée
-> sans avoir été confrontée à de vraies voix d'enfant.**
+#### V4 — la hauteur de référence, contrôlée au chargement
+
+```
+PitchStatus ≠ Unavailable  ET  F0_habituel ∉ domaine du détecteur     → REFUS au chargement
+```
+
+- **Le domaine** est celui du système 1 (`voice-analysis.md`, *Formulas* §5, ligne
+  `F0_habituel`) — `[69,6 ; 666,7] Hz` avec la configuration non calibrée actuelle. **Aucune
+  borne propre à ce document** : ni plancher à 20 Hz, ni plafond à 500 Hz.
+- **Une calibration ne peut pas produire une valeur hors domaine** : la hauteur y est mesurée
+  sous cette configuration (§2). **Témoin atteignable** : un fichier corrompu ou édité, revalidé
+  au chargement.
+- **Aucune voix n'est refusée sur sa hauteur.** Une voix d'enfant, aiguë, est dans le domaine ;
+  une voix que les détecteurs lisent mal est `NoJitter` ou `Unavailable`, jamais refusée.
+
+#### Ordre, verdict et message
+
+- Les validations sont des conditions indépendantes : **le verdict ne dépend pas de l'ordre
+  d'évaluation**.
+- **Priorité du message**, si plusieurs échouent : en direct, V1 puis V2 ; au chargement,
+  version de schéma, puis V1, V2, V4.
+- `LowRange` se lève si V2 **ou** V3 le demande.
 
 ### 5. La cadence de décimation, décidée par le profil
 
 ```
-DecimationHz = ( F0_habituel × 2 > 600 )  ?  12000  :  8000
+DecimationHz = ( 2 · F0_habituel > 600  ET  SampleRate multiple de 12 000 )  ?  12 000  :  8 000
 
-Plage de recherche = [ max(70 , F0_habituel / 2) ,  min(PlafondHz , F0_habituel × 2) ]
-   PlafondHz = 600 à 8 kHz · 900 à 12 kHz
+Plage de recherche = [ max(70 ; F0_habituel / 2) ; min(PlafondHz ; 2 · F0_habituel) ]
+   PlafondHz = 600 Hz à 8 kHz · 900 Hz à 12 kHz
+
+PitchStatus = Unavailable  →  aucune détection de hauteur
 ```
 
-Ces règles ne sont pas décidées ici : elles reprennent les *Edge Cases* du système 1, qui
-les tient d'ADR-0004. Ce document se contente d'être **l'endroit où la décision est prise**,
-puisque c'est le profil qui la détermine.
+Ces règles reprennent le système 1 et ADR-0004. Ce document est **l'endroit où la décision
+est prise**, puisque c'est le profil qui la détermine.
 
-**Conséquence d'implémentation.** La cadence dépendant du profil, le `Decimator` et le
-`PitchDetector` du système 1 sont **reconstruits à la réception du profil**, jamais à la
-construction de l'analyseur.
+- **La branche 12 kHz n'existe que si le `SampleRate` d'entrée est un multiple de 12 000** — 48
+  ou 96 kHz parmi les fréquences courantes. À 44,1 kHz, une voix aiguë reste à 8 kHz et sa
+  plage est plafonnée à 600 Hz : les hauteurs de ses cris au-delà deviennent non voisées. Le
+  contrat de fréquence du système 2 en décide (`voice-analysis.md`, *Formulas* §5).
+- **Conséquence d'implémentation** : le `Decimator` et le `PitchDetector` du système 1 sont
+  **reconstruits à la réception du profil**, jamais à la construction de l'analyseur.
 
-### Récapitulatif des valeurs provisoires
+### 6. La sortie de la boucle de refus — le profil approximatif
 
-Dix valeurs, aucune mesurée. Elles s'ajoutent aux dix du système 1.
+```
+Refus consécutifs dans une même calibration  =  2   →   proposer le profil approximatif
 
-| Valeur | Provisoire | Se règle par |
-|---|---|---|
-| `FloorMargin_dB` | 3 | Mesure d'entrée fantôme en pièce réelle |
-| `VoicedMin` | 100 trames | Essai : combien de parole avant que la médiane se stabilise |
-| `PlateauDelta_dB` | 1,5 | Essai sur montées réelles |
-| `PlateauHold_s` | 1,2 | Essai — trop court coupe la montée, trop long fatigue |
-| `PeakTimeout_s` | 10 | Essai |
-| `HardFloor_dB` | 13 | Protocole A du système 1 |
-| `QualityBand_dB` | 20 | Protocole A du système 1 |
-| `RestMin` | 0,15 | Statistiques sur calibrations réelles |
-| `RestMax` | 0,70 | Statistiques sur calibrations réelles |
-| `F0Max` | 500 Hz | **Doit passer par de vraies voix d'enfant** |
+Profil approximatif :
+    Floor_dB, Rest_dB, F0_habituel, PitchStatus   de la dernière tentative
+    Scream_dB = max( Scream_dB mesuré ; max Rms_dB de l'étape 2 )
+    exige V1 :  Gate_dB < Rest_dB < Scream_dB
+    Approximate = true,  LowRange = true
+```
+
+- **Le joueur consent explicitement** : « entrer avec une mesure approximative » ou
+  « réessayer ».
+- **Aucune valeur n'est inventée.** Le `Scream_dB` retenu est le plus fort niveau réellement
+  mesuré sur les étapes 2 et 3 : il est donc au-dessus de la médiane `Rest_dB`, ce qui rétablit
+  l'ordre strict sans substitution.
+- **Le plancher dur ne s'applique pas au profil approximatif** : c'est précisément le refus que
+  le joueur consent à dépasser. V1 s'applique, parce qu'elle garde `Loudness` d'une inversion.
+- **Le seul cas où la porte reste fermée** est celui où V1 échoue malgré tout : **rien n'a
+  franchi la porte**, ou le signal est parfaitement constant. Ce n'est pas une voix
+  inhabituelle, c'est une capture qui ne fonctionne pas — le parcours bascule sur le diagnostic
+  du périphérique.
+- **Témoin** : deux refus V2 consécutifs, `Gate_dB = −53`, `Scream_dB = −49`, plus fort niveau de
+  l'étape 2 à `−51` → `Scream_dB` retenu `−49`, `Δ' = 4` → profil approximatif commité,
+  `Approximate` et `LowRange` levés ; V1 tient.
+- **Le compte des refus** repart de zéro à chaque commit et à chaque retour à `Idle`. Une étape
+  rejouée sans refus — parole pendant le silence, chuchotement, trop peu de parole — ne compte
+  pas.
+- Le profil approximatif **porte une invitation durable** à refaire la mesure au calme, sans
+  jamais bloquer.
+
+### Porte de mesure du système 6 — la liste canonique des valeurs provisoires
+
+**Critère d'entrée : une valeur y figure si et seulement si elle attend une mesure.** Les
+valeurs du système 1 y sont nommées, jamais chiffrées. Les nombres de cette table sont les
+seuls de ce document ; partout ailleurs, on y renvoie.
+
+| Valeur | Provisoire | Plage sûre | Propriétaire | Statut | Se fixe par |
+|---|---|---|---|---|---|
+| Durée de l'étape 1 | 7 s | 6 – 8 s | Système 6 | PROVISOIRE | Écart de `P95` entre deux calibrations d'une même pièce (B7) |
+| `WarmUp_s` | 0,5 s | 0,3 – 1 s | Système 6 | PROVISOIRE | Convergence de l'enveloppe depuis `MinDb` |
+| Centile du plancher | P95 | P90 – P98 | Système 6 | PROVISOIRE | B7 |
+| `FloorMargin_dB` | 3 | 1 – 6 | Système 6 | PROVISOIRE | Part de trames à `Loudness = 0` quand le joueur se tait (B2), **avec** `Margin_dB` du système 1 |
+| `StabilityMax_dB` — écart `P95 − P50` | — | — | Système 6 | **EN ATTENTE** | OQ-C3 |
+| `SpeechRun` | 5 trames | 3 – 10 | Système 6 | PROVISOIRE | Enregistrements de silences avec et sans paroles |
+| `DeviceCheck_s` | 5 s | 3 – 8 s | Système 6 | PROVISOIRE | Playtest du parcours |
+| `VoicedMin` | 100 trames | 60 – 200 | Système 6 | PROVISOIRE | Stabilisation de la médiane ; ne pas allonger le mode réparation |
+| `Step2Timeout_s` | 15 s | 12 – 20 s | Système 6 | PROVISOIRE | Playtest ; ne pas pénaliser une parole entrecoupée |
+| `PlateauDelta_dB` | 1,5 | 1 – 3 | Système 6 | PROVISOIRE | Montées réelles, **avec** les deux suivants |
+| `PlateauHold_s` | 1,2 | 0,8 – 2 | Système 6 | PROVISOIRE | idem |
+| `PeakTimeout_s` | 10 | 8 – 15 | Système 6 | PROVISOIRE | idem |
+| `HardFloor_dB`, sur `Δ'` | 6 | 4 – 8 | Système 6 | PROVISOIRE — pari de raisonnement, sans protocole | ≈ 2 × oscillation trame à trame de `Rms_dB` sur voix tenue (B7, C9) |
+| `QualityBand_dB`, sur `Δ'` | 13 | 10 – 17 | Système 6 | PROVISOIRE — pari de raisonnement | B7, C9 |
+| `RestMax`, sur `r'` | 0,80 | 0,70 – 0,90 | Système 6 | PROVISOIRE | Statistiques sur calibrations réelles |
+| `Margin_dB`, `JitterMin`, `N`, `γ`, `MinDb`, facteur `LowRange` | — | — | **Système 1** | voir `voice-analysis.md` | voir `voice-analysis.md` |
+
+**Décisions, hors de la liste parce qu'elles n'attendent pas de mesure** : deux refus avant le
+profil approximatif (décision du propriétaire, 2026-09-15) ; l'ordre des trois étapes ; la
+médiane plutôt que la moyenne.
+
+**Ordre de mesure.** Ces valeurs ne se règlent pas indépendamment de celles du système 1 :
+`FloorMargin_dB` et `Margin_dB` d'abord, **ensemble** ; puis le plancher dur et la bande de
+qualité, qui portent sur `Δ'` que les premières déplacent ; `RestMax` en dernier, sur des
+calibrations déjà passées. **La séquence canonique est écrite dans `voice-analysis.md`**,
+*Open Questions*, OQ-4. **La règle qui la rend soutenable : enregistrer le signal brut une
+fois, dériver hors ligne, rejouer toujours.**
 
 ## Edge Cases
 
@@ -547,751 +735,782 @@ Chaque entrée nomme la **condition exacte**, la **résolution exacte**, et sa s
 **bloquant** (le système produit un profil faux sans le signaler), **dégradant** (profil
 médiocre mais honnête) ou **cosmétique**.
 
-### Pendant la mesure
+### Avant et pendant la mesure
 
-- **Si le micro coupe ou change pendant une étape** : l'étape est annulée, **le tampon est
-  jeté en entier**, retour à `Idle`, profil actif intact. **Bloquant si non traité** —
-  conserver « le `Scream_dB` atteint jusque-là » fabrique exactement les profils dégénérés
-  que la validation existe pour refuser.
+- **Si la permission micro est refusée** : écran de blocage dédié, qui dit ce qui manque et où
+  l'accorder dans les réglages du système. **Bloquant si non traité** — la calibration
+  échouerait en silence, sans aucun des messages prévus.
 
-- **Si le joueur parle pendant l'étape de silence** : `P95` remonte au niveau de sa voix,
-  `Floor_dB` se pose beaucoup trop haut, et **toute parole normale donnera ensuite
-  `Loudness = 0`** — le jeu ne réagirait plus qu'aux cris. **Bloquant.** Détection : si
-  l'étape 1 contient des trames voisées, ou si l'écart `P95 − P50` dépasse un seuil, l'étape
-  n'a pas été respectée et se rejoue.
+- **Si le périphérique sélectionné ne transmet rien** : l'étape 0 le détecte (« dis un mot ») et
+  affiche le sélecteur. **Bloquant si non traité** — un micro mort traverserait l'étape de
+  silence et échouerait deux étapes plus loin, sous un message qui parlerait d'orientation.
 
-- **Si un bruit transitoire survient pendant l'étape de silence** — porte, chien,
-  notification : le `P95` y est robuste par construction, un transitoire court ne déplace
-  pas un centile haut. **Cosmétique.** En revanche un bruit *soutenu* — aspirateur,
-  circulation — élève légitimement le plancher : ce n'est pas une erreur de mesure, c'est
-  l'environnement réel du joueur, et `Floor_dB` doit le refléter.
+- **Si le micro coupe ou change pendant une étape** : l'étape est annulée, **le tampon est jeté
+  en entier**, retour à `Idle`, profil actif intact. **Bloquant si non traité** — conserver « le
+  `Scream_dB` atteint jusque-là » fabrique exactement les profils dégénérés que la validation
+  existe pour refuser.
 
-- **Si le joueur ne parle pas assez à l'étape 2** : `|V| < VoicedMin`, l'étape n'a pas
-  abouti et se rejoue. **Dégradant.**
+- **Si le joueur parle pendant l'étape de silence** : la garde de parole le reconnaît (*Formulas*
+  §1) et l'étape se rejoue. **Bloquant si non traité** — `Floor_dB` se poserait au niveau de sa
+  voix, et toute parole normale donnerait ensuite `Loudness = 0`.
 
-- **Si le joueur chuchote à l'étape 2** : le chuchotement phonétique est **structurellement
-  apériodique**, YIN le déclare non voisé, `|V|` reste sous le seuil et on retombe sur le
-  cas précédent. **Le système se protège tout seul**, mais le message au joueur doit le
-  dire — « on ne t'entend pas assez » — et non le laisser recommencer à l'identique.
+- **Si un bruit transitoire survient pendant l'étape de silence** — porte, chien, notification :
+  le P95 y est robuste, un transitoire court ne déplace pas un centile haut. **Cosmétique.** En
+  revanche un bruit *soutenu* — aspirateur, circulation — élève légitimement le plancher :
+  c'est l'environnement réel du joueur.
 
-- **Si le signal écrête pendant l'étape 3** : `Scream_dB` mesure alors **le plafond du
-  micro, pas celui de la voix**. Le profil reste utilisable — le haut de l'échelle est le
-  haut de ce que le matériel sait porter — mais **tout ce que le joueur produit au-delà
-  devient indiscernable**, et son registre haut est aplati pour toute la partie.
-  **Dégradant, et à signaler** : c'est le seul cas où la bonne réponse est de demander au
-  joueur de **baisser le gain d'entrée** de son micro, puis de recommencer.
+- **Si un bruit cyclique change d'état entre la calibration et le jeu** — compresseur de frigo,
+  chauffage, ventilation. Les deux sens existent, et ils ne font pas le même dégât :
+  - *calibré à l'arrêt, joué en marche* : le bruit peut franchir la porte → **entrée fantôme**,
+    l'objet réagit quand le joueur se tait ;
+  - *calibré en marche, joué à l'arrêt* : la porte reste trop haute → **le chuchotement devient
+    invisible**, le registre que le Pilier 1 protège.
 
-- **Si le joueur monte très vite à l'étape 3** : le plateau est reconnu presque
-  immédiatement, la porte de calage étant franchie. Ce n'est pas un défaut — la mesure est
-  valide. **Cosmétique.**
+  **Dégradant, non détectable par la validation.** Mitigations : l'étape de 6 à 8 secondes
+  réduit le tirage ; la relance rapide répare. Un contrôle de cohérence léger à l'entrée en
+  partie est une piste nommée (OQ-C12).
 
-- **Si le joueur change de distance au micro entre les étapes** : la calibration mélange
-  deux référentiels. S'éloigner abaisse `Rest_dB` et `Scream_dB` sans toucher `Floor_dB`,
-  donc l'écart se resserre et V2 ou V3 attrapent les cas francs. **Mais les cas légers
-  passent.** **Dégradant, partiellement détectable** — l'UI doit demander de ne pas bouger,
-  ce qui est moins coûteux que de tenter de le mesurer.
+- **Si le joueur ne parle pas assez à l'étape 2** : l'étape expire et se rejoue. **Dégradant.**
+  Le message distingue « on ne t'entend pas du tout » de « continue encore un peu ».
+
+- **Si le joueur chuchote à l'étape 2** : ses trames sont dans `G` mais pas dans `Y`. La première
+  fois, l'étape se rejoue avec une demande de voix posée ; la seconde, le profil est accepté en
+  `Unavailable`. **Le système se protège tout seul, sans exclure une voix réellement
+  apériodique.**
+
+- **Si la parole est entrecoupée** — bégaiement, dysarthrie : `VoicedMin` compte des trames, pas
+  une continuité, et `Step2Timeout_s` laisse le temps. **Le message ne présume jamais une cause
+  de volume.**
+
+- **Si le signal écrête pendant l'étape 3** : `Scream_dB` mesure **le plafond du micro, pas celui
+  de la voix**. Le profil reste utilisable, mais tout ce que le joueur produit au-delà devient
+  indiscernable. **Dégradant, et à signaler** : le message demande de **baisser le gain d'entrée
+  ou d'éloigner légèrement le micro** — un écrêtage analogique, dans le préampli du casque, ne
+  disparaît pas en baissant un curseur logiciel.
+
+- **Si le joueur monte très vite à l'étape 3** : le plateau est reconnu presque immédiatement.
+  Ce n'est pas un défaut. **Cosmétique.**
+
+- **Si le joueur change de distance au micro entre les étapes** : la calibration mélange deux
+  référentiels. Les cas francs tombent sous V1 ou V2, **les cas légers passent**. **Dégradant,
+  partiellement détectable** — l'UI demande de ne pas bouger.
+
+- **Si le système d'exploitation ou le périphérique traite le signal avant le jeu** — AGC de
+  communication de Windows, pilotes constructeur, AGC matériel des casques USB, bascule d'un
+  casque Bluetooth en profil main libre. Le profil **dérive pendant la session** alors que
+  chaque validation voit un instantané cohérent. **Dégradant, non détectable** : l'UI demande de
+  désactiver les améliorations micro, au même rang que le prérequis du casque ; une mesure de
+  dérive est à mener au POC audio (OQ-C12).
+
+- **Si le gain d'entrée est très bas** : toutes les validations travaillent en décibels relatifs,
+  et un profil sous-alimenté passe. Le rapport signal sur bruit se dégrade, surtout pour le
+  chuchotement. **Dégradant, non détecté** (OQ-C13).
+
+- **Si le joueur recalibre en jeu sur haut-parleurs** : les voix des coéquipiers entreraient dans
+  l'étape de silence et gonfleraient `Floor_dB`. **Le chat vocal se tait dans les deux sens
+  pendant la calibration** (système 14), ce qui ferme ce chemin quel que soit le matériel. Pour
+  le reste du jeu, **aucune annulation d'écho ne protège l'analyse** : une annulation
+  auto-référencée serait possible, elle est refusée pour son coût et parce que le casque est un
+  prérequis (ADR-0003, alternatives 7 à 9).
 
 ### À la validation
 
-- **Si l'écart tombe juste sous le plancher dur** : refus, et **le joueur a coopéré**. Le
-  message porte sur le micro et la pièce, jamais sur sa voix. **Bloquant, mais c'est le
-  comportement voulu** — ce que ce refus protège, c'est un dénominateur exploitable.
+- **Si la plage utile tombe juste sous le plancher dur** : refus, et **le joueur a coopéré**. Le
+  message porte sur le micro et la pièce, jamais sur sa voix. Au deuxième refus, le profil
+  approximatif est proposé. **Bloquant, mais c'est le comportement voulu.**
 
-- **Si la source n'est pas une voix humaine** — télévision, musique, une autre personne qui
-  parle à côté : **aucun contrôle ne l'attrape.** Les quatre validations vérifient la
-  cohérence des mesures, pas leur provenance. Un profil calibré sur la télé sera
-  parfaitement valide et parfaitement inutile. **Dégradant, non détectable, et il faut le
-  dire plutôt que prétendre l'inverse.**
+- **Si la voix posée est proche du maximum mesuré** (`r' ≥ RestMax`) : **accepté, `LowRange`**.
+  Jamais un refus : ce n'est pas une mesure cassée.
 
-- **Si `F0_habituel × 2` tombe près de 600 Hz** : deux calibrations successives de la même
-  personne peuvent basculer entre 8 kHz et 12 kHz de décimation. Les deux chaînes
-  fonctionnent, mais le joueur n'a pas exactement le même pipeline d'une fois sur l'autre.
-  **Cosmétique** — à traiter par une hystérésis si le playtest montre une différence
-  perceptible.
+- **Si les détecteurs du système 1 lisent mal une vraie voix** : `PitchStatus = NoJitter` ou
+  `Unavailable`, profil accepté, drapeau « hauteur indisponible ». **Jamais un refus.**
 
-- **Si `F0_habituel × 2` dépasse 900 Hz même à 12 kHz** : la plage est clampée et la perte
-  documentée. **Dégradant, non résolu** — c'est le reliquat du défaut d'équité des voix
-  très aiguës, que le système 1 a corrigé jusqu'à 900 Hz et pas au-delà. Cas extrême, à
-  surveiller en playtest **avec de vraies voix d'enfant**.
+- **Si la source n'est pas une voix humaine** — télévision, musique, une autre personne : aucun
+  contrôle ne l'attrape. Les validations vérifient la cohérence des mesures, pas leur
+  provenance. **Dégradant, non détectable, et il faut le dire.**
+
+- **Si `2 · F0_habituel` tombe près de 600 Hz** : deux calibrations de la même personne peuvent
+  basculer entre 8 et 12 kHz. **Cosmétique** — une hystérésis est une piste nommée (OQ-C14).
+
+- **Si `2 · F0_habituel` dépasse 900 Hz même à 12 kHz** : la plage est clampée et la perte
+  documentée. **Dégradant.** À surveiller en playtest **avec de vraies voix d'enfant**.
+
+- **Si le `SampleRate` n'est pas un multiple de 12 000** : une voix aiguë n'a pas de branche
+  12 kHz, et les hauteurs de ses cris sont perdues. **Dégradant** ; `Loudness` n'est pas
+  touchée. Le contrat de fréquence du système 2 en décide.
+
+- **Si deux refus se suivent** : profil approximatif proposé (*Formulas* §6). **Sauf si rien n'a
+  franchi la porte** : c'est la capture qui ne marche pas, et le parcours passe au diagnostic
+  du périphérique.
 
 ### Persistance et reprise
 
 - **Si le profil sur disque est illisible ou corrompu** : il est traité comme **absent**.
-  Calibration forcée. **Jamais de chargement partiel** — un profil à moitié lu est un
-  profil dégénéré qui a contourné la validation.
+  Calibration forcée. **Jamais de chargement partiel.**
 
-- **Si le profil sur disque vient d'une version antérieure du format** : soit il se migre,
-  soit il est traité comme absent. **Le profil doit donc porter un numéro de version de
-  schéma** — sans quoi un ajout de champ transformerait tous les profils existants en
-  données silencieusement mal interprétées. **Bloquant si non prévu**, et c'est un besoin
-  de conception, pas un cas limite d'exécution.
+- **Si le profil vient d'une version antérieure du format** : il se migre, ou il est traité
+  comme absent. **Le profil porte un numéro de version de schéma.**
 
-> ### ⚠️ Le cas que les valeurs provisoires nous préparent
->
-> **Si un profil valide à l'écriture devient invalide parce que les seuils ont changé.**
-> Ce document porte dix valeurs provisoires, dont `HardFloor_dB`, `RestMin`, `RestMax` et
-> `F0Max` — toutes utilisées par la validation. Le jour où la mesure les déplace, **des
-> profils déjà enregistrés cesseront de passer les contrôles.**
->
-> **Résolution : revalider à chaque chargement**, jamais seulement à l'écriture. Un profil
-> qui échoue redevient absent et déclenche une calibration, avec un message honnête —
-> « nos réglages ont changé, il faut refaire une mesure ». **Bloquant si non traité** :
-> sans revalidation au chargement, un profil devenu hors normes continuerait de piloter la
-> normalisation sans que rien ne le signale.
->
-> C'est le prix, prévu et accepté, d'assumer des valeurs provisoires plutôt que de les
-> inventer définitives.
+- **Si un profil valide à l'écriture devient invalide parce que la configuration a changé** —
+  plancher dur relevé, `Margin_dB` monté au point que `Scream_dB ≤ Gate_dB` : **revalidation à
+  chaque chargement**. Un profil qui échoue redevient absent, avec un message qui endosse la
+  responsabilité — « nos réglages ont changé, il faut refaire une mesure ». **Bloquant si non
+  traité** : un profil hors normes continuerait de piloter la normalisation sans que rien ne le
+  signale.
+
+- **Si `F0_habituel` sort du domaine du détecteur dans un profil chargé** : fichier corrompu ou
+  édité → absent. **Bloquant si non traité.**
 
 - **Si une étape est rejouée seule** : le profil n'est recommité qu'après une **validation
-  complète sur les quatre contrôles**, valeurs anciennes et nouvelles mélangées. **Bloquant
-  si non traité** — un `Floor_dB` remesuré peut devenir incompatible avec un `Scream_dB`
-  ancien, et l'accepter sans revérifier rouvre la porte au retournement silencieux.
+  complète**, valeurs anciennes et nouvelles mélangées. **Bloquant si non traité.**
+
+- **Si un profil approximatif est rechargé** : il se charge normalement et garde son
+  invitation, jusqu'au premier commit non approximatif. **Sa revalidation applique la version
+  de schéma, V1 et V4, pas le plancher dur** — sans quoi le consentement du joueur serait
+  annulé au lancement suivant et il retrouverait la porte fermée. **Bloquant si non traité.**
 
 ### Le profil qui devient faux sans que rien ne casse
 
-C'est la famille de cas la plus insidieuse, parce qu'aucune erreur ne se produit nulle part.
-
 - **Si le joueur calibre dans un environnement et joue dans un autre** — calibré au calme le
-  matin, joue le soir avec la télévision allumée : `Floor_dB` est désormais **sous** le
-  bruit ambiant réel. Le bruit franchit la porte de voisement, et le joueur subit de
-  l'**entrée fantôme** — ses objets réagissent quand il se tait. **Dégradant.**
+  matin, joue le soir avec la télévision allumée : entrée fantôme. **Dégradant.**
 
-- **Si le joueur change de micro** — casque le soir, micro du portable en déplacement : le
-  contrat du système 1 pose qu'**un changement de périphérique ne force jamais de
-  recalibration**. C'est un choix délibéré, parce que ces événements se déclenchent souvent
-  à tort et qu'éjecter un joueur en plein contrat serait le pire moment possible. **Mais le
-  prix est réel : le profil peut devenir faux en silence.**
+- **Si le joueur change de micro** : un changement de périphérique **ne force jamais de
+  recalibration** — ces événements se déclenchent souvent à tort, et éjecter un joueur en plein
+  contrat serait le pire moment. **Mais le profil peut devenir faux en silence.**
 
-> **Ces deux cas ne se détectent pas de façon fiable, et c'est précisément pourquoi la
-> calibration doit être relançable à tout moment et rapidement.** L'exigence d'accessibilité
-> permanente n'est pas un confort d'ergonomie : c'est **la seule mitigation** d'une classe
-> de défauts que rien ne signale. Le joueur est le capteur.
->
-> Cela redonne son poids au mode « réparation » de *Player Fantasy* : ce n'est pas un
-> parcours secondaire, c'est le filet de sécurité de tout le système.
+> **Ces cas ne se détectent pas de façon fiable, et c'est précisément pourquoi la calibration
+> doit être relançable à tout moment et rapidement.** L'accès permanent n'est pas un confort :
+> c'est **la seule mitigation** d'une classe de défauts que rien ne signale. Le joueur est le
+> capteur, et le mode réparation est le filet de sécurité de tout le système.
 
 ## Dependencies
 
-Ce document reprend la distinction posée par `voice-analysis.md`, qui a fait ses preuves :
-une **dépendance de conception** empêche de *spécifier* tant que l'autre ne l'est pas ; une
-**dépendance d'exécution** empêche de *fonctionner* une fois en marche. Les confondre
-fabrique des cycles fantômes.
+Ce document reprend la distinction posée par `voice-analysis.md` : une **dépendance de
+conception** empêche de *spécifier* tant que l'autre ne l'est pas ; une **dépendance
+d'exécution** empêche de *fonctionner* une fois en marche. Les confondre fabrique des cycles
+fantômes.
 
 ### Le tableau
 
 | Système | Nature | Sens | Interface |
 |---|---|---|---|
-| **1. Analyse vocale** | **DURE — conception** | mutuelle | **Chaque champ du profil existe parce qu'une de ses formules le réclame.** On ne pouvait pas spécifier ce système avant lui — et c'est fait, il est `Designed` |
-| **2. Audio d'entrée** | **DURE — exécution** | il nous pousse | Les échantillons, **à la même cadence et par le même trajet qu'en jeu**. Plus les événements de périphérique |
-| 8. Session / lobby | consommateur | il lit | Le verdict « ce joueur a un profil valide », et la porte d'entrée qui en découle |
-| 14. Chat vocal | contraint | il se tait | **Aucune diffusion pendant la calibration** — et davantage, voir plus bas |
-| 19. UI diégétique | consommateur | il lit | La jauge temps réel de l'étape 3 |
-| 5. Réseau | **aucune** | — | **Le profil ne traverse jamais le réseau.** Décidé en *Detailed Rules* |
+| **1. Analyse vocale** | **DURE — conception** | mutuelle | Chaque champ du profil existe parce qu'une de ses formules le réclame. Nous en citons `Gate_dB`, `r'`, la règle `PitchStatus` (§4), la table des domaines atteignables (§5), la liste canonique de ses valeurs et la règle de fils d'exécution (*Edge Cases*, « Conséquence d'implémentation »). Il lit `LowRange` et multiplie ses constantes de temps `τ` |
+| **2. Audio d'entrée** | **DURE — exécution** | il nous pousse | Les échantillons **par le même trajet qu'en jeu**, signal brut ; la fréquence d'échantillonnage livrée ; la liste des périphériques ; les événements de coupure, de changement et de « capture reprise » |
+| **5. Réseau** | exécution | il transporte | **`r'` seul**, du client vers l'hôte, à la connexion et à chaque recalibration (ADR-0003, *Decision*, chaîne d'analyse, étape 5). Le profil ne traverse jamais le réseau |
+| **8. Session / lobby** | consommateur | il lit | Le verdict « ce joueur a un profil valide », la porte d'entrée qui en découle, l'avancement du parcours pour l'affichage aux autres |
+| **11. Effet voix → objets** | consommateur | il lit, via le système 5 | `r'` de chaque joueur, sur l'hôte. Ses seuils sont des positions dans la plage utile ; il ne lit ni `Rest_dB` ni aucun champ en décibels |
+| **14. Chat vocal** | **contraint** | il se tait | **Silence dans les deux sens pendant la calibration**, au lobby comme en jeu |
+| **7. 3C** et **9. Portage** | contraint | ils immobilisent et posent | Ouvrir le menu immobilise le personnage ; un personnage immobilisé pose ce qu'il porte |
+| **19. UI diégétique** | voisin | il signale | L'icône « micro coupé » visible par le joueur seul et l'option d'accessibilité « afficher mon volume », qui ramènent vers le diagnostic et la calibration |
 
-**Une seule dépendance de conception, et elle est déjà satisfaite.** C'est ce qui rend ce
-document écrivable maintenant.
+**Une seule dépendance de conception, et elle est satisfaite** : le système 1 a été révisé
+le premier dans la passe groupée. C'est ce qui rend ce document écrivable maintenant.
 
 ### Le cycle apparent 1 ↔ 6, et pourquoi ce n'en est pas un
 
 L'index déclare que 6 dépend de 1 et 2 ; le système 1, lui, ne produit rien sans notre
 profil. Cela ressemble à un cycle et n'en est pas un : **les deux vivent dans la même
 assembly** (ADR-0006) et partagent les mêmes primitives internes. Ce n'est pas une
-dépendance entre modules, c'est une collaboration interne. `voice-analysis.md` le
-démontre en détail ; ce document s'y range.
+dépendance entre modules, c'est une collaboration interne. `voice-analysis.md` le démontre ;
+ce document s'y range.
 
 ### La calibration vit dans deux assemblies, et la ligne compte
 
 | Ce qui vit où | Assembly | Testable sans Unity |
 |---|---|---|
-| Mesures, médianes, détection de plateau, **les quatre validations** | `SUAC.Voice.Core` — `noEngineReferences` | **Oui** |
+| Mesures, médianes, ensembles `G`/`Y`/`V`, détection de plateau, **validations**, calcul de `r'` | `SUAC.Voice.Core` — `noEngineReferences` | **Oui** |
+| **Machine à états du parcours**, compte des refus, profil approximatif | `SUAC.Voice.Core` | **Oui** |
 | **Sérialisation du profil, version de schéma, revalidation au chargement** | `SUAC.Voice.Core` | **Oui** |
-| Parcours, écrans, jauge, **E/S fichier** | Couche Unity | Non |
+| Écrans, objet de l'étape 3, **E/S fichier** | Couche Unity | Non |
 
-**Tout ce qui peut produire un profil faux est du côté testable.** C'est la conséquence
-directe d'ADR-0006, et elle n'est pas un hasard : les quatre contrôles de validation sont
-précisément ce qu'on veut pouvoir exercer en millisecondes, sans micro et sans scène, avec
-des profils synthétiques dégénérés.
-
-La couche Unity, elle, ne décide rien — elle collecte, affiche et **range des octets**.
-
-> ### ⚠️ Correction du 2026-09-08 — la ligne du milieu n'existait pas
->
-> Ce tableau ne comptait que deux entrées, et affirmait que « tout ce qui peut produire un
-> profil faux est du côté testable ». **C'était faux tel qu'écrit.** Le numéro de version de
-> schéma et la revalidation au chargement — CAL-30, CAL-31 — n'avaient **aucune maison** :
-> ni DSP pur, ni écran. Tombés dans la couche de persistance Unity, ces deux critères
-> devenaient intestables.
->
-> Or ce document établit lui-même que **quatorze valeurs provisoires garantissent** qu'un
-> jour des profils enregistrés cesseront de valider. La revalidation n'est donc pas un cas
-> limite exotique : c'est un chemin qu'on empruntera à coup sûr.
->
-> **La règle de partage est simple : Unity lit et écrit des octets, Core décide de tout le
-> reste.** Désérialiser, versionner, revalider et refuser sont des décisions ; l'accès
-> disque n'en est pas une.
+**Tout ce qui peut produire un profil faux est du côté testable.** La règle de partage :
+**Unity lit et écrit des octets, et affiche ; Core décide de tout le reste.** Désérialiser,
+versionner, revalider, refuser, proposer le profil approximatif et choisir l'étape à rejouer
+sont des décisions ; l'accès disque et le rendu n'en sont pas. La revalidation au chargement
+n'est pas un cas exotique : tant qu'une valeur de la liste canonique reste provisoire, des
+profils enregistrés cesseront un jour de valider.
 
 ---
 
 ### Ce que les GDD voisins devront porter
 
-Cohérence bidirectionnelle exigée par les règles du projet. Aucun de ces systèmes n'a
-encore de GDD.
+Cohérence bidirectionnelle exigée par les règles du projet. Les systèmes 2, 5, 7, 8, 9, 14 et
+19 n'ont pas encore de GDD ; les systèmes 1 et 11 en ont un.
+
+**Système 1 — Analyse vocale** *(porté, `voice-analysis.md`)*
+- `Gate_dB`, `r'` et sa disponibilité, la règle `PitchStatus`, la table des domaines, la règle
+  de fils d'exécution, le facteur `LowRange` appliqué à `τ`.
+- **Reste à porter** : exposer le détecteur d'écrêtage comme une information, et non plus
+  seulement comme la condition d'un gel (OQ-C2).
 
 **Système 2 — Audio d'entrée**
-- Livrer les échantillons **par le même trajet qu'en jeu** : post-AEC, sans VAD, sans AGC,
-  sans suppression de bruit. **Un AGC actif pendant la calibration rendrait la mesure
-  absurde** — il égaliserait justement l'écart qu'on cherche à mesurer.
-- Même **cadence fixe** qu'en jeu. Calibrer sur un trajet et jouer sur un autre invaliderait
-  la mesure sans que rien ne le signale.
+- Livrer les échantillons **par le même trajet qu'en jeu** : signal brut, **aucun traitement
+  qui modifie la dynamique ou la forme d'onde dans la bande vocale** — la règle unique
+  d'ADR-0003. Un AGC actif pendant la calibration rendrait la mesure absurde : il égaliserait
+  justement l'écart qu'on cherche à mesurer.
+- Même **cadence fixe** qu'en jeu. Calibrer sur un trajet et jouer sur un autre invaliderait la
+  mesure sans que rien ne le signale.
+- **Publier la fréquence d'échantillonnage livrée** : la branche 12 kHz n'existe que si elle
+  est un multiple de 12 000 (*Formulas* §5).
 - Être **déjà en marche** avant le lancement de la calibration.
-- Signaler coupure et changement de périphérique, pour l'annulation d'étape.
+- Signaler **coupure**, **changement de périphérique** et **capture reprise**, pour l'annulation
+  d'étape et le diagnostic.
+
+**Système 5 — Réseau**
+- Acheminer **`r'`**, et lui seul parmi les grandeurs tirées du profil, vers l'hôte, à la
+  connexion et à chaque recalibration.
 
 **Système 8 — Session / lobby**
 - Porter la **porte d'entrée** : un joueur sans profil valide ne rejoint pas.
-- Rendre l'attente lisible pour les autres — « X termine sa configuration » — plutôt qu'un
-  silence qui se lit comme un plantage.
+- Rendre l'attente lisible pour les autres — l'étape en cours, ou « rencontre une
+  difficulté » —, plutôt qu'un silence qui se lit comme un plantage.
+- Trancher si le groupe peut démarrer sans le joueur en calibration (OQ-C10).
+
+**Système 11 — Effet voix → objets** *(porté, `voice-object-effect.md`, révision à l'étape 4 de
+la passe groupée)*
+- Consommer `r'` et rien d'autre du profil. Toute mention de `L_repos` ou de `Rest_dB` comme
+  entrée d'un seuil disparaît.
 
 **Système 14 — Chat vocal**
-- **Ne rien diffuser** de ce que le joueur produit pendant sa calibration. C'est un moment
-  privé, même en multijoueur.
-- *(La réciproque — ne pas lui faire entendre les autres — n'a pas besoin d'être demandée :
-  elle découle de l'état de pause. Voir la décision du 2026-09-08 plus bas.)*
+- **Pendant la calibration, rien ne part et rien n'arrive** : aucune diffusion de ce que le
+  joueur produit, **et aucune restitution de ce que disent les autres**, au lobby comme en jeu.
+  Le système 14 en est le propriétaire, et un critère `[INTEG]` le vérifie (CAL-54).
+- **Cette règle ne découle d'aucun état de pause.** En réseau, ouvrir un menu ne gèle que le
+  client local, et la voix transite par un canal découplé de cet état ; la première
+  calibration, elle, a lieu au lobby, qui n'est jamais en pause.
+
+**Systèmes 7 et 9 — 3C et Portage : rien à ajouter, une confirmation à obtenir**
+- La recalibration en jeu repose sur un comportement générique : ouvrir le menu immobilise le
+  personnage, et un personnage immobilisé **pose ce qu'il porte**. **Nous ne demandons aucun
+  comportement spécial** : nous empruntons le chemin d'un porteur qui lâche.
+- Il reste à vérifier, au moment d'écrire ces GDD, que ce chemin **existe** (OQ-C9).
 
 **Système 19 — UI diégétique**
-- La jauge de l'étape 3, en temps réel, et **distincte du sonomètre de jeu** : le contexte
-  n'est pas le même, et confondre les deux affichages reviendrait à dire au joueur qu'il
-  joue alors qu'il se règle.
-
-**Systèmes 7 et 9 — 3C et Portage : rien à ajouter, mais une confirmation à obtenir**
-- La décision du 2026-09-08 fait reposer la recalibration en jeu sur un comportement
-  générique : ouvrir le menu immobilise le personnage, et un personnage immobilisé **pose
-  ce qu'il porte**. **Nous ne demandons donc aucun comportement spécial** — nous empruntons
-  un chemin que le portage doit gérer de toute façon, celui d'un porteur qui lâche.
-- La seule chose à vérifier au moment d'écrire ces GDD est que ce chemin **existe bien**.
-  Si le portage ne prévoyait pas qu'un porteur puisse lâcher en cours de transport, notre
-  élégance s'effondrerait et il faudrait rouvrir OQ-11.
+- **L'icône « micro coupé », visible par le joueur seul**, même si elle n'est pas diégétique :
+  aucun sens corporel ne détecte un micro mort. Elle ouvre le diagnostic du périphérique et la
+  calibration.
+- **L'option d'accessibilité « afficher mon volume »**, désactivée par défaut. Sa conception lui
+  appartient.
+- **L'écran de calibration n'est pas le sien** : l'objet de l'étape 3 appartient à ce document
+  (*Visual/Audio Requirements*), et il ne doit pas ressembler au sonomètre de jeu — confondre
+  les deux dirait au joueur qu'il joue alors qu'il se règle.
 
 ---
 
-### Une interaction que personne n'avait vue : la calibration en jeu écoute le salon
+### Le prérequis du casque — la seule mitigation, et ce qu'elle ne couvre pas
 
-Un joueur qui recalibre **en cours de partie** a les voix de ses coéquipiers dans les
-oreilles. S'il joue sur haut-parleurs, ces voix rentrent dans son micro — et pendant
-l'étape 1, elles sont mesurées comme **bruit ambiant**.
+*Shut Up & Carry !* se joue **au casque avec micro** : c'est une condition d'entrée, pas une
+recommandation de confort (décision du propriétaire du 2026-09-08). **Aucune annulation d'écho
+ne protège l'analyse** : le casque est la seule mitigation (ADR-0003). Une annulation
+auto-référencée serait réalisable — le jeu génère lui-même les voix qu'il restitue — ; elle est
+refusée pour son coût et parce que la population concernée est écartée par le prérequis
+(ADR-0003, alternatives 7 à 9). Un joueur sur haut-parleurs verra **son meuble s'alourdir quand
+ses coéquipiers parlent**.
 
-La conséquence est le pire mode d'échec du système : **`Floor_dB` gonflé**. Un plancher
-placé au niveau de la conversation de ses amis écrase ensuite toute sa parole normale à
-`Loudness = 0`. Il ne réagirait plus qu'aux cris, sans qu'aucune validation ne s'en
-aperçoive — les quatre contrôles vérifieraient un profil parfaitement cohérent.
+Pendant la calibration, le chemin le plus grave — les voix des coéquipiers mesurées comme bruit
+ambiant, donc un `Floor_dB` gonflé que les validations ne voient pas — est fermé **quel que soit
+le matériel** par le silence du chat dans les deux sens (système 14).
 
-> **Ne comptez pas sur l'AEC : il n'y en aura pas.** Une version antérieure de ce paragraphe
-> disait qu'elle « couvrait ce cas en principe ». La recherche du 2026-09-08 a établi que
-> l'AEC de Dissonance s'applique **en aval, sur sa branche de transmission** — jamais sur
-> notre analyse. L'exigence « AEC en amont de la fourche » a été **retirée d'ADR-0003**.
-
-Heureusement, la réponse ne dépendait pas d'elle, et elle tient en une ligne.
-
-> ### ✅ Tranché le 2026-09-08 — **le casque est un prérequis du jeu**
->
-> *Shut Up & Carry !* est un jeu bâti sur le son et le micro. **Jouer au casque avec un
-> micro est une condition d'entrée, pas une recommandation de confort.** Les joueurs sur
-> haut-parleurs sont pénalisés d'office, et c'est assumé : on n'investit pas d'énergie à
-> rattraper ce cas.
->
-> ADR-0003 posait le casque comme repli — « sans AEC → casque obligatoire ». Cette décision
-> l'en sort : **le casque n'est plus un repli, c'est la ligne de base.**
->
-> **Et depuis le 2026-09-08, c'est même davantage : c'est la seule mitigation qui existe.**
-> L'AEC en amont de la fourche s'est révélée irréalisable avec Dissonance, l'exigence a été
-> retirée d'ADR-0003, et il n'y a aucun filet derrière. Un joueur sur haut-parleurs verra
-> **son meuble s'alourdir quand ses coéquipiers parlent**, et rien dans la chaîne ne peut
-> l'en protéger.
->
-> **La solution facile est prise quand même**, parce qu'elle ne coûte rien : la
-> recalibration se fait depuis le menu, donc **en pause — le son du jeu est coupé de toute
-> façon**, chat vocal compris. Il n'y a pas de règle spéciale à écrire pour le système 14 :
-> le silence pendant la mesure découle de l'état de pause, pas d'une exception.
->
-> C'est la deuxième fois que le passage par le menu résout gratuitement un problème de ce
-> document — après la question de l'objet porté. Ce n'est probablement pas un hasard : **la
-> calibration a besoin que le monde s'arrête, et le menu est exactement ça.**
+Deux limites restent, et elles sont nommées ailleurs : le prérequis **exclut structurellement**
+des joueurs qui ne peuvent pas porter de casque (*UI Requirements*, « Accessibilité » ; OQ-C15),
+et il ne dit rien des traitements que le système d'exploitation applique avant le jeu (*Edge
+Cases* ; OQ-C12).
 
 ## Tuning Knobs
 
+**Les valeurs sont dans la liste canonique** (*Formulas*, « Porte de mesure du système 6 ») et
+nulle part ailleurs. Cette section dit **ce que chaque curseur fait au joueur** et **comment ils
+se contrarient**.
+
 ### L'arbitrage à exposer avant tous les autres
 
-> **L'inclusion contre la qualité de mesure.**
+> **Honnêteté du signalement contre friction du parcours.**
 
-C'est l'axe unique de ce système. **Chaque seuil qu'on desserre pour accepter un joueur de
-plus accepte aussi un profil un peu plus mauvais**, et chaque seuil qu'on resserre pour
-garantir la mesure exclut quelqu'un qui aurait pu jouer.
+Depuis le principe du 2026-09-14, aucun curseur de ce document n'a le droit d'**exclure** une
+voix : une voix inhabituelle est acceptée, au besoin marquée. Et depuis la décision D2, personne
+ne reste devant la porte après deux refus. L'ancien axe « inclusion contre qualité » n'existe
+donc plus sous cette forme. Ce qui reste :
 
-Il n'y a pas de réglage qui fasse gagner sur les deux. Ce que ces curseurs doivent faire,
-c'est **rendre l'arbitrage visible** plutôt que le figer implicitement — même discipline
-qu'au système 1, et même raison.
+- **Durcir** un seuil qui refuse — le plancher dur — envoie plus de joueurs dans la boucle
+  refus, refus, profil approximatif : plus de friction, et des profils approximatifs qui
+  auraient pu être propres.
+- **Desserrer** un seuil qui signale — la bande de qualité, `RestMax` — marque moins de joueurs
+  `LowRange` : moins de lissage inutile, mais des registres étroits qui jouent sans la
+  protection prévue pour eux.
 
-Le drapeau `LowRange` est ce qui rend cet axe supportable : il transforme un choix binaire
-— j'accepte ou j'exclus — en **gradation**. Sans lui, chaque desserrage serait une
-concession sèche sur la qualité.
+Ce que ces curseurs doivent faire, c'est **rendre l'arbitrage visible** plutôt que le figer
+implicitement — même discipline qu'au système 1.
 
 ### Les curseurs
 
-| Curseur | Provisoire | Plage sûre | Trop haut | Trop bas |
-|---|---|---|---|---|
-| `FloorMargin_dB` | **3** | 1 – 6 | le plancher monte, l'écart dynamique se resserre, des profils légitimes deviennent `LowRange` ou refusés | le bruit ambiant franchit la porte : entrée fantôme, l'objet réagit quand le joueur se tait |
-| Durée de l'étape 1 | **3 s** | 2 – 5 s | le joueur attend en silence, ce qui est plus inconfortable qu'il n'y paraît | le `P95` porte sur trop peu d'échantillons, un seul transitoire le déplace |
-| Centile du plancher | **P95** | P90 – P98 | on capture les transitoires et le plancher monte | on descend sous le bruit réel de la pièce |
-| Écart `P95 − P50` toléré | *à définir* | — | on ne détecte plus qu'un joueur a parlé pendant l'étape de silence | on rejoue l'étape pour une pièce simplement vivante |
-| `VoicedMin` | **100 trames** | 60 – 200 | l'étape 2 s'éternise — insupportable en mode réparation | la médiane est instable, une erreur d'octave pèse trop lourd |
-| `PlateauDelta_dB` | **1,5** | 1 – 3 | le plateau se déclare pendant que le joueur monte encore : `Scream_dB` sous-estimé | le plateau ne se déclare jamais et le délai devient le vrai terminateur |
-| `PlateauHold_s` | **1,2** | 0,8 – 2 | le joueur doit tenir son cri longtemps : fatigant, et désagréable à faire | une inspiration suffit à déclencher un faux plateau |
-| `PeakTimeout_s` | **10** | 8 – 15 | on laisse pousser trop longtemps, ce qui n'est bon pour aucune voix | on coupe la montée d'un joueur qui monte lentement |
-| `HardFloor_dB` | **13** | 10 – 16 | exclut des joueurs légitimes, discrets ou mal équipés | des profils inexploitables passent la validation |
-| `QualityBand_dB` | **20** | 16 – 24 | trop de joueurs marqués `LowRange` et lissés sans nécessité | des profils instables jouent sans lissage renforcé |
-| `RestMin` | **0,15** | 0,08 – 0,25 | refuse des joueurs dont la voix posée est naturellement basse | laisse passer une étape 2 ratée, voix hors axe du micro |
-| `RestMax` | **0,70** | 0,60 – 0,85 | laisse passer un faux cri à peine au-dessus de la conversation | refuse un joueur qui parle fort naturellement |
-| `F0Max` | **500 Hz** | **à mesurer** | accepte une accroche d'harmonique ou une source qui n'est pas une voix | **refuse des voix d'enfant** |
-| Renforcement `LowRange` | **×1,5** | 1,2 – 2,5 | la voix des joueurs concernés devient molle : on les inclut pour leur donner un jeu terne | le lissage ne compense pas leur registre étroit, `Loudness` sautille |
+| Curseur | Ce qu'il gouverne | Trop haut | Trop bas |
+|---|---|---|---|
+| Durée de l'étape 1 | Stabilité du plancher d'une calibration à l'autre | le joueur attend en silence, plus inconfortable qu'il n'y paraît | le `P95` repose sur quelques trames de queue ; deux calibrations de la même pièce diffèrent de plusieurs décibels |
+| `WarmUp_s` | Trames écartées pendant que l'enveloppe rejoint le bruit réel | on jette de la mesure utile | le plancher part de `MinDb` et s'abaisse à tort |
+| Centile du plancher | Ce que le plancher tolère du bruit | les transitoires entrent, le plancher monte | le plancher descend sous le bruit réel : entrée fantôme |
+| `FloorMargin_dB` | Distance entre le bruit mesuré et `Floor_dB` | la porte monte, la plage utile `Δ'` rétrécit, le chuchotement devient invisible | le bruit stationnaire et la respiration franchissent la porte |
+| `StabilityMax_dB` | Tolérance d'une pièce instable à l'étape 1 | une pièce qui change d'état passe et fausse le plancher | on rejoue l'étape pour une pièce simplement vivante |
+| `SpeechRun` | Longueur d'une parole reconnue pendant le silence | un « ok » bref passe et gonfle le plancher | un bruit brièvement périodique fait rejouer l'étape |
+| `DeviceCheck_s` | Patience du test « dis un mot » | un micro mort fait attendre avant le sélecteur | un joueur lent à répondre voit le sélecteur à tort |
+| `VoicedMin` | Stabilité des médianes de l'étape 2 | l'étape 2 s'éternise, insupportable en mode réparation | une erreur d'octave ou une toux pèse trop lourd |
+| `Step2Timeout_s` | Temps laissé à une parole entrecoupée | un micro mort fait attendre | un bégaiement ou une dysarthrie ne finit pas l'étape |
+| `PlateauDelta_dB` | Ce qu'on appelle « ça ne monte plus » | le plateau se déclare pendant la montée : `Scream_dB` sous-estimé | le plateau ne se déclare jamais, le délai termine l'étape |
+| `PlateauHold_s` | Durée pendant laquelle le cri doit tenir | tenir un cri longtemps : fatigant, désagréable | une inspiration déclenche un faux plateau |
+| `PeakTimeout_s` | Durée maximale de la montée | on laisse pousser trop longtemps, mauvais pour toute voix | on coupe la montée d'un joueur lent |
+| `HardFloor_dB`, sur `Δ'` | Frontière entre plage inexploitable et plage étroite | des joueurs qui ont coopéré passent par la boucle de refus | deux niveaux indistinguables sont acceptés |
+| `QualityBand_dB`, sur `Δ'` | Frontière du lissage renforcé | trop de joueurs lissés sans nécessité, jeu plus mou pour eux | des registres étroits jouent sans lissage, `Loudness` sautille |
+| `RestMax`, sur `r'` | Voix posée proche du cri : signalement `LowRange` | des voix posées très hautes jouent sans lissage renforcé | des profils ordinaires sont marqués et lissés |
 
-### Le curseur qui n'agit pas ici — et le contrat qu'il crée
-
-**`LowRange` est décidé par ce système et appliqué par le système 1.** Le drapeau ne fait
-rien en lui-même : il demande à l'`EnvelopeFollower` d'allonger ses constantes de temps
-pour ce joueur.
-
-> **Contrat à reporter dans `voice-analysis.md` :** le système 1 doit **lire `LowRange` et
-> multiplier ses constantes d'attaque et de relâchement** par le facteur ci-dessus. Sans
-> cela, le drapeau est décoratif — un profil marqué, un lissage inchangé, et l'inclusion
-> qu'on croyait avoir gagnée reste sur le papier.
+**Le facteur `LowRange` n'est pas un curseur de ce document.** Le drapeau est décidé ici ; le
+facteur qui multiplie les constantes de temps `τ` de l'enveloppe appartient au système 1 (sa
+liste canonique ; *Tuning Knobs*, « Le facteur `LowRange` vient du système 6 »).
 
 ### Les interactions — tourner un curseur peut en annuler un autre
 
-**`FloorMargin_dB` contre `HardFloor_dB`.** Ils agissent sur la **même grandeur par les
-deux bouts** : monter la marge relève `Floor_dB`, donc rétrécit `Δ = Scream_dB − Floor_dB`,
-donc rapproche le profil du refus. Durcir la protection contre l'entrée fantôme **exclut
-mécaniquement des joueurs**, sans qu'on ait touché au seuil d'exclusion.
+**`FloorMargin_dB` et `Margin_dB` s'empilent.** Le premier niveau que le jeu entend est
+`P95 + FloorMargin_dB + Margin_dB` (*Formulas* §1). Monter l'un **ou** l'autre relève `Gate_dB`,
+rétrécit `Δ' = Scream_dB − Gate_dB`, et rapproche des profils de `LowRange` puis du refus — sans
+qu'on ait touché ni au plancher dur ni à la bande de qualité. **Ils se règlent ensemble, avant
+eux** (ordre canonique : `voice-analysis.md`, OQ-4).
 
-**`RestMax` contre `HardFloor_dB`.** Ce sont deux chemins vers la même défense — le faux
-cri. Un `HardFloor_dB` élevé le refuse par l'écart ; un `RestMax` bas le refuse par la
-position. **Baisser les deux ensemble ouvre la porte en grand**, et c'est tentant, puisque
-baisser chacun se justifie séparément au nom de l'inclusion.
+**Le plancher dur est désormais la seule défense contre le faux cri.** `RestMax` ne refuse plus :
+il signale. Baisser le plancher dur au nom de l'inclusion n'a donc plus de filet derrière lui —
+mais il n'en a plus besoin non plus, puisque le joueur refusé deux fois entre quand même.
+
+**`RestMax` agit sur le jeu, pas seulement sur le drapeau.** Un joueur à `r'` élevé a ses seuils
+d'objet haut placés dans sa plage utile (système 11) : sa voix posée déclenche l'alerte, et son
+chuchotement dispose d'une large marge. Le baisser marque plus de joueurs `LowRange`, donc les
+lisse, sans changer leurs seuils.
 
 **Le trio du plateau — `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s`.** Si le plateau
-devient difficile à déclencher, **le délai devient le vrai terminateur de l'étape** : la
-mesure ne dépend plus de l'endroit où le joueur a plafonné, mais de sa patience. Le
-plateau est alors décoratif. **Ces trois-là se règlent ensemble ou pas du tout.**
+devient difficile à déclencher, **le délai devient le vrai terminateur** : la mesure dépend de la
+patience du joueur, plus de l'endroit où il a plafonné. **Ces trois-là se règlent ensemble ou pas
+du tout.**
 
-**`VoicedMin` contre le mode réparation.** Plus de trames donnent une meilleure médiane et
-une étape plus longue. Or *Player Fantasy* pose qu'une relance doit être **rapide** : le
-joueur qui recalibre a un problème et veut le régler, pas passer un examen. Régler
-`VoicedMin` sur la qualité seule dégrade le parcours qui compte le plus.
+**`VoicedMin` et `Step2Timeout_s` contre le mode réparation.** Plus de trames donnent une meilleure
+médiane et une étape plus longue ; *Player Fantasy* pose qu'une relance doit être **rapide**, et
+CAL-57 lui donne une cible. Régler `VoicedMin` sur la qualité seule dégrade le parcours qui compte
+le plus ; régler `Step2Timeout_s` sur la vitesse seule exclut la parole entrecoupée.
 
-**Le renforcement `LowRange` contre la réactivité.** C'est la tension centrale du système 1
-— l'attribution veut de la stabilité, le contrôle veut de la réactivité — appliquée à une
-sous-population. On lisse pour que leur mesure ne sautille pas, et on leur donne un jeu
-plus mou qu'aux autres. **Inclure quelqu'un dans un jeu terne n'est pas l'inclure.**
+**`HardFloor_dB` et le calage du plateau.** Le plateau ne se déclare pas sous le plancher dur
+(*Formulas* §3). Monter le plancher dur allonge donc aussi l'étape 3 des joueurs discrets.
 
 ### Ce qui n'est pas un curseur
 
-Cinq choses ressemblent à des réglages et n'en sont pas :
-
-- **L'ordre des trois étapes.** Silence, puis parole, puis montée. C'est un **contrat**,
-  doublement : l'étape 2 a besoin de `Floor_dB` pour savoir quelles trames sont voisées, et
-  commencer par le geste le moins exposant est ce qui rend la suite acceptable.
-- **Le calage du plateau sur `HardFloor_dB`.** On peut déplacer `HardFloor_dB` ; on ne peut
-  pas **découpler** la détection de plateau de la validation. Les découpler ramène le
-  défaut que ce calage corrige : refuser un joueur qui a coopéré.
-- **V1, l'ordre strict `Floor < Rest < Scream`.** Ce n'est pas un seuil, c'est une garde de
-  correction. Il n'y a pas de valeur à choisir.
-- **Médiane et non moyenne.** C'est une méthode, choisie pour la robustesse aux erreurs
-  d'octave. La changer ne règle rien, elle casse.
-- **La revalidation au chargement.** Elle n'est pas négociable tant qu'une seule valeur de
-  ce document reste provisoire — c'est-à-dire aujourd'hui, pour les quatorze.
-
-> **Sur les valeurs marquées *à définir*.** Il n'en reste qu'une, l'écart `P95 − P50`
-> toléré à l'étape 1. Elle échoue au test des trois critères posé par le système 1 — pas de
-> valeur provisoire, pas de déclencheur nommé — et elle rejoint le TTL de l'anneau comme
-> seul manquement de cette catégorie dans les deux documents. À combler par la mesure, en
-> même temps que le reste.
+- **L'ordre des trois étapes.** Silence, puis parole, puis montée. C'est un contrat, doublement :
+  `G` exige `Gate_dB`, donc `Floor_dB` ; et commencer par le geste le moins exposant rend la suite
+  acceptable.
+- **Le calage du plateau sur le plancher dur.** On peut déplacer le plancher dur ; on ne peut pas
+  **découpler** la détection de plateau de la validation, sans ramener le refus d'un joueur qui a
+  coopéré.
+- **V1, l'ordre strict `Gate_dB < Rest_dB < Scream_dB`.** Une garde de correction, sans valeur à
+  choisir.
+- **Médiane et non moyenne.** Une méthode, choisie pour la robustesse aux erreurs d'octave.
+- **Le domaine de V4.** Il vient du détecteur du système 1 ; il n'y a pas de borne de hauteur
+  propre à ce document.
+- **La mesure de `F0` sous la configuration non calibrée**, recalibration comprise.
+- **Deux refus avant le profil approximatif** — décision du propriétaire du 2026-09-15.
+- **`r'` seul vers l'hôte** — décision E5.
+- **La revalidation au chargement**, non négociable tant qu'une valeur de la liste canonique reste
+  provisoire.
+- **`γ`.** Il ne déplace aucun seuil : les seuils du système 11 comparent des positions dans la
+  plage utile, en amont de `γ` (`voice-analysis.md` §1). Scinder `γ` en deux usages n'a plus
+  d'objet.
 
 ## Visual/Audio Requirements
 
-**Contrairement au système 1, celui-ci a bel et bien une image et un son.** Le système 1
-transforme un micro en quatre nombres et n'affiche rien ; la calibration est un écran qu'on
-regarde pendant deux minutes, et c'est le premier du jeu.
+**Contrairement au système 1, celui-ci a une image et un son.** Le système 1 transforme un micro
+en nombres et n'affiche rien ; la calibration est un écran qu'on regarde pendant deux minutes, et
+c'est le premier du jeu.
 
-Comme ailleurs dans ce projet, la section reste au niveau **exigence** — ce qui doit être
-communiqué, jamais à quoi cela ressemble. La direction visuelle évoluera quand un graphiste
-entrera dans l'équation.
+La section reste au niveau **exigence** — ce qui doit être communiqué, jamais à quoi cela
+ressemble. La direction visuelle évoluera quand un graphiste entrera dans l'équation.
 
 ### Le principe qui gouverne toute la section
 
 > **Les canaux de retour de la calibration doivent être ceux du jeu.**
 
-Si la calibration donne au joueur un retour qu'il n'aura plus ensuite, elle ne l'entraîne
-pas : **elle lui apprend un mensonge**, et il devra désapprendre au premier contrat. Ce
-principe tranche à lui seul trois questions qu'on se poserait sinon une par une — le
-sidetone, l'exemple à imiter, la réécoute.
+Si la calibration donne au joueur un retour qu'il n'aura plus ensuite, elle ne l'entraîne pas :
+**elle lui apprend un mensonge**, et il devra désapprendre au premier contrat. Ce principe tranche
+à lui seul le sidetone, l'exemple à imiter, la réécoute — **et ce que montre l'étape 3**.
 
-### La jauge de l'étape 3
+### L'étape 3 montre une conséquence, pas un niveau
 
-C'est le seul élément visuel qui compte vraiment, et *Player Fantasy* explique pourquoi :
-**l'enseignement est la technique de mesure.** Un joueur qui voit sa voix agir pousse plus
-loin, donc se mesure mieux. Une jauge molle ne produit pas seulement un écran terne, elle
-produit **des profils au registre écrasé**.
+*Décision D1 du 2026-09-15.* En jeu, la voix qui monte **alourdit** le meuble porté. L'étape de
+montée montre donc **un objet qui réagit** : il frémit, s'alourdit, devient récalcitrant à mesure
+que la voix monte au-dessus de la porte. Une jauge qui monte enseignerait « fort, c'est bien » —
+l'inverse du jeu, dans le seul moment d'apprentissage qu'il se donne.
 
-- **Réponse en temps réel**, sans lissage qui la découplerait de la voix. Le joueur doit
-  sentir le lien de cause à effet, c'est tout l'objet du moment.
-- **Aucune cible, aucun plafond, aucun score.** Ce point est le plus important de la
-  section, et il est contre-intuitif.
+- **Réponse en temps réel**, pilotée par le même `Rms_dB` lissé que la mesure : aucun lissage
+  supplémentaire qui découplerait l'objet de la voix. Le joueur doit sentir le lien de cause à
+  effet.
+- **L'objet ne réagit à rien sous `Gate_dB`** : ce qui ne compte pas en jeu ne se montre pas ici.
+- **Échelle élastique, jamais de butée.** `Scream_dB` n'existe pas encore pendant qu'on le mesure :
+  la réaction de l'objet suit l'écart au-dessus de la porte, et l'échelle s'étend quand le joueur
+  pousse. **Il reste toujours de la place au-dessus** ; l'objet n'atteint jamais un état final
+  qu'on pourrait viser.
+- **Aucune cible, aucun plafond, aucun score.** C'est le point le plus contre-intuitif de la
+  section.
+- **La clôture vient du plateau, pas d'une cible.** Quand le plateau est reconnu — ou que le joueur
+  arrête —, l'objet se pose et une confirmation dit que la mesure est faite. Pas de cible ne veut
+  pas dire pas de fin.
 
-> **Pourquoi une cible ruinerait la mesure.** Montrer une zone à atteindre transforme
-> l'étape en test — et *Player Fantasy* établit qu'un test appelle **l'effort minimal
-> suffisant pour le réussir**. Le joueur pousserait jusqu'à la ligne puis s'arrêterait, et
-> on mesurerait notre propre seuil au lieu de son amplitude.
->
-> La jauge doit donc **toujours conserver de la marge** : quoi que produise le joueur, il
-> reste de la place au-dessus. On ne mesure pas s'il atteint quelque chose, on mesure où il
-> s'arrête tout seul.
+> **Pourquoi une cible ruinerait la mesure.** Montrer une zone à atteindre transforme l'étape en
+> test, et un test appelle **l'effort minimal suffisant pour le réussir**. Le joueur pousserait
+> jusqu'à la ligne puis s'arrêterait, et on mesurerait notre propre seuil au lieu de son amplitude.
+> On ne mesure pas s'il atteint quelque chose : on mesure où il s'arrête tout seul.
+
+**La forme exacte de la réaction — frémissement, poids, résistance — se choisit dans la
+mini-calibration du prototype navigateur**, qui l'affiche avant toute implémentation.
+
+### L'étape 0 et l'étape 2 confirment qu'on entend, sans mesurer
+
+- **Étape 0** : quand le « dis un mot » arrive, une confirmation visible le dit.
+- **Étape 2** : une **pulsation « on t'entend »** sur chaque trame au-dessus de la porte (*Detailed
+  Rules*). **Binaire, sans amplitude** : ni niveau, ni cible, ni progression vers un seuil.
+
+C'est ce qui donne au joueur sourd ou malentendant un retour sur **chaque** étape où il parle, et
+à tout joueur la réponse à « est-ce que ça marche ».
 
 ### Ce qu'on ne montre jamais
 
-- **Aucun indicateur de niveau pendant l'étape 1.** Un vumètre vivant pendant l'étape de
-  silence **invite à le faire bouger** — exactement le comportement qui ruine la mesure du
-  plancher. L'attente se signale par une progression neutre, qui ne réagit pas à la voix.
-- **Aucune valeur chiffrée.** Ni décibels, ni hertz, ni pourcentage de « qualité ». Le
-  joueur n'a rien à en faire et cela transformerait un réglage en bulletin de notes.
-- **Aucun exemple à imiter.** L'idée de faire écouter « voilà un cri correct » reviendra —
-  elle est doublement mauvaise : elle pose une cible, et elle transforme une mesure en
-  imitation, donc en performance jugée.
-- **Aucune réécoute.** Faire entendre au joueur ce qu'on a enregistré de lui est
-  désagréable pour beaucoup, et suppose de conserver de l'audio — voir plus bas.
+- **Aucun indicateur de niveau pendant l'étape 1.** Un vumètre vivant pendant le silence **invite
+  à le faire bouger** — exactement ce qui ruine la mesure du plancher. L'attente se signale par une
+  progression neutre, qui ne réagit pas à la voix, et qui ne laisse **aucun doute que le jeu
+  fonctionne**.
+- **Aucune valeur chiffrée.** Ni décibels, ni hertz, ni pourcentage de « qualité ».
+- **Aucun exemple à imiter.** Faire écouter « voilà un cri correct » pose une cible et transforme
+  une mesure en imitation, donc en performance jugée.
+- **Aucune réécoute.** Faire entendre au joueur ce qu'on a enregistré de lui est désagréable pour
+  beaucoup, et suppose de conserver de l'audio.
 
-### Les trois étapes doivent se distinguer au premier regard
+### Les étapes se distinguent au premier regard — et jamais par la couleur seule
 
-Elles demandent trois choses différentes, et un joueur qui ne remarque pas le changement de
-consigne exécute la précédente. **La distinction se porte visuellement**, pas par un
-texte qu'on suppose lu.
+Elles demandent des choses différentes, et un joueur qui ne remarque pas le changement de consigne
+exécute la précédente. **La distinction se porte visuellement**, par la forme, la disposition ou
+l'objet présent, **jamais par la seule couleur** ; pas par un texte qu'on suppose lu, et pas par un
+son (règle suivante).
 
-Corollaire : la transition entre étapes ne doit **pas** être signalée par un son — voir la
-règle suivante.
+### L'étape de silence est vraiment silencieuse
 
-### L'étape de silence doit être vraiment silencieuse
+> **Aucun son n'est émis pendant l'étape 1.** Pas de clic d'interface, pas d'ambiance, pas de
+> musique, pas de bip de transition.
 
-> **Aucun son n'est émis pendant l'étape 1. Aucun.** Pas de clic d'interface, pas
-> d'ambiance, pas de musique, pas de bip de transition.
+Un casque fuit, et le pire mode d'échec du système est un **`Floor_dB` gonflé** — un plancher posé
+au-dessus du bruit réel rend la voix posée invisible, sans qu'aucune validation ne le voie.
+Quelques secondes de silence complet coûtent moins qu'un profil faux.
 
-Le jeu se joue au casque (décision du 2026-09-08), mais un casque fuit, et le pire mode
-d'échec de tout le système est un **`Floor_dB` gonflé** — un plancher posé au-dessus du
-bruit réel écrase ensuite toute parole normale à zéro. Trois secondes de silence complet
-coûtent moins qu'un profil définitivement faux.
+Le reste du parcours peut sonner normalement. Une confirmation à la fin est bienvenue : plus rien
+ne peut être pollué.
 
-Le reste du parcours peut sonner normalement. Une confirmation à la fin est bienvenue : la
-mesure est terminée, plus rien ne peut être pollué.
+### Pas de sidetone, pour la même raison qu'au système 1
 
-### Pas de sidetone, et c'est la même raison qu'au système 1
+Le jeu n'injecte pas de retour de la voix du joueur — ni en jeu, ni ici. **Un sidetone présent à la
+calibration et absent en jeu apprendrait au joueur à s'écouter, alors que le jeu lui demandera de
+regarder.**
 
-Le jeu n'injecte pas de retour de la voix du joueur — ni en jeu, ni ici. La règle vient du
-système 1, mais elle se justifie doublement pendant la calibration : **un sidetone
-présent à la calibration et absent en jeu apprendrait au joueur à s'écouter, alors que le
-jeu lui demandera de regarder.**
+### Les drapeaux — visibles, actionnables, jamais un verdict
 
-C'est le principe de tête de section, appliqué : la calibration doit se sentir comme le jeu
-se sentira.
+`LowRange`, `Approximate` et « hauteur indisponible » changent ce que le joueur vivra ensuite. Les
+cacher serait malhonnête ; les annoncer comme un défaut serait pire.
 
-### `LowRange` — visible, actionnable, jamais un verdict
-
-Le drapeau change ce que le joueur vivra ensuite : sa mesure sera plus lissée. Le lui
-cacher serait malhonnête ; le lui annoncer comme un défaut serait pire.
-
-- **Toujours accompagné d'une action possible.** « Ta plage est un peu étroite, le jeu s'y
-  adapte — si tu peux rapprocher ton micro, tu gagneras en précision. »
-- **Jamais un badge, un score, ni une couleur d'alerte.** Ce n'est pas un échec : c'est le
-  système qui fait son travail d'inclusion.
-- **Jamais visible par les autres joueurs.** C'est une information sur le matériel et le
-  logement de quelqu'un.
+- **Toujours accompagnés de ce qu'ils changent et d'une action possible**, jamais obligatoire.
+- **Jamais un badge, un score, ni une couleur d'alerte.** Ce n'est pas un échec : c'est le système
+  qui fait son travail d'inclusion.
+- **Jamais visibles par les autres joueurs.** Ce sont des informations sur le matériel, le logement
+  et le corps de quelqu'un.
 
 ### Le langage visuel du refus
 
-Un refus est un **réglage à reprendre**, pas une erreur commise. Le vocabulaire visuel de
-l'erreur — rouge, croix, icône d'alerte — dirait au joueur qu'il a raté quelque chose,
-alors que la cause est presque toujours son micro ou sa pièce.
-
-*Player Fantasy* l'exige : le joueur ne doit jamais ressentir que **le jeu juge sa voix**.
+Un refus est un **réglage à reprendre**, pas une erreur commise. Le vocabulaire visuel de l'erreur
+— rouge, croix, icône d'alerte — dirait au joueur qu'il a raté quelque chose, alors que la cause est
+presque toujours son micro ou sa pièce. Le joueur ne doit jamais ressentir que **le jeu juge sa
+voix**.
 
 ### Ce qu'on ne conserve pas
 
-> **La calibration ne garde aucun audio. Jamais.** Le profil est constitué de **quatre
-> nombres et un drapeau** — rien d'autre n'est écrit sur le disque, et rien ne part sur le
-> réseau (décidé en *Detailed Rules*).
+> **La calibration ne garde aucun audio. Jamais.** Le profil contient les champs du tableau
+> `VoiceProfile` (*Detailed Rules*), et rien d'autre n'est écrit sur le disque. **Un seul nombre
+> en est dérivé vers l'hôte, `r'`** ; ni décibels, ni hauteur ne quittent la machine.
 
-Ce n'est pas une exigence technique, c'est une exigence de confiance. Un jeu qui demande
-l'accès au micro dès le premier lancement et fait crier ses joueurs doit pouvoir dire, en
-clair et sans qu'on le lui demande, **ce qu'il garde et ce qu'il ne garde pas**. Le fait
-que ce soit déjà vrai par conception ne coûte rien à énoncer — et ne pas l'énoncer laisse
-la question ouverte dans la tête du joueur.
+C'est une exigence de confiance plus que technique. Un jeu qui demande le micro dès le premier
+lancement et fait crier ses joueurs doit dire, en clair et sans qu'on le lui demande, **ce qu'il
+garde, ce qu'il envoie, et ce qu'il ne garde pas**.
+
+**Les enregistrements bruts qui fixeront les valeurs provisoires** (*Formulas*, « Ordre de mesure »)
+sont un protocole de développement, avec des participants consentants. Ils n'existent pas dans le
+jeu livré.
 
 ## UI Requirements
 
-> **Section rapatriée le 2026-09-08** depuis `voice-analysis.md`, qui la portait en dépôt
-> faute de destinataire. La revue du 2026-09-07 avait raison : un système sans interface
-> n'avait pas à porter cette section. Elle est chez elle ici.
->
-> Elle n'arrive pas telle quelle. **Cinq points de la version d'origine sont devenus faux ou
-> incomplets** depuis, et sont corrigés ci-dessous — le parcours à deux étapes, le nombre de
-> causes de refus, la recalibration en cours de partie, l'exclusion d'accessibilité, et
-> l'absence de distinction entre première calibration et relance.
-
 ### Les écrans requis
 
-- **Écran de calibration** — première utilisation, bloquant tant qu'il n'est pas validé
-- **Accès à la calibration** depuis le menu du lobby **et** depuis le menu en jeu
-- **Indicateur d'état vocal permanent** — `Uncalibrated` / `Calibrated` / `Degraded` —
-  **distinct du sonomètre diégétique**
-- **Écran de blocage** pour qui tente de rejoindre sans profil calibré
-- **Message de prérequis matériel** — voir *Le casque* plus bas
+- **Amorce de la permission micro** — avant toute mesure, et **écran de blocage** si elle est
+  refusée
+- **Test et sélecteur de périphérique** — « dis un mot »
+- **Écran de calibration** — première utilisation, bloquant jusqu'au commit d'un profil, propre ou
+  approximatif
+- **Offre de profil approximatif** — après deux refus consécutifs
+- **Accès à la calibration** depuis le menu du lobby **et** depuis le menu en jeu, dont **« Refaire
+  ma mesure »**
+- **Indicateur d'état vocal permanent** — `Uncalibrated` / `Calibrated` / `Degraded` — **distinct du
+  sonomètre diégétique**
+- **Écran de blocage** pour qui tente de rejoindre sans profil valide
+- **Message de prérequis matériel** — le casque et les améliorations micro, voir plus bas
 
 ### Le parcours
 
-Le vrai problème d'UX de ce jeu n'est pas technique : **il faut demander à quelqu'un de
-crier dans son micro, et beaucoup de joueurs sont dans un salon avec d'autres gens.** La
-calibration doit se présenter comme **le réglage d'un instrument**, jamais comme une épreuve
-à réussir.
+Le vrai problème d'UX de ce jeu n'est pas technique : **il faut demander à quelqu'un de crier dans
+son micro, et beaucoup de joueurs sont dans un salon avec d'autres gens.** La calibration se
+présente comme **le réglage d'un instrument**, jamais comme une épreuve à réussir.
 
-L'ordre des étapes fait tout le travail :
+1. **La préparation** — permission, « dis un mot », amorce sociale (« dans un instant, il faudra
+   parler, puis hausser un peu la voix »), casque. Rien n'est mesuré.
+2. **Le silence** — « ne dis rien pendant quelques secondes, respire normalement ».
+3. **La parole posée** — « parle normalement, comme si tu discutais ».
+4. **La montée**, progressive, avec **l'objet qui réagit**. Le joueur pousse à son rythme ; un
+   **bouton d'arrêt** reste toujours visible, jamais présenté comme un objectif ; **jamais d'ordre
+   frontal** du type « crie le plus fort possible ».
 
-1. **Le silence** — « ne dis rien pendant quelques secondes ». L'étape la plus neutre
-   socialement de toutes, et la seule qui puisse donner `Floor_dB`.
-2. **La parole posée** — « parle normalement, comme si tu discutais ». Donne `Rest_dB` et
-   `F0_habituel`.
-3. **La montée**, progressive, avec **une jauge qui répond en temps réel**. Le joueur pousse
-   à son rythme jusqu'à un plateau détecté automatiquement — **jamais d'ordre frontal** du
-   type « crie le plus fort possible ».
+Garanties non négociables :
 
-Trois garanties non négociables :
-
-- **Aucune diffusion vers les autres joueurs** pendant la calibration. Moment privé, même en
+- **Rien ne part et rien n'arrive** par le chat vocal pendant la calibration. Moment privé, même en
   multijoueur.
-- **Ne pas demander au joueur de bouger** — et le lui dire. Changer de distance au micro
-  entre les étapes mélange deux référentiels, et les cas légers passent toutes les
-  validations.
+- **« Ne bouge pas par rapport au micro »**, dit explicitement : changer de distance entre les
+  étapes mélange deux référentiels, et les cas légers passent toutes les validations.
 - **Une étape se rejoue seule**, sans repasser par les précédentes.
-
-> **La jauge de l'étape 3 n'est pas un accessoire.** *Player Fantasy* établit que
-> l'enseignement **est** la technique de mesure : un joueur qui voit sa voix agir pousse
-> plus loin, donc se mesure mieux. Une étape 3 sans retour visuel temps réel ne produit pas
-> seulement une expérience terne — elle produit **des profils au registre écrasé**.
+- **« Si crier te fait mal, arrête-toi »** — dit avant la montée. Le bouton d'arrêt n'est pas une
+  défaite, et la validation accepte ce que le joueur a donné.
 
 ### Deux modes, et ils ne se ressemblent pas
-
-C'est l'ajout le plus important de ce rapatriement.
 
 | | **Découverte** — la première fois | **Réparation** — toutes les suivantes |
 |---|---|---|
 | Ce que veut le joueur | Comprendre | Que ce soit fini |
-| Rythme | Aucune hâte | **Le plus court possible** |
+| Rythme | Aucune hâte | **Le plus court possible** — cible en CAL-57 |
 | Explications | Oui, c'est le moment d'onboarding | **Aucune** |
-| Point d'entrée | Le parcours complet | **L'étape en cause, directement** |
+| Point d'entrée | Le parcours complet | **L'étape en cause, directement** ; ou le parcours complet via « Refaire ma mesure » |
 
-**Traiter une relance comme une première fois est une faute.** Un joueur qui recalibre a un
-problème et veut le régler ; lui réexpliquer le principe le punit d'avoir eu un incident.
+**Traiter une relance comme une première fois est une faute** : lui réexpliquer le principe punit
+le joueur d'avoir eu un incident. **L'inverse aussi** : un refus survenu pendant la toute première
+calibration **garde le ton de la découverte**.
 
-### Le refus de profil
+### Refus, reprises et signalements
 
-**Quatre contrôles peuvent refuser, et V3 refuse dans deux directions opposées** — la
-version d'origine n'en comptait que trois, avant que `Rest_dB` n'ait un rôle.
+**En direct, deux validations peuvent refuser (V1, V2) ; au chargement s'ajoutent la version de
+schéma et V4 ; et plusieurs situations font rejouer une étape sans être des refus.** Chaque ligne de ce tableau a son propre
+identifiant de message (CAL-35).
 
-| Cause | Ce qu'on dit, en substance | Étape à rejouer |
-|---|---|---|
-| V1 — ordre incohérent | « Quelque chose ne colle pas dans la mesure, on recommence » | Tout |
-| V2 — écart trop faible | « On n'arrive pas à distinguer ta voix calme de ta voix forte — essaie avec le micro plus proche » | 3, puis 1 si ça persiste |
-| V3 haut — faux cri | « Ta voix forte ressemble trop à ta voix normale — tu peux pousser un peu plus ? » | **3 seulement** |
-| V3 bas — voix posée collée au plancher | « On ne t'a pas bien entendu parler — vérifie que le micro est bien orienté » | **2 seulement** |
-| V4 — hauteur aberrante | « On n'arrive pas à lire ta voix — vérifie le micro sélectionné » | 2 |
-| Écrêtage détecté | « Ton micro sature : baisse son volume d'entrée dans les réglages de ton système » | 3, **après action du joueur** |
+| Situation | Nature | Ce qu'on dit, en substance | Reprise |
+|---|---|---|---|
+| Rien ne sort du micro au test | Préparation | « On ne reçoit rien de ce micro — choisis-en un autre ou vérifie qu'il est branché » | Sélecteur de périphérique |
+| Parole reconnue pendant le silence | Étape rejouée | « On a entendu quelque chose — on refait juste ces quelques secondes de silence » | Étape 1 |
+| Rien au-dessus de la porte à l'étape 2 | Étape rejouée | « On ne t'entend pas du tout — vérifie le micro sélectionné » | Étape 2, sélecteur proposé |
+| Trop peu de parole à l'étape 2 | Étape rejouée | « Continue encore un peu, comme si tu racontais quelque chose » | Étape 2 |
+| Chuchotement, première tentative | Étape rejouée | « Parle à voix normale, pas en chuchotant » | Étape 2 |
+| V1 — la montée reste sous la voix posée | Refus | « On n'a pas capté de montée — on refait juste cette étape, à ton rythme » | Étape 3 |
+| V2 — plage inexploitable | Refus | « On n'arrive pas à distinguer ta voix calme de ta voix plus forte — rapproche un peu le micro » | Étape 3 |
+| Deuxième refus consécutif | Offre | « Tu peux entrer avec une mesure approximative : le jeu réagira un peu moins finement, et tu pourras la refaire quand tu veux » — ou « Réessayer » | Profil approximatif ou étape en cause |
+| Rien n'a franchi la porte, même approximativement | Diagnostic | « Ton micro ne semble pas nous parvenir » | Sélecteur de périphérique |
+| Écrêtage pendant la montée | Accepté, signalé | « Ton micro sature : baisse son volume d'entrée **ou éloigne-le légèrement**, puis refais la montée » | Étape 3 proposée ; l'écrêtage est revérifié |
+| `LowRange` par la plage (V2) | Accepté, signalé | « Ta plage est un peu étroite, le jeu s'y adapte — rapprocher le micro peut aider » | Aucune imposée |
+| `LowRange` par la position (V3) | Accepté, signalé | « Ta voix de conversation est proche de ta voix forte — le jeu s'y adapte ; tu pourras refaire la montée quand tu veux » | Aucune imposée |
+| Hauteur indisponible | Accepté, signalé | « Le jeu n'arrive pas à lire la hauteur de ta voix. Le volume et le portage marchent normalement ; certaines actions liées à la hauteur pourraient ne pas répondre » | Aucune imposée |
+| Profil approximatif en vigueur | Rappel durable | « Ta mesure est approximative — la refaire au calme rendra le jeu plus précis » | « Refaire ma mesure » |
+| Chargement : une validation échoue (V1, V2, V4) | Profil absent | « Nos réglages ont changé, il faut refaire une mesure » | Parcours complet, mode réparation |
+| Chargement : fichier illisible ou ancien format | Profil absent | « On n'a pas pu relire ta mesure, il faut la refaire » | Parcours complet, mode réparation |
 
 Règles de rédaction, valables pour toutes :
 
-- **Aucun vocabulaire technique** — ni dB, ni écart dynamique, ni F0.
+- **Aucun vocabulaire technique** — ni dB, ni plage, ni hauteur fondamentale.
 - **Orienté cause probable, jamais verdict sur la personne.** Le ton est celui d'un réglage
-  matériel imparfait — micro, pièce — jamais celui d'une performance vocale insuffisante.
+  matériel imparfait, jamais celui d'une performance vocale insuffisante.
+- **Ne jamais présumer une cause de volume** quand la parole manque : un bégaiement ou une
+  dysarthrie produisent aussi une étape 2 lente.
 - **Ne jamais renvoyer au début** quand une seule étape est en cause.
+- **Le chargement endosse la responsabilité** : « nos réglages ont changé », jamais « ton profil
+  est invalide », qui laisserait croire qu'il a mal fait quelque chose il y a trois semaines.
+- **Priorité**, si plusieurs validations échouent : celle de *Formulas* §4.
 
-> **Le cas de l'écrêtage est le seul qui exige une action hors du jeu.** C'est aussi le seul
-> où ne rien dire aurait un coût durable : un micro qui sature aplatit tout le registre haut
-> du joueur **pour toute la partie**, et il n'en saura jamais rien.
+> **L'écrêtage est le seul cas qui exige une action hors du jeu, et ne rien dire aurait un coût
+> durable** : un micro qui sature aplatit tout le registre haut du joueur **pour toute la
+> partie**, et il n'en saura jamais rien. Un écrêtage analogique, dans le préampli du casque, ne
+> disparaît pas en baissant un curseur logiciel — d'où « éloigne-le légèrement ».
 
 ### La porte d'entrée en partie
 
-Un joueur sans profil est bloqué, et ses amis l'attendent déjà. Le blocage doit se lire
-comme **une étape restante, pas comme une exclusion** :
+Un joueur sans profil est bloqué, et ses amis l'attendent déjà. Le blocage se lit comme **une étape
+restante, pas comme une exclusion** :
 
 - Annoncer une durée courte et estimée, et enchaîner sur la calibration **en un seul geste**.
-- Les autres joueurs du lobby voient un état explicite — *« X termine sa configuration »* —
-  plutôt qu'un silence qui se lit comme un plantage.
-- Tout le parcours reste opérable **au clavier et à la souris seuls**, sans exception.
+- Les autres joueurs du lobby voient **l'étape en cours**, ou « rencontre une difficulté » après un
+  refus — plutôt qu'un « termine sa configuration » statique, qui finit par se lire comme un
+  plantage.
+- Tout le parcours reste opérable **au clavier et à la souris seuls**.
 
-### Le casque
+### Le casque et les améliorations micro
 
-Décidé le 2026-09-08 : **le casque avec micro est une condition d'entrée du jeu.** L'UI doit
-le dire, et le dire **avant** que le joueur découvre que ça marche mal.
+**Le casque avec micro est une condition d'entrée du jeu.** L'UI le dit **avant** que le joueur
+découvre que ça marche mal.
 
-- Message **au premier lancement**, avant la calibration — pas enterré dans un menu d'options.
-- Formulé comme un **prérequis matériel**, au même titre que la configuration minimale : ce
-  n'est pas un conseil de confort.
-- **Il doit dire pourquoi.** *(Exigence renforcée le 2026-09-08, quand l'AEC a été retirée
-  d'ADR-0003.)* Une consigne sans raison sera ignorée, et le joueur qui l'ignore vivra un
-  jeu **cassé sans jamais soupçonner la cause** : ses meubles s'alourdiront quand ses
-  coéquipiers parleront, et il accusera la physique ou le réseau. Une phrase suffit — *« sur
-  haut-parleurs, le jeu entend tes coéquipiers et croit que c'est toi »*.
-- **Aucun blocage technique.** On ne peut pas détecter un casque de façon fiable, et tenter
-  de le faire produirait des faux positifs qui empêcheraient des joueurs équipés de jouer.
-  On informe, on n'interdit pas.
-- **Répéter le message si la configuration le suggère** — sortie sur haut-parleurs
-  identifiée par le système d'exploitation, par exemple. Indice faible, jamais un blocage,
-  mais suffisant pour reposer la question à quelqu'un qui découvre le jeu.
+- **Au premier lancement**, avant la calibration — pas enterré dans un menu d'options.
+- Formulé comme un **prérequis matériel**, au même rang que la configuration minimale.
+- **Il dit pourquoi.** Une consigne sans raison sera ignorée, et le joueur vivra un jeu **cassé
+  sans soupçonner la cause**. Une phrase suffit — *« sur haut-parleurs, le jeu entend tes
+  coéquipiers et croit que c'est toi »*.
+- **Au même rang : désactiver les améliorations du micro** — égaliseur automatique de volume,
+  suppression de bruit, effets du pilote ou du logiciel du casque. Elles changent la voix pendant la
+  session, et le profil devient faux sans que rien ne le signale (*Edge Cases*). Un casque
+  Bluetooth dont le micro est actif bascule en qualité réduite : le dire aussi.
+- **Aucun blocage technique.** On ne détecte pas un casque de façon fiable ; tenter de le faire
+  empêcherait des joueurs équipés de jouer. On informe, on n'interdit pas.
+- **Répéter le message si la configuration le suggère** — sortie sur haut-parleurs identifiée par le
+  système d'exploitation, par exemple. Indice faible, jamais un blocage.
 
 ### La recalibration en cours de partie
 
-> **Résolu le 2026-09-08 — il n'y a presque rien à faire.**
->
-> La version d'origine de cette section décrivait un problème réel : un joueur recalibrant
-> en portant un meuble à plusieurs, dont la sortie tombe à zéro pendant que ses coéquipiers
-> subissent le changement de poids.
->
-> **Ce cas n'existe pas.** La recalibration se lance depuis le menu, ouvrir le menu
-> immobilise le personnage, et un personnage immobilisé **pose ce qu'il porte**. Il n'y a
-> plus de porteur fantôme, plus de poids qui varie, et le monde est en pause pour lui.
+La recalibration se lance depuis le menu ; le personnage pose ce qu'il porte et se fige (*Detailed
+Rules*). **Les coéquipiers doivent comprendre pourquoi** : un état lisible sur son avatar ou dans le
+bandeau d'équipe, sans quoi le comportement se confond avec une déconnexion ou un joueur parti
+manger.
 
-Il reste une seule exigence, et elle est sociale : **les autres joueurs doivent comprendre
-pourquoi leur coéquipier vient de poser sa moitié de canapé et de se figer.** Un état
-lisible sur son avatar ou dans le bandeau d'équipe suffit — sans quoi le comportement se
-confond avec une déconnexion ou un joueur parti manger.
+### `Degraded` et le micro coupé
 
-### L'état `Degraded`
+L'état `Degraded` appartient au système 1, et l'icône « micro coupé » au système 19 ; **c'est vers
+nous qu'ils conduisent**.
 
-Il appartient au système 1, mais **c'est vers nous qu'il doit conduire**.
-
-- **Toujours visible pendant `Degraded`** — dans le HUD, pas seulement dans un menu. Un
-  sonomètre à zéro est indiscernable d'un joueur qui se tait.
+- **Toujours visible par le joueur concerné pendant `Degraded`**, dans le HUD et pas seulement dans
+  un menu : un sonomètre à zéro est indiscernable d'un joueur qui se tait, et le sonomètre est lu
+  par les autres.
 - **Déclenché en moins d'une à deux secondes.** Au-delà, le joueur conclut au bug.
-- **Accès immédiat au diagnostic** : choix du périphérique et relance de la calibration, en
-  un geste depuis l'alerte.
+- **Accès immédiat au diagnostic** : choix du périphérique et relance de la calibration, en un geste
+  depuis l'alerte.
 
-> **Il n'existe aucune solution de repli.** La voix n'a pas d'équivalent clavier : la seule
-> sortie de secours est de rétablir l'entrée micro, pas de la remplacer.
-
-### Quand nos propres réglages invalident un profil
-
-Les *Edge Cases* établissent qu'un profil valide à l'écriture peut devenir invalide quand
-les seuils bougent, et qu'il faut donc **revalider à chaque chargement**. L'UI porte la
-conséquence :
-
-> **Le message doit endosser la responsabilité, pas la faire porter au joueur.** « Nos
-> réglages ont changé, il faut refaire une mesure » — et surtout pas « ton profil est
-> invalide », qui laisserait croire qu'il a mal fait quelque chose il y a trois semaines.
+> **Il n'existe aucune solution de repli.** La voix n'a pas d'équivalent clavier : la seule sortie
+> de secours est de rétablir l'entrée micro, pas de la remplacer.
 
 ### Accessibilité
 
-**Garanti** : opérabilité complète au clavier et à la souris sur tous les écrans, texte
-redimensionnable, sous-titrage de toute instruction, aucun flash ni pic sonore surprise
-pendant la calibration.
+**Garanti, et vérifié par un critère** (*Acceptance Criteria*, H) : opérabilité complète au clavier
+et à la souris sur tous les écrans ; texte redimensionnable ; toute instruction écrite ; **aucune
+étape ne repose sur l'audition** — confirmation visible à l'étape 0, pulsation à l'étape 2, objet à
+l'étape 3 ; aucune distinction par la couleur seule ; aucun flash ni pic sonore pendant la
+calibration ; phrase de santé vocale avant la montée ; aucun message qui présume une cause de
+volume.
 
-> ### L'exclusion est plus étroite qu'écrit à l'origine — révisé le 2026-09-08
->
-> La version d'origine excluait trois populations : qui ne peut pas produire de voix, qui a
-> un trouble de la parole, et **qui vit dans un environnement où parler fort est
-> impossible**. La revue du 2026-09-07 demandait de rouvrir ce point une fois `LowRange`
-> existant. Il existe.
->
-> **La troisième population n'est plus exclue.** Un joueur qui ne peut pas crier — voisinage,
-> enfant qui dort, timidité — obtient un profil `LowRange` : accepté, marqué, lissé, et
-> jouable. C'est exactement ce que ce drapeau a été créé pour faire.
->
-> **Ce qui reste exclu, et qui l'est franchement** : un joueur qui ne peut pas produire de
-> voix du tout. Aucun mode clavier ne remplace l'entrée vocale sans redéfinir le pilier du
-> jeu. C'est une exclusion assumée, pas un oubli — mais elle ne concerne plus qu'un cas au
-> lieu de trois.
+**Inclus, et c'est l'objet du système** : un joueur qui ne peut pas ou ne veut pas crier —
+voisinage, enfant qui dort, gêne, dysphonie, hypophonie, suites d'opération ORL — obtient un profil
+`LowRange` ; une voix que les détecteurs lisent mal obtient « hauteur indisponible » ; un joueur
+refusé deux fois entre avec un profil approximatif. **Aucune de ces populations n'est exclue.**
+
+**Exclu, et nommé comme tel** — deux exclusions, pas une :
+
+- **Un joueur qui ne peut pas produire de voix du tout.** Aucun mode clavier ne remplace l'entrée
+  vocale sans redéfinir le pilier du jeu. Exclusion assumée.
+- **Un joueur qui ne peut pas porter de casque** — implant cochléaire ou aide auditive
+  incompatible, contre-indication médicale, hypersensibilité sensorielle. Le prérequis du casque
+  l'exclut structurellement : il peut jouer, mais sur haut-parleurs le jeu entend ses coéquipiers.
+  **Documenté, pas résolu** (OQ-C15).
+
+L'option « afficher mon volume » du système 19 complète ce dispositif pour les joueurs sourds et
+malentendants en jeu ; elle ne concerne pas la calibration.
 
 ## Acceptance Criteria
 
 ### Ce qu'un critère doit valoir ici
 
 Même exigence qu'au système 1 : **un testeur doit pouvoir le vérifier sans avoir lu ce
-document**. Étiquettes identiques — `[UNIT]` automatisable hors Unity et bloquant,
-`[INTEG]` plusieurs systèmes ou persistance et bloquant, `[HUMAIN]` mesure ou playtest et
-consultatif sauf mention.
+document**. Étiquettes identiques — `[UNIT]` automatisable hors Unity et bloquant, `[INTEG]`
+plusieurs systèmes ou persistance et bloquant, `[HUMAIN]` mesure ou playtest et consultatif sauf
+mention. **EN ATTENTE** : écrit, non exécutable tant que la dépendance nommée n'est pas levée.
 
-Le découpage d'ADR-0006 paie ici comme ailleurs : **toute la logique qui peut produire un
-profil faux est en `[UNIT]`.** La couche Unity ne décide rien, donc elle n'a presque rien à
-prouver.
+Le découpage d'ADR-0006 paie ici comme ailleurs : **toute la logique qui peut produire un profil
+faux est en `[UNIT]`.** La couche Unity ne décide rien, donc elle n'a presque rien à prouver.
 
-> **Les valeurs attendues se dérivent, elles ne se recopient pas.** Quatorze valeurs de ce
-> document sont provisoires. Les critères ci-dessous citent des nombres comme repères de
-> lecture ; **le test lit la constante nommée**. Quand la mesure les déplacera, ces critères
-> suivront sans être réécrits.
+> **Les valeurs attendues se dérivent, elles ne se recopient pas.** Les nombres cités sont des
+> repères de lecture, calculés avec la liste canonique (*Formulas*, « Porte de mesure du système
+> 6 ») et, pour les valeurs du système 1, avec la sienne. **Le test lit la constante nommée**, et
+> la configuration lui est injectée. Quand la mesure déplacera ces valeurs, les critères suivront
+> sans être réécrits.
+
+**Les identifiants sont stables.** Un critère retiré garde son numéro, qui n'est pas réattribué ;
+les critères ajoutés prennent la suite (*Revision History*).
 
 ---
 
-### A — Étape 1, le silence
+### A — Préparation et étape 1, le silence
 
 | # | Critère | Type |
 |---|---|---|
-| CAL-01 | GIVEN une étape sans trame voisée THEN `Floor_dB = P95(Rms_dB) + FloorMargin_dB` | `[UNIT]` |
+| CAL-40 | GIVEN la permission micro refusée THEN l'écran de blocage s'affiche et **aucun état de mesure n'est atteint** ; GIVEN un premier lancement THEN la demande de permission précède l'écran de l'étape 1 | `[INTEG]` |
+| CAL-41 | GIVEN aucun signal reçu du périphérique sélectionné pendant `DeviceCheck_s` THEN le sélecteur de périphérique est proposé et `MeasuringFloor` **n'est pas atteint** ; GIVEN un signal reçu THEN la transition a lieu | `[UNIT]` |
+| CAL-01 | GIVEN une étape sans parole reconnue THEN `Floor_dB = P95(Rms_dB lissé) + FloorMargin_dB`, calculé **sur les seules trames postérieures à `WarmUp_s`** | `[UNIT]` |
 | CAL-02 | GIVEN un creux instantané isolé sous le bruit réel THEN il **n'abaisse pas** `Floor_dB` — propriété attendue du centile haut | `[UNIT]` |
-| CAL-03 | GIVEN des trames voisées pendant l'étape THEN l'étape est **rejetée et rejouée**, aucun `Floor_dB` n'est écrit | `[UNIT]` |
-| CAL-04 | GIVEN un écart `P95 − P50` au-delà du toléré THEN l'étape est rejetée | `[UNIT]` — **non exécutable, voir trous** |
+| CAL-03 | GIVEN `SpeechRun` trames consécutives `IsVoiced_YIN` et `JitterPct > JitterMin`, **quel que soit leur niveau** THEN l'étape est rejetée et rejouée, aucun `Floor_dB` n'est écrit ; GIVEN `SpeechRun − 1` trames THEN elle ne l'est pas ; GIVEN un bourdonnement périodique sans jitter, ou un bruit apériodique THEN elle ne l'est pas. **La garde s'évalue sans `Floor_dB` ni profil** | `[UNIT]` |
+| CAL-04 | GIVEN `P95 − P50 > StabilityMax_dB` sur l'étape THEN l'étape est rejetée. **EN ATTENTE** — `StabilityMax_dB` n'a pas de valeur (OQ-C3) | `[UNIT]` |
 | CAL-05 | GIVEN l'étape affichée THEN **aucun indicateur de niveau et aucun son** ne sont perceptibles | `[HUMAIN]` |
+| CAL-42 | GIVEN des testeurs découvrant le jeu WHEN ils traversent l'étape 1 THEN aucun ne rapporte avoir cru que le jeu ne fonctionnait pas | `[HUMAIN]` |
 
 ### B — Étape 2, la parole posée
 
 | # | Critère | Type |
 |---|---|---|
-| CAL-06 | GIVEN `Floor_dB` connu THEN seules les trames franchissant `Rms_dB > Floor_dB + Margin_dB` entrent dans `V` | `[UNIT]` |
-| CAL-07 | GIVEN `\|V\| < VoicedMin` THEN l'étape est rejouée **sans écrire** `Rest_dB` ni `F0_habituel` | `[UNIT]` |
+| CAL-06 | GIVEN `Gate_dB` connu THEN `G` contient exactement les trames de `Rms_dB` lissé `> Gate_dB`, `Y ⊆ G` les trames périodiques, `V ⊆ Y` celles dont `JitterPct > JitterMin` — les ensembles du système 1, §4 | `[UNIT]` |
+| CAL-07 | GIVEN `n(G) < VoicedMin` à l'expiration de `Step2Timeout_s` THEN l'étape est rejouée **sans écrire** `Rest_dB`, `F0_habituel` ni `PitchStatus` ; GIVEN `n(G) = 0` THEN le message est « on ne t'entend pas du tout » ; GIVEN `0 < n(G) < VoicedMin` THEN il est « continue encore un peu » | `[UNIT]` |
+| CAL-43 | GIVEN `n(V) ≥ VoicedMin` avant le délai THEN l'étape se termine **à cette trame**, `PitchStatus = Full`, médianes sur `V` ; GIVEN à l'expiration `n(V) < VoicedMin ≤ n(Y)` THEN `NoJitter`, `Rest_dB` sur `G`, `F0_habituel` sur `Y` — la table du système 1, §4, appliquée avec ce `VoicedMin` | `[UNIT]` |
 | CAL-08 | GIVEN une série voisée à laquelle on **injecte une seule erreur d'octave** THEN `F0_habituel` est **inchangé** | `[UNIT]` |
 | CAL-09 | GIVEN une tentative d'exécuter l'étape 2 **sans `Floor_dB` au tampon** THEN un état invalide est levé — la dépendance d'ordre est une garde, pas une convention | `[UNIT]` |
-| CAL-10 | GIVEN un chuchotement simulé, apériodique THEN aucune trame n'est voisée et `\|V\|` reste sous le seuil | `[UNIT]` |
+| CAL-10 | GIVEN un chuchotement simulé — trames dans `G`, aucune dans `Y` — à la **première** tentative THEN l'étape est rejouée avec la demande de voix posée ; à la **deuxième consécutive** THEN le profil est accepté en `Unavailable`, **sans `F0_habituel`**, `Rest_dB` médiané sur `G` | `[UNIT]` |
+| CAL-44 | GIVEN une recalibration d'un profil dont `F0_habituel` vaut le **double** de la vraie hauteur THEN la nouvelle mesure est prise sous la configuration non calibrée et retrouve la vraie hauteur — l'erreur d'octave ne se reproduit pas | `[UNIT]` |
+| CAL-45 | GIVEN chacun des trois chemins `Full`, `NoJitter`, `Unavailable` THEN `Rest_dB > Gate_dB` — la médiane est prise sur le même `Rms_dB` lissé que la porte | `[UNIT]` |
 
 ### C — Étape 3, la montée
 
 | # | Critère | Type |
 |---|---|---|
-| CAL-11 | GIVEN une stagnation qualifiante MAIS `M(t) − Floor_dB < HardFloor_dB` THEN **aucun plateau n'est déclaré**, l'étape continue | `[UNIT]` |
-| CAL-12 | GIVEN la même stagnation avec `M(t) − Floor_dB ≥ HardFloor_dB` THEN le plateau est déclaré et `Scream_dB = M(t)` | `[UNIT]` |
+| CAL-11 | GIVEN une stagnation qualifiante MAIS `M(t) − Gate_dB < HardFloor_dB` THEN **aucun plateau n'est déclaré**, l'étape continue | `[UNIT]` |
+| CAL-12 | GIVEN la même stagnation avec `M(t) − Gate_dB ≥ HardFloor_dB` THEN le plateau est déclaré et `Scream_dB = M(t)` | `[UNIT]` |
+| CAL-46 | GIVEN un signal parfaitement plat au-dessus du plancher dur THEN **aucune évaluation de plateau** n'a lieu avant `PlateauHold_s` écoulé depuis le début de l'étape | `[UNIT]` |
 | CAL-13 | GIVEN aucune stagnation avant `PeakTimeout_s` THEN l'étape se termine sur `Scream_dB = M(t_fin)` | `[UNIT]` |
-| CAL-14 | GIVEN un écrêtage détecté pendant l'étape — **même condition qu'au système 1**, `Peak` saturé sur plusieurs échantillons consécutifs THEN le profil reste committable **et le joueur est averti** de baisser son gain d'entrée | `[UNIT]` + `[HUMAIN]` |
+| CAL-47 | GIVEN un arrêt demandé par le joueur THEN l'étape se termine sur `Scream_dB = M(t_arrêt)`, et la validation décide ensuite | `[UNIT]` |
+| CAL-14a | GIVEN un écrêtage signalé par le détecteur du système 1 pendant l'étape THEN le profil reste committable **et** le résultat porte le signalement d'écrêtage ; GIVEN une montée refaite sans écrêtage THEN le signalement disparaît. **EN ATTENTE** — détecteur à exposer (OQ-C2), seuil d'écrêtage du système 1 sans valeur | `[UNIT]` |
+| CAL-14b | GIVEN le message d'écrêtage affiché THEN des testeurs comprennent qu'il faut baisser le volume d'entrée **ou** éloigner le micro, et le font | `[HUMAIN]` |
 
-### D — Les quatre validations
+### D — Les validations
 
 | # | Critère | Type |
 |---|---|---|
-| CAL-15 | GIVEN `Floor_dB ≥ Rest_dB` ou `Rest_dB ≥ Scream_dB` THEN **REFUS** (V1) | `[UNIT]` |
-| CAL-16 | GIVEN `Δ < HardFloor_dB` THEN REFUS ; GIVEN `HardFloor ≤ Δ < QualityBand` THEN ACCEPTÉ avec `LowRange = true` ; GIVEN `Δ ≥ QualityBand` THEN ACCEPTÉ avec `LowRange = false` (V2) | `[UNIT]` |
-| CAL-17 | GIVEN `Floor −70 · Rest −25 · Scream −22` — soit `Δ = 48`, excellent — THEN **REFUS par V3**, `r = 0,94` | `[UNIT]` |
-| CAL-18 | GIVEN `Floor −50 · Rest −48 · Scream −25` — soit `Δ = 25`, correct — THEN **REFUS par V3**, `r = 0,08` | `[UNIT]` |
-| CAL-19 | GIVEN `r` dans les bornes THEN V3 ne refuse pas sur ce seul critère | `[UNIT]` |
-| CAL-20 | GIVEN `F0_habituel` hors `[F0Min ; F0Max]` THEN REFUS (V4) | `[UNIT]` |
-| CAL-21 | GIVEN un même quadruplet évalué dans un ordre d'exécution différent THEN **le verdict est identique** — accepté, refusé, `LowRange` | `[UNIT]` |
-| CAL-22 | GIVEN un profil accepté THEN **`Rest_dB` n'intervient dans aucune formule de sortie** : il sert à valider, jamais à normaliser. Un `Rest_dB` modifié sur un profil déjà validé ne change **aucune** `VoiceFrame` | `[UNIT]` |
+| CAL-15 | GIVEN `Gate_dB ≥ Rest_dB` ou `Rest_dB ≥ Scream_dB` THEN **REFUS** (V1) | `[UNIT]` |
+| CAL-16 | GIVEN `Δ' = Scream_dB − Gate_dB < HardFloor_dB` THEN REFUS ; GIVEN `Δ' = HardFloor_dB` exactement THEN ACCEPTÉ, `LowRange` ; GIVEN `Δ' = QualityBand_dB` exactement THEN ACCEPTÉ, sans `LowRange`. **L'écart porte sur `Δ'`, jamais sur `Scream_dB − Floor_dB`** : `Floor −60 · Scream −42` avec `Margin_dB = 7` donne `Δ = 18` mais `Δ' = 11` → `LowRange` ; un calcul sur `Δ` ne le lèverait pas | `[UNIT]` |
+| CAL-17 | GIVEN `Floor −70 · Rest −25 · Scream −22` avec `Margin_dB = 7` — `Δ' = 41`, `r' ≈ 0,93` THEN **ACCEPTÉ, `LowRange` levé par V3** ; jamais un refus | `[UNIT]` |
+| CAL-18 | *Retiré le 2026-09-16 avec la borne basse de V3, qui était inatteignable* | — |
+| CAL-19 | GIVEN `r' = RestMax` exactement THEN `LowRange` est levé (borne incluse) ; GIVEN `r'` juste sous `RestMax` et `Δ' ≥ QualityBand_dB` THEN il ne l'est pas. Témoin de la revue : `Floor −60 · Rest −35 · Scream −28` → `r' = 0,72` → **ACCEPTÉ sans drapeau** | `[UNIT]` |
+| CAL-20 | GIVEN un profil chargé, `PitchStatus ≠ Unavailable`, `F0_habituel` hors du domaine du détecteur non calibré du système 1 THEN **REFUS au chargement** ; GIVEN `F0_habituel = 400 Hz` THEN pas de refus ; GIVEN `Unavailable` sans `F0_habituel` THEN V4 ne s'applique pas. **Le domaine est lu dans la configuration du détecteur**, jamais dans une constante de ce document | `[UNIT]` |
+| CAL-21 | GIVEN un même profil évalué dans un ordre d'exécution différent THEN **le verdict est identique** — accepté, refusé, `LowRange` ; GIVEN V1 et V2 en échec simultané THEN le message est celui de V1 ; au chargement, l'ordre de priorité est schéma, V1, V2, V4 | `[UNIT]` |
+| CAL-22 | GIVEN un profil accepté THEN `Rest_dB` **n'intervient dans aucune formule de sortie du système 1** : le modifier ne change aucune `VoiceFrame`. **Sa seule sortie dérivée est `r'`** | `[UNIT]` |
+| CAL-48 | GIVEN un commit THEN `r'` est calculé sur le client par la formule du système 1 et appartient à `]0 ; 1[` | `[UNIT]` |
 
-### E — Tampon, atomicité, `LowRange`
+### E — Tampon, atomicité, `LowRange`, profil approximatif
 
 | # | Critère | Type |
 |---|---|---|
 | CAL-23 | GIVEN une coupure micro pendant une étape THEN le tampon est jeté **intégralement** et le profil actif reste identique **bit à bit** | `[UNIT]` |
-| CAL-24 | GIVEN un commit en cours THEN **aucune lecture** ne peut observer un `Floor_dB` neuf combiné à un `Scream_dB` ancien | `[UNIT]` |
-| CAL-25 | GIVEN une seule étape rejouée THEN **les quatre validations** sont réévaluées sur l'ensemble ancien + neuf avant tout commit | `[UNIT]` |
+| CAL-24 | **Propriété structurelle, pas course de fils** : `VoiceProfile` est une **classe** dont tous les champs sont en lecture seule (vérifié par réflexion) ; le commit publie la référence par `Interlocked.Exchange` ; l'analyse la lit par `Volatile.Read` (vérifié par inspection) | `[UNIT]` |
+| CAL-25 | GIVEN une seule étape rejouée THEN **toutes les validations** sont réévaluées sur l'ensemble ancien + neuf avant tout commit | `[UNIT]` |
 | CAL-26 | GIVEN une annulation en cours de parcours THEN **aucun fichier de profil n'est écrit** | `[INTEG]` |
-| CAL-27 | GIVEN `LowRange = true` THEN les constantes d'attaque et de relâchement de l'`EnvelopeFollower` sont multipliées par le facteur déclaré, face à un profil identique en `LowRange = false` | `[UNIT]` |
-| CAL-28 | GIVEN une décimation décidée par le profil THEN `F0_habituel × 2 > 600 Hz` donne **12 kHz** pour ce joueur, sinon 8 kHz ; et le `Decimator` comme le `PitchDetector` sont **reconstruits à la réception du profil**, pas à la construction de l'analyseur | `[UNIT]` |
+| CAL-27 | GIVEN `LowRange = true` THEN l'`EnvelopeFollower` multiplie ses **constantes de temps `τ`** par le facteur du système 1 — jamais le coefficient `c` —, face à un profil identique en `LowRange = false` : le temps de montée sur un même échelon est multiplié par ce facteur | `[UNIT]` |
+| CAL-28 | GIVEN `2 · F0_habituel > 600 Hz` **et** un `SampleRate` multiple de 12 000 THEN décimation à **12 kHz** ; GIVEN la même voix à 44,1 kHz THEN **8 kHz**, plage plafonnée à 600 Hz ; GIVEN `Unavailable` THEN aucune détection de hauteur. Le `Decimator` et le `PitchDetector` sont **reconstruits par le fil d'analyse à la réception du profil**, pas à la construction de l'analyseur | `[UNIT]` |
+| CAL-49 | GIVEN deux refus consécutifs dans une même calibration THEN `OfferingApproximate` ; GIVEN un refus, un retour à `Idle`, puis un refus THEN pas d'offre ; GIVEN un refus puis une étape rejouée sans refus (parole pendant le silence, chuchotement) THEN le compte reste à un | `[UNIT]` |
+| CAL-50 | GIVEN le profil approximatif accepté THEN `Scream_dB = max(Scream_dB mesuré ; max Rms_dB de l'étape 2)`, les autres champs sont ceux de la dernière tentative, `Approximate` et `LowRange` sont levés ; témoin de *Formulas* §6 → commité à `Δ' = 4` | `[UNIT]` |
+| CAL-51 | GIVEN deux refus MAIS V1 en échec même après le calcul du profil approximatif — rien n'a franchi la porte THEN **aucune offre**, le parcours passe au diagnostic du périphérique | `[UNIT]` |
+| CAL-52 | GIVEN un profil approximatif à `Δ' < HardFloor_dB` enregistré THEN il **se recharge** — schéma, V1 et V4 revalidés, pas le plancher dur — et garde `Approximate` jusqu'au premier commit non approximatif | `[UNIT]` |
 
 ### F — Persistance
 
 | # | Critère | Type |
 |---|---|---|
 | CAL-29 | GIVEN un fichier corrompu ou incomplet THEN le profil est traité comme **absent** — jamais de chargement partiel | `[UNIT]` |
-| CAL-30 | GIVEN un profil valide sous une configuration de seuils **A**, revalidé sous une configuration **B** différente THEN il peut être rejeté — **et le test ne cite aucune valeur de production** | `[UNIT]` |
+| CAL-30 | GIVEN un profil valide sous une configuration de seuils **A**, revalidé sous une configuration **B** — par exemple `Margin_dB` monté jusqu'à `Scream_dB ≤ Gate_dB` THEN il est rejeté — **et le test ne cite aucune valeur de production** | `[UNIT]` |
 | CAL-31 | GIVEN un numéro de version de schéma absent ou inconnu THEN le profil est traité comme absent | `[UNIT]` |
 | CAL-32 | GIVEN un profil rejeté au chargement WHEN le joueur tente de rejoindre THEN le système 8 **bloque l'entrée** | `[INTEG]` |
 
@@ -1299,171 +1518,206 @@ prouver.
 
 | # | Critère | Type |
 |---|---|---|
-| CAL-33 | GIVEN une calibration en cours THEN la sortie du joueur vers le jeu reste `Silence` jusqu'à `Committed` ou `Rejected` | `[INTEG]` |
-| CAL-34 | GIVEN une session active WHEN un profil est committé THEN **aucun paquet sortant ne contient un champ du `VoiceProfile`** | `[INTEG]` |
-| CAL-35 | GIVEN les six causes de refus déclenchées une à une par des profils synthétiques THEN **six identifiants de message distincts** sont renvoyés, et l'étape à rejouer désignée est la bonne pour chacun | `[UNIT]` |
-| CAL-36 | GIVEN un refus sur une seule étape THEN le parcours reprend **sur cette étape**, jamais au début | `[INTEG]` |
-| CAL-37 | GIVEN le mode réparation THEN aucun contenu pédagogique n'apparaît | `[HUMAIN]` |
-| CAL-38 | GIVEN l'étape 3 affichée THEN **aucune cible, aucun plafond, aucun score** n'est visible | `[HUMAIN]` — voir cas difficile 3 |
-| CAL-39 | GIVEN une valeur provisoire de ce document THEN elle apparaît **en un seul endroit** comme constante nommée, et aucun document ne la cite comme acquise avant que les protocoles aient tourné | `[UNIT]` par inspection statique + `[HUMAIN]` |
+| CAL-33 | GIVEN une calibration en cours, de `Preparing` à la sortie du parcours (`Committed` ou `Idle`), refus et offre compris THEN la sortie du joueur vers le jeu reste `Silence` | `[INTEG]` |
+| CAL-54 | GIVEN une calibration en cours, **au lobby comme en jeu** THEN le chat vocal **ne diffuse rien** de ce que produit le joueur **et ne lui restitue rien** de ce que disent les autres ; à la sortie du parcours, les deux sens sont rétablis. Propriétaire : système 14 | `[INTEG]` |
+| CAL-34 | GIVEN les types de messages réseau du système 5 THEN **la seule grandeur tirée du `VoiceProfile` qu'ils contiennent est `r'`** — vérifié par inspection des types, pas par capture. **EN ATTENTE** du GDD du système 5 et d'un transport installé | `[INTEG]` |
+| CAL-53 | GIVEN un profil `LowRange`, `Approximate` ou « hauteur indisponible » THEN **aucun autre joueur** ne voit ni ne reçoit ces drapeaux | `[INTEG]` |
+| CAL-35 | GIVEN chaque ligne du tableau « Refus, reprises et signalements » (*UI Requirements*) déclenchée une à une par des profils ou signaux synthétiques THEN **un identifiant de message distinct par ligne** est renvoyé, et la reprise désignée est celle du tableau | `[UNIT]` |
+| CAL-36 | GIVEN un refus portant sur une seule étape THEN le parcours reprend **sur cette étape**, jamais au début | `[INTEG]` |
+| CAL-55 | GIVEN le menu du lobby et le menu en jeu THEN la calibration s'y lance **en un geste** ; GIVEN « Refaire ma mesure » THEN le parcours complet démarre en mode réparation | `[INTEG]` |
+| CAL-56 | GIVEN un joueur portant un objet WHEN il lance la recalibration depuis le menu THEN l'objet est **posé avant l'étape 0** et son poids ne change jamais du fait de la calibration. **EN ATTENTE** de la confirmation du système 9 (OQ-C9) | `[INTEG]` |
+| CAL-57 | GIVEN le mode réparation WHEN un testeur rejoue **une seule étape** THEN le temps entre le geste de relance et le retour au jeu est **inférieur à 15 secondes** en médiane | `[HUMAIN]` |
+| CAL-58 | GIVEN un joueur en calibration dans le lobby THEN les autres voient **l'étape en cours**, ou « rencontre une difficulté » après un refus. **EN ATTENTE** du système 8 (OQ-C10) | `[INTEG]` |
+| CAL-37 | GIVEN le mode réparation THEN aucun contenu pédagogique n'apparaît ; GIVEN un refus pendant la toute première calibration THEN le ton reste celui de la découverte | `[HUMAIN]` |
+| CAL-38 | GIVEN l'étape 3 affichée THEN **aucune cible, aucun plafond, aucun score** n'est visible, et l'objet n'atteint jamais un état final ; GIVEN la relecture du composant THEN il ne contient **aucun chemin de rendu** d'une cible, d'un score ou d'une butée — inventaire des éléments de l'écran en liste blanche | `[HUMAIN]` + relecture — voir cas difficile 3 |
+| CAL-39 | GIVEN une valeur provisoire de ce document THEN elle apparaît **une seule fois**, dans la liste canonique, comme constante nommée ; aucune autre section ni aucun autre document ne la cite comme acquise | `[UNIT]` par inspection statique + `[HUMAIN]` |
+| CAL-59 | GIVEN une calibration menée jusqu'à `Committed`, puis une autre jusqu'à `Idle` THEN **aucun tampon audio ne survit** : chaque tampon traversant la calibration est suivi par une `WeakReference`, et toutes sont mortes après `Collect`, `WaitForPendingFinalizers`, `Collect`. Catégorie de tests lente | `[INTEG]` |
+
+### H — Accessibilité
+
+| # | Critère | Type |
+|---|---|---|
+| CAL-60 | GIVEN un testeur au clavier et à la souris seuls THEN il traverse **tous** les écrans — permission, sélecteur, étapes, offre de profil approximatif, refus — sans blocage | `[HUMAIN]` |
+| CAL-61 | GIVEN le son du jeu **entièrement coupé** THEN un testeur mène la calibration à son terme : toute instruction est écrite, et chaque étape où il parle lui donne un retour visible | `[HUMAIN]` |
+| CAL-62 | GIVEN une capture de chaque étape **en niveaux de gris** THEN les étapes restent distinguables | `[HUMAIN]` |
+| CAL-63 | GIVEN la calibration complète THEN aucun flash et aucun pic sonore ne se produisent | `[HUMAIN]` |
+| CAL-64 | GIVEN le texte à sa taille maximale THEN chaque écran reste lisible, sans troncature | `[HUMAIN]` |
+| CAL-65 | GIVEN une parole synthétique entrecoupée, voisée 40 % du temps THEN `n(V)` atteint `VoicedMin` avant `Step2Timeout_s` avec la liste canonique ; GIVEN le catalogue des messages de l'étape 2 THEN aucun ne présume une cause de volume | `[UNIT]` + `[HUMAIN]` |
+| CAL-66 | GIVEN l'étape 3, **en découverte comme en réparation** THEN la phrase « si crier te fait mal, arrête-toi » est affichée avant la montée — une consigne de sécurité, pas de la pédagogie | `[HUMAIN]` |
 
 ---
 
 ### Ce que ces critères ne couvrent pas
 
-**1. L'écart `P95 − P50` toléré n'a pas de valeur.** CAL-04 est écrit et **non exécutable**.
-C'est la seule valeur *à définir* de ce document, déjà signalée en *Tuning Knobs* — et donc
-le seul report qui échoue au test des trois critères. Elle rejoint le TTL de l'anneau du
-système 1.
-
-**2. La distance au micro entre étapes** reste partiellement indétectable. Seul un critère
-d'interface est possible — la consigne est affichée — pas un critère de détection.
-
-**3. L'hystérésis autour de `F0 × 2 ≈ 600 Hz`** n'est pas un comportement figé mais une
-réserve conditionnelle, donc pas encore un critère.
-
-**4. La durée ressentie du parcours complet** n'a aucun critère, alors que *Player Fantasy*
-en fait un enjeu du mode réparation. À combler.
-
-> **Un cinquième trou a été signalé puis refermé.** Le `qa-lead` relevait qu'aucun détecteur
-> d'écrêtage n'était spécifié, rendant CAL-14 intestable. **Il n'y avait rien à inventer :**
-> le système 1 définit déjà la condition — `Peak` saturé sur plusieurs échantillons
-> consécutifs — pour geler sa `Continuity`. La calibration lit le même signal et réutilise
-> le même détecteur. CAL-14 est exécutable, à condition que ce détecteur soit exposé et non
-> enfoui dans la logique de gel.
+1. **`StabilityMax_dB` n'a pas de valeur** : CAL-04 est écrit et EN ATTENTE (OQ-C3).
+2. **La distance au micro entre étapes** reste partiellement indétectable. Seul un critère
+   d'interface est possible — la consigne est affichée —, pas un critère de détection.
+3. **L'hystérésis autour de `2 · F0_habituel ≈ 600 Hz`** est une piste, pas un comportement
+   (OQ-C14).
+4. **La dérive entre calibration et jeu** — bruit cyclique, traitements du système
+   d'exploitation — ne se voit dans aucune validation (OQ-C12).
+5. **Un gain d'entrée très bas** passe toutes les validations (OQ-C13).
+6. **Une source non humaine** passe toutes les validations (OQ-C7).
+7. **Plusieurs critères dépendent de systèmes sans GDD** — 5, 8, 9, 14. Ils ne bloquent pas la
+   story de logique pure, qui ne contient que des `[UNIT]`.
 
 ### Les trois cas difficiles
 
-**« Aucun audio n'est conservé. »** C'est une promesse de confiance, et une relecture de
-code ne la vaut pas. La méthode proposée tient : instrumenter le pipeline avec des
-`WeakReference` sur chaque tampon audio traversant la calibration, puis vérifier qu'après
-`Committed`, `Rejected` ou `Idle` et un `GC.Collect()` forcé, **toutes sont mortes**. Ce
-n'est pas un test unitaire pur — il exige le vrai graphe d'objets — mais c'est une
-vérification réelle, et bien meilleure qu'une inspection à l'œil.
+**« Aucun audio n'est conservé. »** Une promesse de confiance, qu'une relecture de code ne vaut
+pas. CAL-59 instrumente chaque tampon audio traversant la calibration par une `WeakReference`
+et vérifie qu'elles sont toutes mortes après la sortie du parcours. Le double passage
+`Collect` / `WaitForPendingFinalizers` / `Collect` absorbe la fragilité du ramasse-miettes sous
+Mono et IL2CPP ; le test exige le vrai graphe d'objets, d'où la catégorie lente.
 
-**La revalidation au chargement.** La difficulté était de tester qu'un profil enregistré
-sous d'anciens seuils est rejeté quand ils bougent, **sans figer les seuils dans le test**.
-La réponse est propre et elle impose une contrainte d'implémentation utile : **la fonction
-de validation prend sa configuration en argument** au lieu de lire des constantes
-compilées. Le test construit alors un profil sous une configuration A arbitraire, revalide
-sous une B différente, et vérifie le rejet **sans jamais citer une valeur de production**.
-C'est aussi ce que la norme « valeurs pilotées par la donnée » du projet exige déjà.
+**La revalidation au chargement.** Tester qu'un profil enregistré sous d'anciens seuils est
+rejeté quand ils bougent, **sans figer les seuils dans le test**. La réponse impose une
+contrainte d'implémentation utile : **la fonction de validation prend sa configuration en
+argument** au lieu de lire des constantes compilées. Le test construit un profil sous une
+configuration A arbitraire, revalide sous une B, et vérifie le rejet sans citer une valeur de
+production — ce que la norme « valeurs pilotées par la donnée » du projet exige déjà.
 
-**« La jauge n'a pas de cible. »** **Non testable, et il faut le dire.** C'est l'absence
-d'une fonctionnalité, pas un comportement observable. Les seules vérifications honnêtes
-sont une relecture de code — aucun chemin de rendu de cible, de score ou de plafond dans le
-composant — et un playtest qui confirme que le joueur ne perçoit pas un test. Aucun critère
-automatisé n'existe pour cette propriété, et prétendre le contraire donnerait une fausse
-assurance sur **l'exigence la plus contre-intuitive de tout le document**.
+**« L'étape 3 n'a pas de cible. »** C'est l'absence d'une fonctionnalité, pas un comportement
+observable. Les seules vérifications honnêtes sont un inventaire en liste blanche des éléments
+de l'écran, une relecture qui confirme l'absence de tout chemin de rendu d'une cible, et un
+playtest qui confirme que le joueur ne perçoit pas un test. Prétendre à un critère automatisé
+donnerait une fausse assurance sur **l'exigence la plus contre-intuitive du document**.
 
 ### Ce qui reste hors de portée d'une machine
 
-- La gêne sociale, l'impression de passer un test, la lecture d'un refus comme non
-  jugeant. Playtest qualitatif, et rien d'autre.
-- Le réalisme des environnements bruyants réels — télévision, salon partagé. Non simulable
-  en intégration continue.
-- **La validité de `F0Max` face à de vraies voix d'enfant.** Sujets réels obligatoires ; ce
-  point est le seul de cette liste qui puisse produire une **exclusion injuste** s'il est
-  laissé au raisonnement.
+- La gêne sociale, l'impression de passer un test, la lecture d'un refus comme non jugeant.
+- **Que l'objet de l'étape 3 enseigne le bon sens** — « ma voix alourdit » et non « fort, c'est
+  bien ». Mini-calibration du prototype, puis playtest.
+- Le réalisme des environnements bruyants réels — télévision, salon partagé, même pièce.
+- **De vraies voix d'enfant face au domaine du détecteur, à la branche 12 kHz et aux
+  périphériques à 44,1 kHz.** Sujets réels obligatoires ; c'est le point de cette liste qui
+  peut produire une **injustice ciblée** s'il est laissé au raisonnement (OQ-C5).
 - Le confort et la fatigue induits par `PlateauHold_s` et `PeakTimeout_s`.
-- La fluidité perçue de la jauge en temps réel.
+- La fluidité perçue de la réaction de l'objet.
 
 ## Open Questions
 
 ### Comment lire cette section
 
-Même classement qu'au système 1 — par **ce que la question empêche**, et non par thème.
+Même classement qu'au système 1 — par **ce que la question empêche**, et non par thème. Les
+identifiants sont stables : une question résolue garde son numéro.
 
 ---
 
 ### Bloque le code
 
-#### OQ-C1 — Où le profil persiste-t-il ? Et surtout : doit-il suivre le joueur ?
+#### OQ-C1 — Où le profil persiste-t-il ? Et doit-il suivre le joueur ?
 
-La persistance nous appartient depuis le contrat du système 1 ; l'index des systèmes la
-signalait auparavant **sans propriétaire**. Elle en a un, mais pas de réponse.
-
-Le choix évident serait le Steam Cloud, puisqu'un profil « appartient au joueur ». **C'est
-probablement le mauvais choix, et pour une raison qui n'est pas évidente.**
+La persistance appartient à ce système ; le *où* n'a pas de réponse arrêtée. Le choix évident
+serait le Steam Cloud, puisqu'un profil « appartient au joueur ». **C'est probablement le mauvais
+choix.**
 
 > **Le profil décrit un micro et une pièce autant qu'une voix.** `Floor_dB` est le bruit du
-> logement. `Scream_dB` dépend du gain d'entrée du matériel. Synchroniser ce profil entre
-> machines ferait suivre au joueur, sur son portable dans le train, une calibration faite
-> au casque dans son salon — et **le jeu se tromperait d'autant plus qu'il croirait le
-> connaître**.
-
-Trois issues :
+> logement ; `Scream_dB` dépend du gain d'entrée du matériel. Synchroniser ce profil ferait suivre
+> au joueur, sur son portable dans le train, une calibration faite au casque dans son salon — et
+> **le jeu se tromperait d'autant plus qu'il croirait le connaître**.
 
 | Option | Conséquence |
 |---|---|
 | **A — local, par machine** | Correct par construction. Le joueur recalibre en changeant de machine, ce qui est exactement ce qu'il faut faire |
 | **B — cloud, un profil unique** | Faux dès la deuxième machine, et le défaut est silencieux |
-| **C — cloud, un profil par machine** | Correct et pratique, mais suppose une identification stable de la machine et davantage de logique |
+| **C — cloud, un profil par machine** | Correct et pratique, mais suppose une identification stable de la machine |
 
-> **Recommandation : A pour le MVP.** C est meilleur et peut attendre : le joueur multi-postes
-> n'est pas le cas nominal d'un jeu coop entre amis, et A ne ferme pas la porte à C.
+> **Recommandation : A pour le MVP.** C est meilleur et peut attendre ; A ne ferme pas la porte à
+> C. **La décision appelle un ADR** avant toute ligne de persistance.
 
-#### OQ-C2 — Le détecteur d'écrêtage doit sortir de sa cachette
+#### OQ-C2 — Le détecteur d'écrêtage doit devenir une information
 
-Le système 1 détecte déjà l'écrêtage — `Peak` saturé sur plusieurs échantillons consécutifs
-— mais **uniquement pour geler sa `Continuity`**. Nous en avons besoin comme **information**,
-pour avertir le joueur que son micro sature et que son registre haut sera aplati pour toute
-la partie.
+Le système 1 détecte l'écrêtage pour **geler sa `Continuity`**. Nous en avons besoin comme
+**information**, pour avertir le joueur que son registre haut sera aplati pour toute la partie.
+Tant que le détecteur reste enfoui dans la logique de gel, CAL-14a n'est pas exécutable.
 
-Tant que ce détecteur reste enfoui dans la logique de gel, CAL-14 n'est pas exécutable et
-l'avertissement ne peut pas exister. **C'est un petit changement de surface sur `Voice.Core`,
-à décider avec le système 1.**
+**C'est un changement de surface sur `Voice.Core`**, donc de la liste blanche d'ADR-0004, à
+décider avec le système 1. Il ne suffit pas : **le seuil d'écrêtage lui-même est EN ATTENTE** dans
+la liste canonique du système 1, faute d'enregistrements de cris saturés.
 
-#### OQ-C3 — Deux gardes pour l'étape 1 : redondantes ou complémentaires ?
+#### OQ-C3 — La seconde garde de l'étape 1 n'a pas de valeur
 
-CAL-03 rejette l'étape si des trames voisées y apparaissent — le joueur a parlé. CAL-04
-la rejette si l'écart `P95 − P50` est trop large.
+Deux gardes protègent l'étape de silence, et elles ne sont pas redondantes :
 
-On pourrait croire la seconde redondante. **Elle ne l'est pas**, et le formuler donne enfin
-sa valeur au seuil manquant :
+- **La garde de parole** (CAL-03) attrape une voix, par la périodicité et le jitter, sans porte de
+  niveau.
+- **La garde de stabilité** (CAL-04) attrape **une pièce instable** — ventilateur qui démarre, rue
+  bruyante par intermittence —, c'est-à-dire du bruit fort et non voisé, que la première laisse
+  passer.
 
-- CAL-03 attrape **la parole**, via la porte de voisement.
-- CAL-04 attrape **un environnement instable** — un ventilateur qui démarre, une rue
-  bruyante par intermittence — c'est-à-dire du bruit fort et non voisé, que CAL-03 laisse
-  passer intégralement.
-
-La question n'est donc pas s'il faut la garde, mais **à partir de quelle instabilité une
-pièce cesse d'être caractérisable** par un seul nombre. Cela se mesure ; ça ne se raisonne
-pas.
+La question n'est pas s'il faut la seconde, mais **à partir de quelle instabilité une pièce cesse
+d'être caractérisable par un seul nombre** — et si l'écart `P95 − P50` est la bonne statistique.
+Cela se mesure sur les enregistrements bruts de pièces réelles ; ça ne se raisonne pas.
 
 ---
 
 ### Bloque le réglage
 
-#### OQ-C4 — Quatorze valeurs provisoires, et trois protocoles différents
-
-Aucune n'est mesurée, et elles ne se résolvent pas toutes de la même façon :
+#### OQ-C4 — Les valeurs provisoires ne se règlent pas toutes de la même façon
 
 | Groupe | Valeurs | Se règle par |
 |---|---|---|
-| Partagé avec le système 1 | `HardFloor_dB`, `QualityBand_dB` | **Protocole A** du système 1 |
-| Propre à la calibration | `FloorMargin_dB`, écart `P95−P50`, `VoicedMin`, durée étape 1, centile | Essais en pièces réelles |
-| Le parcours | `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s` | Essais sur montées réelles — **et ensemble**, voir *Tuning Knobs* |
-| La plausibilité | `RestMin`, `RestMax` | Statistiques sur calibrations réelles |
-| Croisé | Renforcement `LowRange` | **Se règle avec le système 1**, puisqu'il agit sur son enveloppe |
+| La plage utile | `HardFloor_dB`, `QualityBand_dB` | Enregistrements bruts et session hors ligne (B7, C9), **après** `FloorMargin_dB` et `Margin_dB` |
+| Le plancher | `FloorMargin_dB` avec `Margin_dB` du système 1, durée de l'étape 1, `WarmUp_s`, centile, `StabilityMax_dB`, `SpeechRun` | Essais en pièces réelles, étape de silence du prototype (B2) |
+| La parole posée | `VoicedMin`, `Step2Timeout_s` | Enregistrements, et le mode réparation comme contrainte |
+| La montée | `PlateauDelta_dB`, `PlateauHold_s`, `PeakTimeout_s` | Montées réelles — **ensemble** |
+| La plausibilité | `RestMax` | Statistiques sur calibrations réelles, en dernier |
+| Le parcours | `DeviceCheck_s` | Playtest |
 
-> **L'ordre compte, et il vit ailleurs.** Ces quatorze valeurs et les dix du système 1 ne
-> sont pas indépendantes — `FloorMargin_dB` déplace `Δ`, donc `HardFloor_dB` ne peut pas se
-> régler avant lui ; `RestMin`/`RestMax` supposent des calibrations déjà passées sous seuils
-> provisoires. **La séquence canonique des vingt-quatre est écrite une seule fois**, dans
-> `voice-analysis.md`, OQ-4 — parce que c'est lui qui possède les protocoles A et B. Ne pas
-> la dupliquer ici.
+> **L'ordre vit ailleurs.** Ces valeurs et celles du système 1 ne sont pas indépendantes — les
+> marges déplacent `Δ'`, donc le plancher dur ne se règle pas avant elles. **La séquence canonique
+> est écrite une seule fois**, dans `voice-analysis.md`, OQ-4.
 
-#### OQ-C5 — `F0Max` ne se règle pas au raisonnement, et le risque n'est pas symétrique
+#### OQ-C5 — Les voix d'enfant ne se valident pas au raisonnement — **condition de sortie d'`In Design`**
 
-Mise à part parce qu'une erreur ici **exclut des joueurs** au lieu de dégrader une mesure.
+Aucune voix n'est plus refusée sur sa hauteur : V4 ne contrôle que le domaine du détecteur, au
+chargement. **Le risque a changé de forme, pas de cible.** Une voix d'enfant peut encore obtenir un
+jeu dégradé — « hauteur indisponible », cris dont la hauteur sort de la plage, branche 12 kHz
+absente sur un périphérique à 44,1 kHz. Ce n'est plus une exclusion, c'est une **injustice ciblée**
+sur une population que le projet a déjà dû corriger deux fois.
 
-Les voix d'enfant montent couramment à 300–400 Hz de médiane. Une borne mal placée les
-refuse — dans un jeu dont la mécanique centrale est de crier, et dont le système 1 a **déjà
-dû corriger un défaut d'équité visant exactement cette population**. Deux fois sur le même
-sujet, ce n'est plus une coïncidence : c'est un angle mort du projet.
+À vérifier sur de **vraies voix d'enfant**, et sur des voix adultes aiguës :
 
-**Cette valeur ne peut pas être figée sans avoir été confrontée à de vraies voix d'enfant.**
+1. `F0_habituel` tombe dans le domaine du détecteur ;
+2. la répartition `Full` / `NoJitter` / `Unavailable` — le seuil de jitter du système 1 ne les
+   pousse-t-il pas hors de `Full` ?
+3. la branche 12 kHz et son plafond à 900 Hz couvrent leurs cris ;
+4. ce qu'elles perdent sur un périphérique à 44,1 kHz.
+
+**Ce document ne sort pas d'`In Design` tant que ce protocole n'a pas tourné** (revue du
+2026-09-11, souscrit par le creative-director).
+
+#### OQ-C12 — La dérive entre calibration et jeu
+
+Un profil cohérent au commit peut devenir faux pendant la session sans qu'aucune validation ne le
+voie :
+
+- **bruit cyclique** qui change d'état — compresseur de frigo, chauffage — dans les deux sens
+  (*Edge Cases*) ;
+- **traitements du système d'exploitation ou du périphérique** — AGC de communication de Windows,
+  pilotes constructeur, AGC matériel des casques USB, bascule Bluetooth en profil main libre ;
+- **notifications du système** pendant l'étape de silence ;
+- **charge machine plus faible au menu qu'en jeu** : les ventilateurs tournent plus fort pendant la
+  partie qu'à la calibration.
+
+**À mesurer** : un POC audio enregistre la dérive de `Floor_dB` et `Scream_dB` sur 20 à 30 minutes
+de vraie session. **Piste nommée, non décidée** : un contrôle de cohérence léger à l'entrée en
+partie — comparer le niveau des trames hors voix au plancher du profil, et **proposer** « Refaire
+ma mesure », jamais l'imposer. Propriétaires : ce système, avec le système 2.
+
+#### OQ-C13 — Le gain d'entrée très bas
+
+Toutes les validations travaillent en décibels **relatifs** : un profil sous-alimenté passe, et
+le rapport signal sur bruit dégradé frappe d'abord le chuchotement. **Piste** : une garde en dBFS
+absolus sur `Scream_dB`. Elle ne jugerait pas une voix mais un réglage de matériel ; **elle
+signale, elle ne refuse pas**, conformément au principe du 2026-09-14. Valeur à mesurer.
+
+#### OQ-C14 — L'hystérésis 8 / 12 kHz
+
+Deux calibrations d'une même voix dont `2 · F0_habituel` tombe près de 600 Hz peuvent basculer
+d'une cadence à l'autre. **Piste** : basculer vers 12 kHz au-dessus de 600 Hz, ne revenir à 8 kHz
+que sous 550 Hz, ce qui suppose de connaître la branche du profil précédent. Second ordre ; même
+population qu'OQ-C5.
 
 ---
 
@@ -1471,68 +1725,75 @@ sujet, ce n'est plus une coïncidence : c'est un angle mort du projet.
 
 #### OQ-C6 — Toute la conception sociale de ce document est une hypothèse
 
-C'est le vrai risque du système, et il n'est pas technique.
+C'est le vrai risque du système, et il n'est pas technique. L'ordre des étapes, l'objet sans cible,
+le refus d'insister, le ton des messages : **tout repose sur une thèse non vérifiée** — qu'un joueur
+gêné se mesure mieux si on ne lui demande rien frontalement.
 
-L'ordre des étapes, l'absence de cible sur la jauge, le refus d'insister, le ton des
-messages : **tout cela repose sur une thèse non vérifiée** — qu'un joueur gêné se mesure
-mieux si on ne lui demande rien frontalement.
+Le mode d'échec est **invisible** : un joueur intimidé produit un profil au registre écrasé qui
+**passe toutes les validations**, et trouve ensuite que le jeu réagit mal.
 
-Le mode d'échec est le pire qui soit : **invisible.** Un joueur intimidé produit un profil
-au registre écrasé qui **passe toutes les validations**. `LowRange` sera peut-être levé,
-peut-être pas. Rien ne signale que le problème vient de la situation sociale et non du
-matériel. Et le joueur, ensuite, trouve simplement que le jeu réagit mal.
-
-> **Le protocole qui tranche est simple et coûte une soirée.** Faire calibrer les mêmes
-> personnes deux fois : **seules dans une pièce**, puis **avec quelqu'un d'autre présent**.
-> Comparer les `Scream_dB`.
+> **Le protocole qui tranche.** Faire calibrer les mêmes personnes **seules**, puis **en condition
+> réelle** — les amis du sujet présents, au lancement d'une partie —, sur un échantillon plus large
+> qu'une soirée. Comparer **`Scream_dB`, `Rest_dB`, `F0_habituel` et `r'`** : les trois derniers
+> alimentent les seuils du système 11, pas seulement le premier.
 >
-> Si l'écart est faible, la conception tient. **S'il est large, elle a échoué** — et aucune
-> des quatorze valeurs ci-dessus n'y changera quoi que ce soit, parce que le problème ne
-> sera pas dans les seuils.
+> Si l'écart est faible, la conception tient. **S'il est large, elle a échoué** — et aucune valeur
+> de la liste canonique n'y changera rien, parce que le problème ne sera pas dans les seuils.
+
+Le test à plusieurs humains du plan de la passe groupée, **dont une session dans la même pièce**,
+en est la première occasion.
 
 #### OQ-C7 — La source non humaine, assumée
 
-Une calibration faite sur la télévision, la musique ou la voix d'un tiers est **parfaitement
-valide et parfaitement inutile**. Les quatre contrôles vérifient la cohérence des mesures,
-jamais leur provenance. Il n'y a pas de défense, ce n'est pas grave — personne n'a intérêt
-à saboter sa propre calibration — et cela reste écrit plutôt que tu.
+Une calibration faite sur la télévision, la musique ou la voix d'un tiers est **parfaitement valide
+et parfaitement inutile**. Les validations vérifient la cohérence des mesures, jamais leur
+provenance. Il n'y a pas de défense, ce n'est pas grave — personne n'a intérêt à saboter sa propre
+calibration —, et cela reste écrit plutôt que tu.
 
 ---
 
 ### Sans propriétaire, ou chez le voisin
 
-| # | Question | Chez qui |
-|---|---|---|
-| OQ-C8 | **Le tutoriel n'existe pas.** Voir ci-dessous | **Personne** |
-| OQ-C9 | Le portage prévoit-il qu'un porteur **lâche** en cours de transport ? Toute l'élégance de la résolution d'OQ-11 en dépend | Système 9 |
-| OQ-C10 | Comment le lobby affiche-t-il « X termine sa configuration » ? | Système 8 |
-| OQ-C11 | La durée ressentie du parcours complet n'a aucun critère, alors que *Player Fantasy* en fait un enjeu du mode réparation | Ici, à combler |
+| # | Question | Chez qui | État |
+|---|---|---|---|
+| OQ-C8 | **Le tutoriel n'existe pas.** Voir ci-dessous | **Personne** | Ouverte |
+| OQ-C9 | Le portage prévoit-il qu'un porteur **lâche** en cours de transport ? La recalibration en jeu en dépend (CAL-56) | Système 9 | Ouverte |
+| OQ-C10 | Comment le lobby affiche-t-il l'étape d'un joueur en calibration, et **le groupe peut-il démarrer sans lui** ? | Système 8 | Ouverte |
+| OQ-C11 | La durée ressentie du mode réparation n'avait aucun critère | Ici | **Résolue** — CAL-57 |
+| OQ-C15 | **Le prérequis du casque exclut structurellement** des joueurs — implant cochléaire, aide auditive, contre-indication médicale, hypersensibilité sensorielle. Documenté ; faut-il une réponse ? | Creative-director, avec l'accessibilité | Ouverte |
+| OQ-C16 | **Un joueur sans casque n'a aucun signal en jeu** : `Degraded` détecte l'absence de capture, pas une sur-réaction aux voix des coéquipiers | Systèmes 1 et 19 | Ouverte |
 
-> ### ⚠️ OQ-C8 — le tutoriel est cité par deux GDD et n'appartient à personne
+> #### OQ-C8 — le tutoriel est cité et n'appartient à personne
 >
-> `voice-analysis.md` écrit que « le joueur crée un profil personnel une fois, **via le
-> tutoriel** ». Ce document le reprend. `mvp-scope.md` fait de la calibration la
-> **porteuse de l'onboarding**.
+> `mvp-scope.md` fait de la calibration la **porteuse de l'onboarding**, et `voice-analysis.md`
+> écrit que le profil se crée « via le tutoriel ». **Aucun système « tutoriel » ne figure dans
+> `systems-index.md`**, qui relève le même oubli. Deux issues : soit l'onboarding **est** la calibration, et les documents cessent de
+> parler d'un tutoriel ; soit il en faut un, et c'est un **vingtième système**.
 >
-> **Or il n'y a pas de système « tutoriel » parmi les dix-neuf.** Aucun des quatre couches
-> n'en contient, et l'index n'en mentionne aucun.
->
-> C'est exactement la même classe d'oubli que la persistance du profil, que l'index avait
-> su repérer — un besoin nommé par plusieurs documents, assumé par aucun. Deux issues : soit
-> l'onboarding **est** la calibration et il n'y a pas de tutoriel séparé, auquel cas les
-> trois documents doivent cesser de parler d'un tutoriel ; soit il en faut un, et c'est un
-> **vingtième système** à ajouter au périmètre.
->
-> **Cette question n'est pas la nôtre à trancher**, mais elle est nôtre à signaler, puisque
-> c'est notre document qui repose dessus.
+> La décision D1 réduit le problème — l'étape 3 enseigne désormais le bon sens — sans le supprimer :
+> rien n'apprend au joueur à porter à plusieurs. **La question n'est pas la nôtre à trancher**,
+> mais elle est nôtre à signaler.
+
+**Différé sciemment**, avec ses raisons : export manuel du profil, guidage du placement du micro,
+faux écrêtage sur les plosives — `design/gdd/reviews/voice-calibration-2026-09-11.md`, « Différé
+sciemment ».
 
 ---
 
 ### État du code aujourd'hui
 
-**Rien de ce document n'est implémenté.** `SUAC.Voice.Core` contient les primitives
-d'analyse — mesure de niveau, décimation, YIN, enveloppe — et 41 tests verts, mais aucune
-ligne de calibration : ni mesure d'étape, ni validation, ni profil, ni persistance.
+**Rien de ce document n'est implémenté.** `SUAC.Voice.Core` contient des primitives d'analyse
+testées — mesure de niveau, décimation, YIN, enveloppe ; le `VoiceAnalyzer` et la normalisation
+restent à écrire, et il n'existe aucune ligne de calibration : ni mesure d'étape, ni validation,
+ni profil, ni persistance. Ce document est une spécification intégrale.
 
-Ce document est donc une spécification intégrale, sans existant à documenter — contrairement
-à `voice-analysis.md`, qui décrivait pour moitié du code déjà écrit.
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-09-07 | Création : squelette et *Overview* | — |
+| 2026-09-08 | Document complet. *UI Requirements* rapatriée depuis `voice-analysis.md`, qui la portait faute de destinataire. Le casque devient un prérequis du jeu. La recalibration en jeu passe par le menu : le personnage pose ce qu'il porte (OQ-11 du système 1 résolue). `LowRange` devient un contrat entrant du système 1. La population « qui ne peut pas parler fort » n'est plus exclue. La sérialisation, la version de schéma et la revalidation entrent dans `Voice.Core`. L'annulation d'écho est retirée d'ADR-0003 : le casque devient la seule mitigation | Revue du système 1 du 2026-09-07 ; recherche du 2026-09-08 |
+| 2026-09-11 | Revue `full` : MAJOR REVISION NEEDED | `design/gdd/reviews/voice-calibration-2026-09-11.md` |
+| 2026-09-14 | Principe des seuils personnels ; règles d'atteignabilité, de provenance et de disponibilité | Décision du propriétaire ; `.claude/rules/design-docs.md` |
+| 2026-09-15 | Dix décisions du propriétaire, dont D1 (l'étape 3 montre une conséquence), D2 (deux refus avant le profil approximatif), E5 (`r'` seul vers l'hôte), F2 (un détecteur ne refuse jamais seul), F5 (corriger en place) | `design/gdd/reviews/voice-analysis-2026-09-14.md` §6 |
+| 2026-09-16 | **Révision, passe groupée, étape 3.** *Validations* : V2 sur `Δ'` ; V3 signale sur `r'`, sa borne basse est supprimée ; V4 contrôle le domaine du détecteur au chargement, `F0Min` et `F0Max` disparaissent ; le plancher dur et la bande de qualité, portés sur `Δ'`, passent de 13 et 20 dB à 6 et 13 dB — la même frontière, moins `Margin_dB` —, provenance « pari de raisonnement » ; priorité des messages. *Parcours* : étape 0 (permission, « dis un mot », amorce sociale) ; étape 1 de 3 s à 6–8 s en respirant ; garde de parole par périodicité et jitter sans porte de niveau (l'ancienne était circulaire) ; `Step2Timeout_s` ; ensembles `G`/`Y`/`V`, `PitchStatus`, `Unavailable` à la deuxième tentative ; hauteur mesurée sous la configuration non calibrée ; plateau calé sur `M − Gate_dB`, sans évaluation avant `PlateauHold_s`, bouton d'arrêt ; profil approximatif après deux refus. *Réseau* : « le profil ne traverse jamais le réseau » devient « seul `r'` en est dérivé vers l'hôte ». *Chat vocal* : silence dans les deux sens, lobby compris — l'ancien texte le faisait découler d'une pause qui n'existe pas en réseau. *Dépendances* : système 11 déclaré, CAL-22 recadré sur le système 1. *Écrans* : l'étape 3 montre un objet qui réagit ; pulsation « on t'entend » à l'étape 2 ; tableau des refus réécrit ; message d'écrêtage étendu au gain analogique ; améliorations micro au rang du casque ; exclusion structurelle du casque nommée. *Critères* : CAL-18 retiré ; CAL-14 scindé ; CAL-24 rendu structurel ; CAL-04 EN ATTENTE ; CAL-40 à CAL-66 ajoutés, dont l'accessibilité. *Questions* : OQ-C5 devient condition de sortie d'`In Design` ; OQ-C6 renforcée ; OQ-C11 résolue ; OQ-C12 à C16 ajoutées. Les encadrés datés sont fondus dans le texte, et les comptes de valeurs remplacés par un renvoi à la liste canonique | Revue du 2026-09-11 ; `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json` |

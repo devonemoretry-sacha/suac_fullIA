@@ -463,9 +463,9 @@ Arbitrage (a) de la revue, accepté par le propriétaire.
 **Conformité au principe des seuils personnels.** `Gate_dB` est personnel : il part du
 bruit de *ta* pièce, mesuré par le système 6. `Margin_dB` est une constante, et le principe
 l'autorise parce qu'elle **détecte du bruit, elle ne juge pas une voix**. La respiration
-n'entre dans `Floor_dB` que si l'étape de silence du système 6 dure assez longtemps et se
-fait en respirant normalement ; tant que `voice-calibration.md` ne l'écrit pas, seule
-`Margin_dB` sépare la respiration de la voix.
+entre dans `Floor_dB` : l'étape de silence du système 6 dure assez longtemps pour la
+capter et se fait en respirant normalement (`voice-calibration.md`, *Detailed Rules*,
+étape 1).
 
 **Pourquoi `γ` et pas une interpolation linéaire en dB.** Le dB compresse déjà
 l'amplitude, mais la sonie perçue croît de façon **convexe** avec le dB. Une
@@ -890,7 +890,7 @@ les chiffre pas.
   calibration ne produit pas une hauteur que son détecteur ne sait pas mesurer. Au commit,
   le même test est une **assertion défensive sans témoin**, gardée comme telle. Il s'écrit
   comme une **appartenance** au domaine, qui rejette aussi une valeur non finie.
-  - **Précondition, à écrire par le système 6** : `F0_habituel` se mesure toujours sous la
+  - **Précondition, écrite par le système 6** (`voice-calibration.md`, *Formulas* §2) : `F0_habituel` se mesure toujours sous la
     configuration non calibrée, recalibration comprise. Mesurée sous une plage recalibrée
     à 12 kHz, une hauteur légitime peut dépasser la borne haute du domaine, et serait
     refusée à tort.
@@ -1339,7 +1339,7 @@ ADR-0004 (*Formulas*, « Décisions d'ADR-0004 ») : la tourner, c'est rouvrir l
 un curseur.
 
 **Le plancher dur et la bande de qualité ne sont pas des curseurs de ce document.** Ils sont
-définis, chiffrés et appliqués par le système 6 — `voice-calibration.md`, *Tuning Knobs* —
+définis, chiffrés et appliqués par le système 6 — `voice-calibration.md`, *Formulas*, « Porte de mesure du système 6 » —
 et ils portent sur la plage utile `Δ' = Scream_dB − Gate_dB` (*Formulas* §1, « Garde et
 plancher dur »).
 
@@ -1629,8 +1629,8 @@ document**. Chacun porte une étiquette qui dit ce qu'il coûte :
 | AC-22 | GIVEN un profil calibré en session 1 WHEN le joueur revient en session 2 THEN il rejoint une partie **sans recalibrer** | `[INTEG]` |
 
 > **Deux critères ont un seul propriétaire, et ce n'est pas ce document.** L'entrée en
-> partie sans profil calibré — doublon de CAL-32 — et l'accès à la calibration depuis les
-> menus lobby et en jeu sont des critères de la calibration : ils vivent dans
+> partie sans profil calibré — CAL-32 — et l'accès à la calibration depuis les
+> menus lobby et en jeu — CAL-55 — sont des critères de la calibration : ils vivent dans
 > `voice-calibration.md`, et ne sont plus redoublés ici. Ce document ne teste que ce que
 > `Voice.Core` produit.
 
@@ -2065,3 +2065,4 @@ règles, où il finirait tôt ou tard par contredire le texte qu'il était cens�
 | 2026-09-11 | **Le sonomètre ne compense rien** : porté sur le torse, il est lu par les coéquipiers et jamais par soi — le joueur n'a aucun retour visuel sur sa propre voix | `game-concept.md` § 2.4.5 |
 | 2026-09-15 | Révision groupée, premier document de la passe 1 → ADR → 6 → 11. Zéro unique de `Loudness` porté à `Gate_dB` ; `r'` et `ToPosition` remplacent `L_repos` ; enveloppe normative en `c = exp(−Δt / τ)` ; `PitchStatus` à trois valeurs, aucun détecteur ne refusant un profil à lui seul ; plancher dur redéfini sur la plage utile `Δ'` ; création de la table des domaines atteignables et de la liste canonique des valeurs provisoires ; ADR-0007 et ADR-0008 signalés *Accepted* ; encadrés datés repliés dans ce tableau | `reviews/voice-analysis-2026-09-14.md` §2, §3 et §6 ; décisions du propriétaire du 2026-09-15 |
 | 2026-09-15 | Vérification adverse de la révision : la sortie de `Degraded` devient l'événement « capture reprise » du système 2 (table des transitions, AC-20b, OQ-2) ; la taille de l'anneau médian rejoint la liste canonique, sa parité étant une décision de ce document et non d'ADR-0004 ; le seuil d'écrêtage et `p` y entrent EN ATTENTE ; AC-26c ajouté ; borne exacte de −12 demi-tons ; datation réseau corrigée ; deux dépendances d'exécution | Passe groupée, étape 1 — vérificateurs de complétude et de cohérence |
+| 2026-09-16 | Renvois alignés sur la révision du système 6 : la respiration entre dans `Floor_dB` ; la précondition de mesure de `F0_habituel` est écrite ; le plancher dur et la bande de qualité sont chiffrés dans la liste canonique du système 6, pas dans ses *Tuning Knobs* ; l'accès à la calibration depuis les menus porte l'identifiant CAL-55 | Passe groupée, étape 3 |

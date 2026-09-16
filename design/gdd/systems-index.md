@@ -321,7 +321,7 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
-| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED**, révision groupée en attente)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED**, révision groupée en attente)* |
+| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 3, re-revue à faire)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED**, révision groupée en attente)* |
 | Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |
