@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Passe groupee — etape 1 (systeme 1) faite ; etape 2 : ADR et documents transverses
+Task: Passe groupee — etapes 1 (systeme 1) et 2 (ADR, index, mvp-scope) faites ; etape 3 : systeme 6
 <!-- /STATUS -->
 
 ---
@@ -165,7 +165,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 
 1. [x] Archiver la revue du système 6, règle de méthode « atteignabilité + témoin »
 2. [x] Revue full du système 11 → re-revue full du système 1 (NEEDS REVISION)
-3. [~] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées.** Étape 1 (système 1) **faite le 2026-09-16** ; impacts transverses dans `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json`. (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
+3. [~] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées.** Étape 1 (système 1) et étape 2 (ADR-0003/0004/0005/0007/0008, index, `mvp-scope.md`) **faites le 2026-09-16** ; impacts transverses dans `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json`. (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
 4. [ ] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
 5. [ ] Test à plusieurs humains — **dont au moins une session dans la même pièce** (OQ-8)
 6. [ ] Puis les GDD suivants

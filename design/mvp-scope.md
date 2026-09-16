@@ -27,7 +27,7 @@ construits maintenant.
 
 | # | Système | Justification | État actuel |
 |---|---------|---------------|-------------|
-| 1 | **Voice-Physics — analyse** | Mécanique centrale. Loudness, pitch, enveloppe. | ✅ `Voice.Core` écrit et testé |
+| 1 | **Voice-Physics — analyse** | Mécanique centrale. Loudness, pitch, enveloppe. | Primitives de `Voice.Core` testées ; `VoiceAnalyzer` et normalisation à écrire |
 | 2 | **Voice-Physics — effet sur les objets** | La moitié manquante : traduire `VoiceFrame` en comportement physique. | ❌ Non commencé |
 | 3 | **Portage d'objets** | Solo et collectif, points d'ancrage multiples. Cœur de la coopération forcée. | ❌ Non commencé |
 | 4 | **Mobilier réactif — 2 à 3 types contrastés** | Prouve que le système généralise à des comportements différents. | ❌ Non commencé |

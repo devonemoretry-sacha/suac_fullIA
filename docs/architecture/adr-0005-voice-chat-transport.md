@@ -27,8 +27,8 @@
 >
 > **Conséquence sur le coût.** Le raisonnement « gratuit d'abord, Dissonance en upgrade
 > quand l'AEC deviendra nécessaire » ne tient plus par deux bouts : l'étape gratuite
-> n'existe pas, et l'AEC a été reclassée de confort à **correctness** par l'amendement
-> d'ADR-0003.
+> n'existe pas, et l'AEC n'est de toute façon exigée sur aucune implémentation : ADR-0003
+> (rétrogradé le 2026-09-08) la laisse au confort de la branche chat vocal.
 >
 > ### Backend retenu le 2026-09-07 : **Dissonance**
 >
@@ -144,12 +144,10 @@ un, rien n'oblige à se coupler à un middleware payant avant d'en avoir besoin.
   c'est ce qui procure occlusion et atténuation par la distance sans middleware payant.
 - L'implémentation B fournit à Dissonance un canal **non fiable et non ordonné** — ce que
   le P2P Steam donne nativement. Dissonance fournit les classes de base d'adaptateur.
-- **L'AEC vit en amont de la fourche** (ADR-0003, amendé le 2026-09-03) et n'est plus
-  un traitement de confort : sans elle, un joueur sans casque injecte la voix de ses
-  coéquipiers dans **sa propre analyse gameplay**. Elle n'existe pourtant qu'en
-  implémentation B. **Conséquence pour l'implémentation A : le casque est obligatoire**,
-  comme prérequis de validité de la mesure et non comme recommandation de confort.
-  Le point larsen du BACKLOG reste ouvert jusqu'à B.
+- **Aucune AEC ne protège l'analyse, quelle que soit l'implémentation** (ADR-0003) : un
+  joueur sans casque injecte la voix de ses coéquipiers dans **sa propre analyse gameplay**.
+  **Le casque est donc un prérequis du jeu**, pas une recommandation de confort. L'AEC du
+  backend reste un confort de la branche chat vocal, disponible en implémentation B.
 
 ## Alternatives Considered
 
@@ -176,9 +174,9 @@ Gratuite et déjà embarquée via Facepunch, mais l'API Steam ne fait que captur
 compresser — pas d'audio 3D, pas de rooms, pas d'annulation d'écho, pas de suppression de
 bruit. **Rejetée comme solution finale**, mais **retenue comme implémentation initiale (A)** :
 combinée à FMOD, elle couvre la spatialisation, l'occlusion et la distance — c'est-à-dire
-tout ce que le gameplay exige en matière de spatialisation. Ce qui manque en RNNoise et
-en rooms relève du confort ; **l'AEC, elle, ne relève pas du confort** (ADR-0003 amendé) —
-son absence est compensée par l'obligation du casque, pas ignorée.
+tout ce que le gameplay exige en matière de spatialisation. Ce qui manque en RNNoise, en
+rooms et en AEC relève du confort de la branche chat vocal ; l'entrée fantôme dans l'analyse,
+elle, n'est couverte par aucune AEC et relève du casque prérequis (ADR-0003).
 
 ### Alternative 5: Acheter Dissonance immédiatement
 
@@ -222,12 +220,11 @@ figure pas dans cette liste.
   ce jour, et **aucune n'est nécessaire pour le MVP**.
   *(Note : FMOD lui-même est **gratuit** sous 200 000 $ de revenu annuel et 500 000 $ de
   financement — les 55 $ ne concernent que le pont Dissonance→FMOD.)*
-- **Pas d'AEC en implémentation A — et depuis l'amendement d'ADR-0003, ce n'est plus
-  un simple inconfort.** Sans AEC, les haut-parleurs d'un joueur rejouent la voix de
-  ses coéquipiers, son micro la capte, et elle entre dans **sa propre analyse
-  gameplay** : le meuble qu'il porte réagit à la voix d'un autre. **Le casque devient
-  donc un prérequis de validité de la mesure**, pas une recommandation de confort — à
-  énoncer comme tel dans les consignes de playtest. Le larsen, lui, reste ouvert jusqu'à B.
+- **Aucune AEC sur l'analyse, en A comme en B** (ADR-0003). Les haut-parleurs d'un joueur
+  rejouent la voix de ses coéquipiers, son micro la capte, et elle entre dans **sa propre
+  analyse gameplay** : le meuble qu'il porte réagit à la voix d'un autre. **Le casque est un
+  prérequis du jeu**, à énoncer comme tel au premier lancement et dans les consignes de
+  playtest. Le larsen du chat vocal, lui, relève de l'AEC du backend.
 - Une interface de plus à définir et maintenir — coût réel, mais faible : l'adaptateur
   était à écrire de toute façon
 - Un adaptateur réseau à écrire **et à maintenir nous-mêmes**
@@ -304,3 +301,10 @@ FMOD et d'une dépendance au cloud Unity. Dans les trois cas, le gameplay ne cha
 - **ADR-0003** — Pipeline d'analyse : retire Dissonance du chemin critique de l'analyse, ce qui rend ce découplage possible
 - **Supersede** : l'entrée LOG du 2026-07-05 « Réseau pour l'audio : Dissonance + FishNet sessions parallèles », dont la question ouverte (« Dissonance a-t-il une intégration FishNet officielle ? ») a été tranchée par la négative le 2026-09-03
 - Source : `LOG - Décisions techniques.md`, entrée du 2026-09-03
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-09-07 | Implémentation initiale A (voix native Steam) invalidée par ADR-0008 ; Dissonance retenu | ADR-0008 |
+| 2026-09-16 | Corrigé en place : l'AEC n'est plus décrite comme protégeant l'analyse (ADR-0003 rétrogradé le 2026-09-08) ; le casque est un prérequis du jeu en toute implémentation | `design/gdd/reviews/voice-analysis-2026-09-14.md` §4, étape 2 ; règle « corriger en place » |

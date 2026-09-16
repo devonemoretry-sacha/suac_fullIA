@@ -151,13 +151,20 @@ Tout élément dépendant du temps le consomme. Il y en a **cinq**, pas un :
 | TTL de l'anneau médian | Un compte de **trames** | Exprimé en **secondes** |
 | Fenêtre de gel sur écrêtage | 250 ms, comptés sans référence | `DeltaSeconds` |
 
-- Les coefficients sont recalculés lorsque l'intervalle s'écarte du précédent au-delà d'un
-  epsilon. Un intervalle stable ne coûte donc rien de plus qu'aujourd'hui.
+- **Le coefficient de l'enveloppe est `c = exp(−Δt / τ)`**, recalculé lorsque l'intervalle
+  s'écarte du précédent au-delà d'un epsilon. C'est la loi actuelle du code,
+  `exp(−1 / (τ · rate))` avec `Δt = 1 / rate` (`EnvelopeFollower.cs:130`). La récurrence
+  opère en décibels, `E_n = x_n + (E_{n−1} − x_n) · c`, et sa remise à zéro pose l'état à
+  `MinDb`, **jamais à 0** : en dB, 0 est la pleine échelle. Le facteur `LowRange` multiplie
+  `τ`, jamais `c`. Détail et témoins : `design/gdd/voice-analysis.md`, *Formulas* §1a.
+  Un intervalle stable ne coûte rien de plus qu'aujourd'hui.
 - Les constantes de temps, exprimées en **millisecondes ou en secondes**, deviennent la
   vérité de référence. Cadence d'appel et cadence d'échantillonnage ne sont plus que des
   données d'entrée.
-- L'écart au nominal est **exposé**, pas seulement absorbé — consommé par le compteur
-  `ProfilerRecorder` du critère AC-42b.
+- L'écart au nominal est **exposé**, pas seulement absorbé. `Voice.Core` le rend comme une
+  valeur ; la couche `SUAC.Voice.Capture`, qui a le droit de connaître Unity, la publie dans un
+  compteur de profilage — un `ProfilerRecorder` ne peut pas vivre dans une assembly
+  `noEngineReferences` (critère AC-42b).
 
 > **Pourquoi `SampleRate` voyage avec `DeltaSeconds`.** Ce sont les deux faces du même
 > défaut. Si l'intervalle dérive, le nombre de relevés par trame dérive avec lui : les
@@ -245,9 +252,9 @@ AC-42b.
 
 Une comparaison de `float` par trame dans le cas nominal ; un recalcul de deux coefficients
 exponentiels lorsque l'intervalle change. À ~50 Hz, sur une seule instance par client
-(ADR-0003), l'ordre de grandeur est négligeable devant YIN, qui est en O(fenêtre²) et
-domine la chaîne — d'autant plus pour un joueur à voix aiguë décimé à 12 kHz, dont le coût
-YIN est environ 2,25 fois celui du cas courant.
+(ADR-0003), l'ordre de grandeur est négligeable devant YIN, qui coûte `maxLag × fenêtre` et domine
+la chaîne. Le surcoût d'un joueur à voix aiguë décimé à 12 kHz **n'est pas mesuré** :
+`design/gdd/voice-analysis.md`, AC-42, mesure deux profils (voir ADR-0004).
 
 ## Migration Plan
 
@@ -261,15 +268,17 @@ YIN est environ 2,25 fois celui du cas courant.
 ## Validation Criteria
 
 - AC-14 — le temps de montée correspond à la constante déclarée, à cadence nominale.
-- Le nouveau test de cadence variable ci-dessus.
+- AC-14e — le même échelon, injecté à deux cadences différentes, donne le même temps de montée
+  en dB (le test de cadence variable de l'étape 3 du *Migration Plan*).
 - AC-42b — la déviation de cadence est exposée en continu.
 
 ## GDD Requirements Addressed
 
 | GDD Document | System | Requirement | How This ADR Satisfies It |
 |-------------|--------|-------------|--------------------------|
-| `design/gdd/voice-analysis.md` | Tuning Knobs | « La cadence de la chaîne (~50 Hz) est un **contrat**, pas un curseur. La modifier casse le lissage en silence » | Rend le contrat vérifiable au lieu de seulement déclaré |
-| `design/gdd/voice-analysis.md` | Open Questions — OQ-3 | « Cadence implicite ou `deltaTime` explicite » | Tranche : explicite, l'implicite étant indisponible |
+| `design/gdd/voice-analysis.md` | Tuning Knobs — « Ce qui n'est pas un curseur » | L'intervalle entre deux trames est une **donnée d'entrée** : chaque appel porte son `AnalysisTiming` | Remplace un contrat implicite par une donnée injectée et vérifiable |
+| `design/gdd/voice-analysis.md` | Formulas §1a | « Le coefficient de l'enveloppe : `c = exp(−Δt / τ)` » | Fixe la loi que la migration de l'`EnvelopeFollower` doit appliquer |
+| `design/gdd/voice-analysis.md` | Open Questions — OQ-3 | « Cadence implicite ou `deltaTime` explicite » — fermée, cet ADR *Accepted* | Tranche : explicite, l'implicite étant indisponible |
 | `design/gdd/voice-analysis.md` | Dependencies — Système 2 | « Pousser les échantillons à cadence fixe et connue » | Le contrat subsiste, mais l'analyse cesse d'en dépendre aveuglément |
 
 > TR-ID stables à attribuer par `/architecture-review`.
@@ -282,3 +291,11 @@ YIN est environ 2,25 fois celui du cas courant.
 - **ADR-0003** — Une seule instance d'analyse par client, ce qui borne le surcoût
 - `design/gdd/voice-analysis.md` — OQ-3, AC-14, AC-42b
 - `design/gdd/reviews/voice-analysis-2026-09-07.md` — la revue qui a déclenché cet ADR
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-09-07 | Décision : `deltaTime` explicite, aucun mécanisme Unity ne fournissant 50 Hz fixes | Revue `/design-review` du 2026-09-07, constat du `unity-specialist` |
+| 2026-09-08 | Élargi à `AnalysisTiming { DeltaSeconds, SampleRate }` et aux quatre horloges implicites restantes | `docs/architecture/voice-chain-td-review-2026-09-08.md` |
+| 2026-09-16 | Corrigé en place : formule du coefficient `c = exp(−Δt / τ)`, remise à `MinDb`, facteur `LowRange` sur `τ` ; « 2,25 fois » retiré comme non mesuré ; le compteur de déviation vit dans `Voice.Capture` ; critère AC-14e nommé ; table des exigences GDD alignée sur le GDD révisé | `design/gdd/reviews/voice-analysis-2026-09-14.md` §2 (A1.6, A2, C3) ; décisions du propriétaire du 2026-09-15 |

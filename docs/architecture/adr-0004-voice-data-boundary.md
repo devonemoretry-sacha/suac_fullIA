@@ -82,8 +82,15 @@ six mois : il fallait un mécanisme que le compilateur fasse respecter.
 Les types de mesure brute (`RawLoudness`, `RawPitch`, `LoudnessMeter`, `PitchDetector`,
 `Decimator`) sont **`internal` à `SUAC.Voice.Core`**. Le gameplay vivant dans une autre
 assembly, il ne *peut pas* les lire. Seule **`VoiceFrame`**, entièrement normalisée,
-est publique. `PublicSurfaceTests` affirme que la surface publique de Core est
-**exactement** `{ VoiceFrame }`, par liste blanche.
+est publique. `PublicSurfaceTests` affirme la surface publique de Core **par liste blanche**.
+**La liste s'allonge, la règle ne se relâche jamais** : un type n'y entre que lorsqu'il est
+décidé et qu'il existe. Décidés à ce jour : `VoiceFrame` (écrit) ; `VoiceProfile` et
+`AnalyzerState` (2026-09-08) ; la conversion publique `ToPosition`, inverse de la courbe de
+sonie (2026-09-15, `design/gdd/voice-analysis.md`, *Formulas* §1), dont la forme — nouveau
+type ou méthode statique d'un type déjà public — se tranche à l'écriture du `VoiceAnalyzer`.
+`PublicSurfaceTests` est mis à jour le jour où chaque type existe. Aucun de ces ajouts ne
+fait franchir la frontière à une valeur brute : `AnalyzerState` est une énumération d'états,
+`ToPosition` convertit une grandeur déjà normalisée.
 `InternalsVisibleTo("SUAC.Tests.EditMode")` ouvre l'accès aux seuls tests.
 
 **2. Où vit l'état : Core lisse la mesure, Gameplay accumule le sens.**
@@ -112,8 +119,10 @@ pas et ne doit pas connaître.
 
 ### Key Interfaces
 
-- `VoiceFrame` — seul type public de `SUAC.Voice.Core` ; instantané daté, normalisé, valide comme paquet réseau
+- `VoiceFrame` — type public de `SUAC.Voice.Core` ; instantané daté, normalisé, valide comme paquet réseau
 - `VoiceProfile` (à venir) — public comme type, mais ses valeurs mesurées resteront internes
+- `AnalyzerState` (à venir) — état de session de l'analyseur, lu par les systèmes 12 et 19 ; propriété de l'analyseur, jamais champ de trame
+- `ToPosition` (à venir) — inverse pure de la courbe de sonie, consommée par le système 11 sur l'hôte ; forme à trancher
 - `VoiceAnalyzer` (à venir) — porte **tout** l'état de Core ; partout ailleurs, des fonctions pures
 
 ### Implementation Guidelines
@@ -213,24 +222,21 @@ extrapole plus qu'on ne mesure. **Rejetée.**
 | Fenêtre volume | n/a | ~21 ms | — |
 | Fenêtre hauteur | n/a | ~46 ms | — |
 
-> ### Correction du 2026-09-08 — l'estimation YIN était fausse d'un facteur 3 à 4
->
-> Recalculée sur le code par la revue de chaîne : `ComputeDifference` coûte
-> `maxLag × windowSize`. À 8 kHz, plage 70–600 Hz, fenêtre 256 → `maxLag = ⌈8000/70⌉ = 115`,
-> soit **29 440 itérations** internes, chacune avec vérification de bornes sur `Span`.
->
-> L'estimation d'origine (~25 µs) supposait ~0,85 ns par itération — **c'est du SIMD, pas du
-> scalaire Mono ou IL2CPP**. L'ordre de grandeur réaliste est 60 à 120 µs.
->
-> **Et cela ne change rien.** À ~50 Hz, hors thread principal, une seule instance par client
-> (ADR-0003) : **0,3 à 0,6 % d'un cœur**. Le pire cas des voix aiguës est même plus doux
-> qu'annoncé — la quatrième défense resserre aussi `minHz`, ce qui diminue `maxLag` :
-> **~1,8× et non 2,25×**.
->
-> **Conséquence pour la conception : cesser de dimensionner contre ce budget.** Le plafond de
-> 1 ms/frame ne couvre que la remise de la `VoiceFrame` au thread principal, que personne
-> n'a chiffrée — pas la chaîne DSP. AC-42b garde sa valeur comme **diagnostic**, pas comme
-> budget.
+**Coût de YIN — calculé, pas mesuré.** `ComputeDifference` coûte `maxLag × windowSize`. À
+8 kHz, plage 70–600 Hz, fenêtre 256 → `maxLag = ⌈8000/70⌉ = 115`, soit **29 440 itérations**
+internes, chacune avec vérification de bornes sur `Span`. L'ordre de grandeur réaliste en
+scalaire Mono ou IL2CPP est de **60 à 120 µs** — une estimation, pas une mesure. À ~50 Hz,
+hors thread principal, une seule instance par client (ADR-0003) : 0,3 à 0,6 % d'un cœur.
+
+**Le surcoût d'un joueur à voix aiguë décimé à 12 kHz n'est pas mesuré.** Les deux ratios
+qui ont circulé — « ~1,8× » et « 2,25× » — sont calculés sur des modèles, pas relevés sur le
+code : ils ne fondent aucune décision. `design/gdd/voice-analysis.md`, AC-42, **mesure deux
+profils** : la voix aiguë à 12 kHz et la plage par défaut à 8 kHz.
+
+**Conséquence pour la conception : ne pas dimensionner contre ce budget.** Le plafond de
+1 ms/frame ne porte que sur la remise de la `VoiceFrame` au thread principal, dont le
+mécanisme reste à décider (ADR de fil d'exécution à écrire avant le `VoiceAnalyzer`). AC-42b
+garde sa valeur comme **diagnostic**, pas comme budget.
 
 ## Migration Plan
 
@@ -270,3 +276,12 @@ vocale, qui est une exigence de design, pas une préférence technique.
 - Code : `Unity/Shut_up_and_carry/Assets/_Project/Runtime/Voice.Core/`
 - Tests : `Unity/Shut_up_and_carry/Assets/_Project/Tests/EditMode/PublicSurfaceTests.cs`
 - Source : `LOG - Décisions techniques.md`, entrées du 2026-07-27 (quatre entrées distinctes)
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-07-27 | Décisions d'origine : frontière brut/normalisé opposable à la compilation, YIN, porte de volume hors du détecteur | `LOG - Décisions techniques.md` |
+| 2026-09-03 | Formalisation en ADR | Onboarding du template |
+| 2026-09-08 | Estimation du coût de YIN recalculée sur le code (`maxLag × windowSize`) ; `VoiceProfile` et `AnalyzerState` décidés comme types publics | `docs/architecture/voice-chain-td-review-2026-09-08.md` |
+| 2026-09-16 | Corrigé en place : la liste blanche de la surface publique s'allonge (`AnalyzerState`, `ToPosition`), la règle ne change pas ; les ratios de coût 12 kHz « ~1,8× » et « 2,25× » sont retirés comme non mesurés, AC-42 mesure deux profils | `design/gdd/reviews/voice-analysis-2026-09-14.md` §3 (g) ; décisions du propriétaire du 2026-09-15 |

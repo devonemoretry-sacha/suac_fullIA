@@ -30,8 +30,7 @@ Utilisateur (solo dev). Déclenché par la revue `/design-review` du 2026-09-07 
 ## Summary
 
 Toute l'architecture vocale suppose que le système 2 **possède le périphérique micro et le
-fourche** — une branche vers l'analyse, une branche vers le chat vocal, l'AEC en amont de
-la fourche. Cette supposition présuppose une chose jamais établie : que le SDK de chat
+fourche** — une branche brute vers l'analyse, une branche traitée vers le chat vocal. Cette supposition présuppose une chose jamais établie : que le SDK de chat
 vocal accepte du **PCM fourni de l'extérieur** au lieu de posséder lui-même la capture.
 **La plupart des SDK possèdent la capture.** Décision : l'ingestion de PCM externe devient
 un **critère éliminatoire** de sélection du backend, et cette sélection **précède** tout
@@ -52,7 +51,7 @@ test de partage de périphérique.
 
 | Field | Value |
 |-------|-------|
-| **Depends On** | ADR-0005 (interface maison, implémentation interchangeable), ADR-0003 (fourche du signal, AEC en amont) |
+| **Depends On** | ADR-0005 (interface maison, implémentation interchangeable), ADR-0003 (fourche du signal brut) |
 | **Enables** | Système 2 — Audio d'entrée ; le POC audio |
 | **Blocks** | Le test de partage de périphérique décrit en OQ-7, qui ne mesure rien tant que ce critère n'est pas résolu |
 | **Ordering Note** | **Cet ADR précède le test, il ne le suit pas.** C'est tout l'objet du recadrage. |
@@ -71,7 +70,6 @@ capture — comportement le plus répandu — alors :
 
 - le système 2 **ne peut pas** être propriétaire du périphérique ;
 - il n'y a rien à fourcher, puisque deux composants réclament la même ressource ;
-- l'AEC ne peut pas être placée en amont de la fourche, car il n'y a pas de fourche ;
 - **le trajet décrit par ADR-0003 s'effondre**, quel que soit le résultat du test.
 
 Mener le test d'abord reviendrait à mesurer soigneusement une hypothèse dont on ignore si
@@ -90,18 +88,20 @@ mais n'a pas vérifié que le catalogue des fournisseurs acceptables était non 
 
 ### Constraints
 
-- Le signal remis à l'analyse doit être **brut** : post-AEC uniquement, jamais de VAD,
-  d'AGC ni de suppression de bruit (`design/gdd/voice-analysis.md`, *Visual/Audio
+- Le signal remis à l'analyse doit être **brut** : aucun traitement qui modifie la
+  dynamique ou la forme d'onde — ni AEC, ni VAD, ni AGC, ni suppression de bruit (ADR-0003) (`design/gdd/voice-analysis.md`, *Visual/Audio
   Requirements*). Un SDK qui n'expose que du signal déjà traité est inutilisable **même
   s'il accepte du PCM externe** en entrée.
-- L'AEC doit rester disponible et positionnable **en amont** de la fourche : c'est une
-  question de justesse de mesure, pas de confort d'écoute (ADR-0003).
+- L'AEC du backend est un **confort de la branche chat vocal** : elle n'est pas exigée sur la
+  branche d'analyse, où aucune AEC ne s'applique (ADR-0003, amendé le 2026-09-08 ; le casque
+  est la seule mitigation de l'entrée fantôme).
 - Cible PC / Steam.
 
 ### Requirements
 
 1. Établir quels SDK candidats acceptent du PCM fourni par l'application.
-2. Parmi eux, lesquels exposent une AEC utilisable en amont de la fourche.
+2. ~~Parmi eux, lesquels exposent une AEC utilisable en amont de la fourche.~~ **Critère
+   retiré le 2026-09-08** : aucune AEC n'est exigée sur la branche d'analyse (ADR-0003).
 3. Retenir un backend, et seulement ensuite tester le partage sur la cible.
 
 ## Decision
@@ -139,8 +139,9 @@ issues seraient, par ordre de préférence :
   alimente le chat vocal par une API d'entrée personnalisée, si le SDK en offre une même
   partielle.
 - **Renoncer à l'AEC en amont** et accepter une contamination mesurée, en la traitant comme
-  une dégradation documentée plutôt que comme un défaut caché. Coût : la justesse de la
-  mesure, c'est-à-dire le cœur du jeu. **Fortement défavorable.**
+  une dégradation documentée plutôt que comme un défaut caché. *(C'est la voie finalement
+  retenue le 2026-09-08, pour une autre raison — l'AEC du backend retenu ne peut pas se
+  placer en amont —, avec le casque comme mitigation : ADR-0003.)*
 - **Renoncer au chat vocal intégré** au profit d'un chat externe (Discord), la voix
   redevenant un pur contrôleur. Coût de conception réel, mais **honnête** : le jeu perd une
   commodité, pas sa mécanique centrale.
@@ -495,7 +496,7 @@ Consultées le 2026-09-07. Documentation éditeur de préférence à toute sourc
 | GDD Document | System | Requirement | How This ADR Satisfies It |
 |-------------|--------|-------------|--------------------------|
 | `design/gdd/voice-analysis.md` | Open Questions — OQ-7 | « Le micro peut-il vraiment être partagé ? » | Recadre : la question préalable est la capacité d'ingestion du SDK |
-| `design/gdd/voice-analysis.md` | Visual/Audio Requirements | « Livrer le signal brut : post-AEC uniquement, jamais de VAD, d'AGC ni de suppression de bruit » | En fait un critère de sélection du backend, pas un souhait adressé au système 2 |
+| `design/gdd/voice-analysis.md` | Dependencies — Système 2 | « Livrer le signal brut, sans aucun traitement » | En fait un critère de sélection du backend, pas un souhait adressé au système 2 |
 | `design/gdd/voice-analysis.md` | Dependencies — Système 2 | « Posséder le périphérique et le fourcher — jamais un second lecteur » | Établit à quelle condition ce contrat est seulement réalisable |
 
 > TR-ID stables à attribuer par `/architecture-review`.
@@ -504,7 +505,14 @@ Consultées le 2026-09-07. Documentation éditeur de préférence à toute sourc
 
 - **ADR-0005** — Transport de la voix : cet ADR précise le domaine de validité de son
   interchangeabilité
-- **ADR-0003** — Fourche du signal et AEC en amont : c'est le trajet que cette question
-  peut invalider
+- **ADR-0003** — Fourche du signal brut, sans AEC sur l'analyse : c'est le trajet que cette
+  question peut invalider
 - `design/gdd/voice-analysis.md` — OQ-7
 - `design/gdd/reviews/voice-analysis-2026-09-07.md` — la revue qui a produit ce recadrage
+
+## Revision History
+
+| Date | Changement | Source |
+|---|---|---|
+| 2026-09-07 | Critère éliminatoire arrêté, inventaire fait, Dissonance retenu, intégration FishNet auditée et vendorisée | Revue `/design-review` du 2026-09-07 ; OQ-7 |
+| 2026-09-16 | Corrigé en place après la rétrogradation d'ADR-0003 : le signal d'analyse est brut sans AEC, le critère « AEC en amont » est retiré. **L'ordre d'activation de l'intégration** (compiler, canal, authentification, OQ-7) **contredit toujours** `DissonanceFishNet~/VENDORING.md:152–155` — à trancher par le `technical-director` | `design/gdd/reviews/voice-analysis-2026-09-14.md` §2 (C10) ; ADR-0003 |

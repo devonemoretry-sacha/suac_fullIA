@@ -25,8 +25,9 @@ la question des priorités se réduit donc à l'**ordre de conception**.
 spécifié avant quoi*, pas les flèches de compilation ni le flux de données à
 l'exécution. **Foundation = aucune dépendance envers un système *non encore conçu*.**
 
-La formulation compte : les systèmes 2 et 3 dépendent du système 1, qui est déjà
-construit, testé et figé. Dépendre d'un acquis n'empêche pas de commencer ; dépendre
+La formulation compte : les systèmes 2 et 3 dépendent du système 1, dont les
+primitives sont testées et le GDD écrit ; le `VoiceAnalyzer` et la normalisation restent à
+coder. Dépendre d'un acquis n'empêche pas de commencer ; dépendre
 d'un système qui reste à concevoir, si. Cette distinction n'est pas cosmétique —
 l'appliquer a fait remonter deux systèmes d'une couche et en a fait descendre un
 autre (voir *Revision History*).
@@ -47,7 +48,7 @@ autre (voir *Revision History*).
 | 8 | Session / lobby | Core | MVP | Not Started | — | 5 |
 | 9 | Portage d'objets | Gameplay | MVP | Not Started | — | 5, 7 |
 | 10 | Appartement | Level | MVP | Not Started | — | 7, 9 |
-| 11 | Effet voix → objets | Gameplay | MVP | **Needs Revision** | `voice-object-effect.md` | 3, 9, **6, 10** ⚠️ |
+| 11 | Effet voix → objets | Gameplay | MVP | **Needs Revision** | `voice-object-effect.md` | **1**, 3, 9, **6, 10** ⚠️ |
 | 12 | Couche de retour local *(inféré)* | Gameplay | MVP | Not Started | — | 1, 2, 5, 9, 11 |
 | 13 | Mobilier réactif (2-3 types) | Gameplay | MVP | Not Started | — | 3, 11 |
 | 14 | Chat vocal de proximité | Audio | MVP | Not Started | — | 2, 4, 5 |
@@ -109,7 +110,7 @@ Vertical Slice / Alpha / Full Vision existent comme vision dans le GDD source ma
 
 ### Foundation Layer (aucune dépendance de conception)
 
-1. **Analyse vocale** ✅ — implémentée et testée (41 tests hors éditeur). Pure DSP.
+1. **Analyse vocale** — primitives testées (41 tests hors éditeur) ; `VoiceAnalyzer` et normalisation à écrire. Pure DSP.
 2. **Audio d'entrée** — possède le périphérique micro et le **fourche** :
    voie brute → analyse, voie traitée → chat vocal. Conforme à ADR-0003
    (« deux voies distinctes **sur le même micro** »). Un seul lecteur du device.
