@@ -74,6 +74,11 @@ var APP = (function () {
       A.analyser.fftSize = 1024;                         // ≈ 21 ms à 48 kHz
       A.buf = new Float32Array(A.analyser.fftSize);
       setupRecorder();
+      if (A.clockMode === 'audio') {
+        A.clockNode = A.ctx.createScriptProcessor(1024, 1, 1);
+        var m2 = A.ctx.createGain(); m2.gain.value = 0; A.clockNode.connect(m2); m2.connect(A.ctx.destination);
+        A.clockNode.onaudioprocess = function () { A.runClock(); };
+      }
     }
     if (A.ctx.state === 'suspended') A.ctx.resume();
     return A.ctx;
@@ -183,9 +188,22 @@ var APP = (function () {
     var mute = A.ctx.createGain(); mute.gain.value = 0;
     A.recNode.connect(mute); mute.connect(A.ctx.destination);
     A.recNode.onaudioprocess = function (ev) {
-      if (A.rec.active) A.rec.chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+      var d = ev.inputBuffer.getChannelData(0);
+      if (A.rec.active) A.rec.chunks.push(new Float32Array(d));
+      var peak = 0, clips = 0;
+      for (var i = 0; i < d.length; i++) { var a = d[i] < 0 ? -d[i] : d[i]; if (a > peak) peak = a; if (a >= 0.985) clips++; }
+      A.livePeak = Math.max(peak, (A.livePeak || 0) * 0.7);
+      if (clips) A.lastClipAt = performance.now();
+      A.dynTokens.forEach(function (t) { t.peak = Math.max(t.peak, peak); t.clips += clips; t.n += d.length; });
     };
   }
+  // Crête et part d'échantillons saturés sur une fenêtre de mesure (diagnostic du prototype, OQ-C2)
+  A.dynTokens = [];
+  A.dynStart = function () { var t = { peak: 0, clips: 0, n: 0 }; A.dynTokens.push(t); return t; };
+  A.dynStop = function (t) {
+    A.dynTokens = A.dynTokens.filter(function (x) { return x !== t; });
+    return { crete_dBFS: t.peak > 0 ? +(20 * Math.log10(t.peak)).toFixed(1) : null, saturation_pct: t.n ? +(t.clips / t.n * 100).toFixed(3) : 0 };
+  };
   A.recStart = function (label) {
     if (!el('chkRecord').checked || !A.ctx) return;
     A.rec.active = true; A.rec.label = label; A.rec.chunks = [];
@@ -299,9 +317,16 @@ var APP = (function () {
 
   // ------------------------------------------------------------ boucle
   // ?horloge=timer : horloge de secours pour les vérifications dans un volet où requestAnimationFrame est suspendu
-  var schedule = location.search.indexOf("horloge=timer") >= 0
-    ? function (f) { setTimeout(function () { f(performance.now()); }, 16); }
+  // ?horloge=audio : horloge portée par les rappels audio, qui ne sont pas bridés quand l'onglet est caché
+  var clockQueue = [];
+  A.clockMode = location.search.indexOf('horloge=audio') >= 0 ? 'audio' : location.search.indexOf('horloge=timer') >= 0 ? 'timer' : 'raf';
+  var schedule = A.clockMode === 'timer' ? function (f) { setTimeout(function () { f(performance.now()); }, 16); }
+    : A.clockMode === 'audio' ? function (f) {
+        if (A.clockNode) clockQueue.push(f);
+        else setTimeout(function () { f(performance.now()); }, 50);
+      }
     : function (f) { requestAnimationFrame(f); };
+  A.runClock = function () { var q = clockQueue; clockQueue = []; q.forEach(function (g) { g(performance.now()); }); };
   var last = performance.now(), wasOn = false, tOn = 0, tStop = null, prevRaw = P.S1.MinDb;
   function frame(now) {
     var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -326,7 +351,10 @@ var APP = (function () {
 
     el('liveBox').hidden = A.hideLevel;
     if (!A.hideLevel) {
-      el('liveDb').textContent = A.src ? fmt(A.envDb, 1) + ' dB' + (A.profile ? ' · L ' + fmt(A.L, 2) : '') : '—';
+      var sat = A.lastClipAt && now - A.lastClipAt < 1000;
+      el('liveDb').textContent = A.src ? fmt(A.envDb, 1) + ' dB · crête ' + (A.livePeak > 0 ? fmt(20 * Math.log10(A.livePeak), 0) : '—') + ' dBFS' +
+        (sat ? ' · SATURE' : '') + (A.profile ? ' · L ' + fmt(A.L, 2) : '') : '—';
+      el('liveDb').style.color = sat ? 'var(--max)' : '';
       el('liveBar').style.width = Math.max(0, Math.min(100, (A.envDb + 90) / 90 * 100)) + '%';
     }
     for (var j = 0; j < A.subs.length; j++) A.subs[j](now, dt);

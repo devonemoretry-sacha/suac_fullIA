@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype etendu construit (prototypes/charge-vocale-etendue) ; attente du premier essai au micro
+Task: Prototype etendu — essai 1 analyse, corrections faites ; essai 2 attendu (Blue VO!CE coupe, voix simulees muettes)
 <!-- /STATUS -->
 
 ---
@@ -179,7 +179,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 ## Prototype étendu — démarré le 2026-09-17 (plan, étape 4)
 
 **Dossier** : `prototypes/charge-vocale-etendue/` · lancement `node prototypes/charge-vocale-etendue/serve.js` → http://localhost:4322 (micro : localhost obligatoire, comme le banc).
-**Chemin** : navigateur (décidé dans le plan). **Phase** : 6 — construit et vérifié le 2026-09-17 (29 contrôles Node, parcours complet au générateur) ; premier essai interrompu : calibration trop rapide, corrigée (porte « Je suis prêt », fin de parole par le joueur) — à reporter dans voice-calibration.md à la re-revue (CAL-43) ; nouvel essai attendu.
+**Chemin** : navigateur. **Phase** : 6 — essai 1 fait le 2026-09-17 (journal `prototypes/charge-vocale-etendue/sessions/2026-09-17-essai-1.json`, analyse dans le README) ; hypothèse principale : Blue VO!CE (G HUB) compresse la voix du propriétaire ; jeu biaisé par une voix simulée active ; prototype corrigé ; essai 2 attendu.
 
 **Hypothèses** :
 - **H1 (E1)** — l'avertissement « événement au franchissement » laisse le temps de se taire au moins aussi bien que l'indice dès l'attaque du banc ; signal : choix en comparaison aveugle + lecture de la pré-charge (VO-49).

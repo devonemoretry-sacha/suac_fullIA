@@ -1,0 +1,1392 @@
+{
+  "profil": {
+    "floor": -71.71429379343685,
+    "rest": -26.748076376834124,
+    "scream": -11.397642064606764,
+    "lowRange": false,
+    "approximate": false,
+    "source": "calibration"
+  },
+  "s1": {
+    "MinDb": -120,
+    "Margin_dB": 7,
+    "gamma": 0.65,
+    "tauAttack": 0.015,
+    "tauRelease": 0.15,
+    "lowRangeFactor": 1.5
+  },
+  "s6": {
+    "step1": 7,
+    "WarmUp": 0.5,
+    "FloorMargin": 3,
+    "DeviceCheck": 5,
+    "VoicedMinSec": 2,
+    "Step2Timeout": 15,
+    "PlateauDelta": 1.5,
+    "PlateauHold": 1.2,
+    "PeakTimeout": 10,
+    "HardFloor": 6,
+    "QualityBand": 13,
+    "RestMax": 0.8
+  },
+  "s11": {
+    "Avertissement": 0.35,
+    "Remplissage": 1.5,
+    "Vidange": 1.5,
+    "Amorcage": 0.15,
+    "h": 0.2,
+    "k": 0.85,
+    "Lenteur": 10,
+    "T_objet": 0.7,
+    "k_z": 0.4,
+    "z": 0.5,
+    "DureeMin": 1,
+    "FusionMax": 10,
+    "Expiration": 0.2,
+    "semantique": "evenement",
+    "zizanie": "duree"
+  },
+  "journal": [
+    {
+      "t": "2026-09-17T11:40:16.500Z",
+      "type": "attribution",
+      "text": "Cri mystère : Lou — réponse Max (fausse)",
+      "data": {
+        "vrai": "Lou",
+        "reponse": "Max",
+        "juste": false,
+        "delai_ms": 1600,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:40:14.176Z",
+      "type": "attribution",
+      "text": "Cri mystère : Ada — réponse Ada (juste)",
+      "data": {
+        "vrai": "Ada",
+        "reponse": "Ada",
+        "juste": true,
+        "delai_ms": 1146,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:40:11.839Z",
+      "type": "attribution",
+      "text": "Cri mystère : Lou — réponse Lou (juste)",
+      "data": {
+        "vrai": "Lou",
+        "reponse": "Lou",
+        "juste": true,
+        "delai_ms": 2035,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:40:04.187Z",
+      "type": "attribution",
+      "text": "Cri mystère : Ada — réponse Ada (juste)",
+      "data": {
+        "vrai": "Ada",
+        "reponse": "Ada",
+        "juste": true,
+        "delai_ms": 2825,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:59.912Z",
+      "type": "attribution",
+      "text": "Cri mystère : Lou — réponse Lou (juste)",
+      "data": {
+        "vrai": "Lou",
+        "reponse": "Lou",
+        "juste": true,
+        "delai_ms": 2043,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:54.630Z",
+      "type": "attribution",
+      "text": "Cri mystère : Max — réponse Max (juste)",
+      "data": {
+        "vrai": "Max",
+        "reponse": "Max",
+        "juste": true,
+        "delai_ms": 2039,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:50.223Z",
+      "type": "attribution",
+      "text": "Cri mystère : Max — réponse Lou (fausse)",
+      "data": {
+        "vrai": "Max",
+        "reponse": "Lou",
+        "juste": false,
+        "delai_ms": 4174,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:42.406Z",
+      "type": "attribution",
+      "text": "Cri mystère : Lou — réponse Lou (juste)",
+      "data": {
+        "vrai": "Lou",
+        "reponse": "Lou",
+        "juste": true,
+        "delai_ms": 1417,
+        "voix_audibles": true,
+        "config": {
+          "semantique": "evenement",
+          "zizanie": "duree",
+          "T_objet": 0.7,
+          "Avertissement_ms": 350,
+          "Remplissage": 1.5,
+          "Vidange": 1.5,
+          "Amorcage": 0.15,
+          "h": 0.2,
+          "k": 0.85,
+          "Lenteur": 10,
+          "k_z": 0.4,
+          "z": 0.5,
+          "role": "hote",
+          "latence_ms": 60,
+          "son": true,
+          "tremblement": true,
+          "halo": false,
+          "tau_attaque_ms": 15,
+          "tau_relachement_ms": 150,
+          "gamma": 0.65,
+          "Margin_dB": 7,
+          "profil": {
+            "r": 0.712,
+            "lowRange": false,
+            "source": "calibration"
+          },
+          "voix": [
+            "Lou:A:converse:r0.47:120ms",
+            "Max:A:muet:r0.35:90ms",
+            "Ada:B:muet:r0.6:150ms"
+          ]
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:35.734Z",
+      "type": "zizanie",
+      "text": "Zizanie : punitive",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:32.536Z",
+      "type": "conversation",
+      "text": "Conversation soutenue (E4) : jouable",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:26.920Z",
+      "type": "tremblement",
+      "text": "Tremblement seul (VO-48) : oui",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:20.518Z",
+      "type": "precharge",
+      "text": "Pré-charge (VO-49) : déjà nerveux",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:18.531Z",
+      "type": "precharge",
+      "text": "Pré-charge (VO-49) : déjà nerveux",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:39:17.460Z",
+      "type": "phrase",
+      "text": "« J'ai eu le temps de me taire » : oui",
+      "data": {
+        "semantique": "evenement",
+        "zizanie": "duree",
+        "T_objet": 0.7,
+        "Avertissement_ms": 350,
+        "Remplissage": 1.5,
+        "Vidange": 1.5,
+        "Amorcage": 0.15,
+        "h": 0.2,
+        "k": 0.85,
+        "Lenteur": 10,
+        "k_z": 0.4,
+        "z": 0.5,
+        "role": "hote",
+        "latence_ms": 60,
+        "son": true,
+        "tremblement": true,
+        "halo": false,
+        "tau_attaque_ms": 15,
+        "tau_relachement_ms": 150,
+        "gamma": 0.65,
+        "Margin_dB": 7,
+        "profil": {
+          "r": 0.712,
+          "lowRange": false,
+          "source": "calibration"
+        },
+        "voix": [
+          "Lou:A:converse:r0.47:120ms",
+          "Max:A:muet:r0.35:90ms",
+          "Ada:B:muet:r0.6:150ms"
+        ]
+      }
+    },
+    {
+      "t": "2026-09-17T11:38:00.961Z",
+      "type": "même pièce",
+      "text": "sans étiquette — franchit la porte sur 1 % des trames",
+      "data": {
+        "part_trames_au_dessus_porte": 0.0119,
+        "position_max": 0.228,
+        "position_P95": 0,
+        "mediane_dB_au_dessus_porte": 3.3
+      }
+    },
+    {
+      "t": "2026-09-17T11:38:00.958Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Même pièce (sans étiquette)",
+      "data": {
+        "secondes": 31.21,
+        "offsetDC": -9.681e-9,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:37:25.621Z",
+      "type": "B3",
+      "text": "Scintillement : 0,3 bascules par seconde",
+      "data": {
+        "bascules_par_s": 0.33,
+        "L_max": 0.611,
+        "L_mediane_positive": 0.377
+      }
+    },
+    {
+      "t": "2026-09-17T11:37:25.620Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Note douce sur la porte",
+      "data": {
+        "secondes": 7.43,
+        "offsetDC": -2.773e-8,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:37:16.236Z",
+      "type": "AC-40",
+      "text": "p = 0,915 (cible atteinte)",
+      "data": {
+        "p": 0.9146,
+        "p4": 0.6998,
+        "descente_effective_s": 2.14,
+        "trames": 5399
+      }
+    },
+    {
+      "t": "2026-09-17T11:37:16.234Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Silence 30 s",
+      "data": {
+        "secondes": 31.3,
+        "offsetDC": -1.924e-8,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:41.469Z",
+      "type": "B2",
+      "text": "p = 1,000 (cible atteinte)",
+      "data": {
+        "p": 1,
+        "p4": 1,
+        "descente_effective_s": 1.5,
+        "trames": 1441
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:41.468Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Silence 8 s",
+      "data": {
+        "secondes": 9.47,
+        "offsetDC": 3.036e-8,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:23.895Z",
+      "type": "B1",
+      "text": "Voix posée — alarme sur un objet ordinaire",
+      "data": {
+        "mediane_dB": -22.8,
+        "P90_dB": -18.5,
+        "au_dessus_P95_piece_dB": 51.9,
+        "vs_porte_dB": 41.9,
+        "position_mediane": 0.787,
+        "position_P90": 0.867,
+        "part_trames_L_positive": 1,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:23.894Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Voix posée",
+      "data": {
+        "secondes": 5.48,
+        "offsetDC": -0.000008871,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:15.932Z",
+      "type": "B1",
+      "text": "Note chantée douce — alarme sur un objet ordinaire",
+      "data": {
+        "mediane_dB": -38.7,
+        "P90_dB": -26.4,
+        "au_dessus_P95_piece_dB": 36,
+        "vs_porte_dB": 26,
+        "position_mediane": 0.487,
+        "position_P90": 0.718,
+        "part_trames_L_positive": 0.878,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:15.930Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Note chantée douce",
+      "data": {
+        "secondes": 5.48,
+        "offsetDC": 0.0000145,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:08.052Z",
+      "type": "B1",
+      "text": "Bruits de bouche — alarme sur un objet ordinaire",
+      "data": {
+        "mediane_dB": -51.5,
+        "P90_dB": -29.9,
+        "au_dessus_P95_piece_dB": 23.3,
+        "vs_porte_dB": 13.3,
+        "position_mediane": 0.249,
+        "position_P90": 0.652,
+        "part_trames_L_positive": 0.879,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:36:08.051Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Bruits de bouche",
+      "data": {
+        "secondes": 5.48,
+        "offsetDC": 3.991e-7,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:51.257Z",
+      "type": "B1",
+      "text": "Clavier — alarme sur un objet ordinaire",
+      "data": {
+        "mediane_dB": -25.7,
+        "P90_dB": -21.9,
+        "au_dessus_P95_piece_dB": 49,
+        "vs_porte_dB": 39,
+        "position_mediane": 0.731,
+        "position_P90": 0.802,
+        "part_trames_L_positive": 0.981,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:51.256Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Clavier",
+      "data": {
+        "secondes": 5.39,
+        "offsetDC": -0.000002041,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:42.230Z",
+      "type": "B1",
+      "text": "Respiration normale — sous la porte : ne pèse rien",
+      "data": {
+        "mediane_dB": -80.1,
+        "P90_dB": -77.2,
+        "au_dessus_P95_piece_dB": -5.4,
+        "vs_porte_dB": -15.4,
+        "position_mediane": 0,
+        "position_P90": 0,
+        "part_trames_L_positive": 0,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:42.229Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Respiration normale",
+      "data": {
+        "secondes": 5.48,
+        "offsetDC": -6.775e-9,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:28.995Z",
+      "type": "B1",
+      "text": "Chuchotement — alarme sur un objet ordinaire",
+      "data": {
+        "mediane_dB": -27.2,
+        "P90_dB": -21.1,
+        "au_dessus_P95_piece_dB": 47.5,
+        "vs_porte_dB": 37.5,
+        "position_mediane": 0.704,
+        "position_P90": 0.819,
+        "part_trames_L_positive": 1,
+        "r": 0.712,
+        "seuil_ordinaire": 0.498
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:28.993Z",
+      "type": "B7",
+      "text": "Enregistrement brut : Chuchotement",
+      "data": {
+        "secondes": 5.48,
+        "offsetDC": 0.00003035,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:16.555Z",
+      "type": "profil",
+      "text": "Profil appliqué (calibration)",
+      "data": {
+        "floor": -71.71429379343685,
+        "rest": -26.748076376834124,
+        "scream": -11.397642064606764,
+        "lowRange": false,
+        "approximate": false,
+        "source": "calibration",
+        "r": 0.712,
+        "deltaP": 53.3,
+        "raisonsLowRange": []
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:04.417Z",
+      "type": "calibration",
+      "text": "Profil accepté",
+      "data": {
+        "profil": {
+          "floor": -71.71429379343685,
+          "rest": -26.748076376834124,
+          "scream": -11.397642064606764
+        },
+        "r": 0.712,
+        "deltaP": 53.3,
+        "infos": {
+          "silence": {
+            "P95": -74.7,
+            "P50": -79.5,
+            "ecartP95_P50": 4.8,
+            "trames": 1170,
+            "Floor_dB": -71.7
+          },
+          "parole": {
+            "Rest_dB": -26.7,
+            "trames_G": 717,
+            "max_etape2": -18,
+            "duree_s": 4.5,
+            "fin": "bouton",
+            "PitchStatus": "non mesuré (sans YIN)"
+          },
+          "montee": {
+            "Scream_dB": -11.4,
+            "fin": "plateau",
+            "duree_s": 2.1
+          }
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:02.916Z",
+      "type": "calibration",
+      "text": "Étape 3 : montée terminée (plateau)",
+      "data": {
+        "Scream_dB": -11.4,
+        "fin": "plateau",
+        "duree_s": 2.1
+      }
+    },
+    {
+      "t": "2026-09-17T11:35:02.916Z",
+      "type": "B7",
+      "text": "Enregistrement brut : montee",
+      "data": {
+        "secondes": 2.14,
+        "offsetDC": 0.00004881,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:34:58.421Z",
+      "type": "calibration",
+      "text": "Étape 2 : parole posée mesurée",
+      "data": {
+        "Rest_dB": -26.7,
+        "trames_G": 717,
+        "max_etape2": -18,
+        "duree_s": 4.5,
+        "fin": "bouton",
+        "PitchStatus": "non mesuré (sans YIN)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:34:58.420Z",
+      "type": "B7",
+      "text": "Enregistrement brut : parole posee",
+      "data": {
+        "secondes": 4.46,
+        "offsetDC": -0.00004724,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:40.266Z",
+      "type": "calibration",
+      "text": "Profil accepté — LowRange (V3)",
+      "data": {
+        "profil": {
+          "floor": -71.71429379343685,
+          "rest": -21.384515021191106,
+          "scream": -14.313062459794153
+        },
+        "r": 0.86,
+        "deltaP": 50.4,
+        "infos": {
+          "silence": {
+            "P95": -74.7,
+            "P50": -79.5,
+            "ecartP95_P50": 4.8,
+            "trames": 1170,
+            "Floor_dB": -71.7
+          },
+          "parole": {
+            "Rest_dB": -26.7,
+            "trames_G": 717,
+            "max_etape2": -18,
+            "duree_s": 4.5,
+            "fin": "bouton",
+            "PitchStatus": "non mesuré (sans YIN)"
+          },
+          "montee": {
+            "Scream_dB": -11.4,
+            "fin": "plateau",
+            "duree_s": 2.1
+          }
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:38.762Z",
+      "type": "calibration",
+      "text": "Étape 3 : montée terminée (plateau)",
+      "data": {
+        "Scream_dB": -14.3,
+        "fin": "plateau",
+        "duree_s": 2.6
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:38.762Z",
+      "type": "B7",
+      "text": "Enregistrement brut : montee",
+      "data": {
+        "secondes": 2.6,
+        "offsetDC": -0.0001012,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:25.975Z",
+      "type": "calibration",
+      "text": "Étape 2 : parole posée mesurée",
+      "data": {
+        "Rest_dB": -21.4,
+        "trames_G": 2124,
+        "max_etape2": -14.3,
+        "duree_s": 14.1,
+        "fin": "bouton",
+        "PitchStatus": "non mesuré (sans YIN)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:25.974Z",
+      "type": "B7",
+      "text": "Enregistrement brut : parole posee",
+      "data": {
+        "secondes": 13.93,
+        "offsetDC": 0.0001128,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:05.652Z",
+      "type": "calibration",
+      "text": "Étape 1 : silence mesuré",
+      "data": {
+        "P95": -74.7,
+        "P50": -79.5,
+        "ecartP95_P50": 4.8,
+        "trames": 1170,
+        "Floor_dB": -71.7
+      }
+    },
+    {
+      "t": "2026-09-17T11:33:05.651Z",
+      "type": "B7",
+      "text": "Enregistrement brut : silence",
+      "data": {
+        "secondes": 6.87,
+        "offsetDC": 3.734e-9,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:32:47.520Z",
+      "type": "calibration",
+      "text": "Étape 0 : signal reçu",
+      "data": {
+        "apres_s": 1.25
+      }
+    },
+    {
+      "t": "2026-09-17T11:32:43.475Z",
+      "type": "calibration",
+      "text": "Étape 0 : signal reçu",
+      "data": {
+        "apres_s": 3.46
+      }
+    },
+    {
+      "t": "2026-09-17T11:32:36.857Z",
+      "type": "capture",
+      "text": "Micro activé",
+      "data": {
+        "source": "micro",
+        "sampleRateContexte": 44100,
+        "sampleRatePiste": 48000,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 1,
+        "label": "Microphone (Logitech PRO X Gaming Headset) (046d:0aaa)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:25:54.843Z",
+      "type": "calibration",
+      "text": "Profil accepté",
+      "data": {
+        "profil": {
+          "floor": -58.680718517250185,
+          "rest": -24.2865031899574,
+          "scream": -12.04153538316856
+        },
+        "r": 0.691,
+        "deltaP": 39.6,
+        "infos": {
+          "silence": {
+            "P95": -61.7,
+            "P50": -80.5,
+            "ecartP95_P50": 18.8,
+            "trames": 1170,
+            "Floor_dB": -58.7
+          },
+          "parole": {
+            "Rest_dB": -24.3,
+            "trames_G": 360,
+            "max_etape2": -15.5,
+            "duree_s": 2.9,
+            "PitchStatus": "non mesuré (sans YIN)"
+          },
+          "montee": {
+            "Scream_dB": -12,
+            "fin": "plateau",
+            "duree_s": 5.9
+          }
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:25:54.143Z",
+      "type": "calibration",
+      "text": "Étape 3 : montée terminée (plateau)",
+      "data": {
+        "Scream_dB": -12,
+        "fin": "plateau",
+        "duree_s": 5.9
+      }
+    },
+    {
+      "t": "2026-09-17T11:25:11.480Z",
+      "type": "calibration",
+      "text": "Profil accepté",
+      "data": {
+        "profil": {
+          "floor": -58.680718517250185,
+          "rest": -24.2865031899574,
+          "scream": -16.85624630435646
+        },
+        "r": 0.787,
+        "deltaP": 34.8,
+        "infos": {
+          "silence": {
+            "P95": -61.7,
+            "P50": -80.5,
+            "ecartP95_P50": 18.8,
+            "trames": 1170,
+            "Floor_dB": -58.7
+          },
+          "parole": {
+            "Rest_dB": -24.3,
+            "trames_G": 360,
+            "max_etape2": -15.5,
+            "duree_s": 2.9,
+            "PitchStatus": "non mesuré (sans YIN)"
+          },
+          "montee": {
+            "Scream_dB": -12,
+            "fin": "plateau",
+            "duree_s": 5.9
+          }
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:25:10.778Z",
+      "type": "calibration",
+      "text": "Étape 3 : montée terminée (plateau)",
+      "data": {
+        "Scream_dB": -16.9,
+        "fin": "plateau",
+        "duree_s": 2.2
+      }
+    },
+    {
+      "t": "2026-09-17T11:25:08.539Z",
+      "type": "calibration",
+      "text": "Étape 2 : parole posée mesurée",
+      "data": {
+        "Rest_dB": -24.3,
+        "trames_G": 360,
+        "max_etape2": -15.5,
+        "duree_s": 2.9,
+        "PitchStatus": "non mesuré (sans YIN)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:43.982Z",
+      "type": "calibration",
+      "text": "Profil accepté — LowRange (V3)",
+      "data": {
+        "profil": {
+          "floor": -58.680718517250185,
+          "rest": -19.71795232727463,
+          "scream": -18.177619299914177
+        },
+        "r": 0.954,
+        "deltaP": 33.5,
+        "infos": {
+          "silence": {
+            "P95": -61.7,
+            "P50": -80.5,
+            "ecartP95_P50": 18.8,
+            "trames": 1170,
+            "Floor_dB": -58.7
+          },
+          "parole": {
+            "Rest_dB": -24.3,
+            "trames_G": 360,
+            "max_etape2": -15.5,
+            "duree_s": 2.9,
+            "PitchStatus": "non mesuré (sans YIN)"
+          },
+          "montee": {
+            "Scream_dB": -12,
+            "fin": "plateau",
+            "duree_s": 5.9
+          }
+        }
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:43.281Z",
+      "type": "calibration",
+      "text": "Étape 3 : montée terminée (plateau)",
+      "data": {
+        "Scream_dB": -18.2,
+        "fin": "plateau",
+        "duree_s": 1.3
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:41.992Z",
+      "type": "calibration",
+      "text": "Étape 2 : parole posée mesurée",
+      "data": {
+        "Rest_dB": -19.7,
+        "trames_G": 360,
+        "max_etape2": -13.7,
+        "duree_s": 2.7,
+        "PitchStatus": "non mesuré (sans YIN)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:39.324Z",
+      "type": "calibration",
+      "text": "Étape 1 : silence mesuré",
+      "data": {
+        "P95": -61.7,
+        "P50": -80.5,
+        "ecartP95_P50": 18.8,
+        "trames": 1170,
+        "Floor_dB": -58.7
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:32.321Z",
+      "type": "calibration",
+      "text": "Étape 0 : signal reçu",
+      "data": {
+        "apres_s": 1.4
+      }
+    },
+    {
+      "t": "2026-09-17T11:24:02.557Z",
+      "type": "capture",
+      "text": "Micro activé",
+      "data": {
+        "source": "micro",
+        "sampleRateContexte": 44100,
+        "sampleRatePiste": 48000,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 1,
+        "label": "Microphone (Logitech PRO X Gaming Headset) (046d:0aaa)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:57.522Z",
+      "type": "capture",
+      "text": "Micro activé",
+      "data": {
+        "source": "micro",
+        "sampleRateContexte": 44100,
+        "sampleRatePiste": 48000,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 1,
+        "label": "Microphone (Logitech PRO X Gaming Headset) (046d:0aaa)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:42.884Z",
+      "type": "capture",
+      "text": "Micro activé",
+      "data": {
+        "source": "micro",
+        "sampleRateContexte": 44100,
+        "sampleRatePiste": 48000,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 1,
+        "label": "Microphone (Logitech PRO X Gaming Headset) (046d:0aaa)"
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:28.529Z",
+      "type": "calibration",
+      "text": "Étape 2 : trop peu de parole",
+      "data": {
+        "secondes_au_dessus_de_la_porte": 0
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:28.529Z",
+      "type": "B7",
+      "text": "Enregistrement brut : parole posee",
+      "data": {
+        "secondes": 14.95,
+        "offsetDC": -0.0000184,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:13.528Z",
+      "type": "calibration",
+      "text": "Étape 1 : silence mesuré",
+      "data": {
+        "P95": -22.2,
+        "P50": -80,
+        "ecartP95_P50": 57.8,
+        "trames": 1170,
+        "Floor_dB": -19.2
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:13.528Z",
+      "type": "B7",
+      "text": "Enregistrement brut : silence",
+      "data": {
+        "secondes": 6.97,
+        "offsetDC": 0.00001166,
+        "sr": 44100
+      }
+    },
+    {
+      "t": "2026-09-17T11:23:06.523Z",
+      "type": "calibration",
+      "text": "Étape 0 : signal reçu",
+      "data": {
+        "apres_s": 1.67
+      }
+    },
+    {
+      "t": "2026-09-17T11:22:37.450Z",
+      "type": "capture",
+      "text": "Micro activé",
+      "data": {
+        "source": "micro",
+        "sampleRateContexte": 44100,
+        "sampleRatePiste": 48000,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 1,
+        "label": "Microphone (Logitech PRO X Gaming Headset) (046d:0aaa)"
+      }
+    }
+  ]
+}

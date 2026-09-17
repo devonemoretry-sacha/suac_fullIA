@@ -99,7 +99,7 @@
   var MODES = [['muet', 'Muet'], ['chuchote', 'Chuchote'], ['converse', 'Converse'], ['cris', 'Crie par à-coups'], ['panique', 'Panique'], ['curseur', 'Curseur']];
   var ROOMS = [['A', 'Pièce A'], ['B', 'Pièce B'], ['X', 'Hors de portée']];
   var sims = A.load('sims') || [
-    { name: 'Lou', color: '#7FA7D9', room: 'A', r: 0.47, mode: 'converse', slider: 0.3, lat: 120, f: 650 },
+    { name: 'Lou', color: '#7FA7D9', room: 'A', r: 0.47, mode: 'muet', slider: 0.3, lat: 120, f: 650 },
     { name: 'Max', color: '#B98BD9', room: 'A', r: 0.35, mode: 'muet', slider: 0.3, lat: 90, f: 1000 },
     { name: 'Ada', color: '#D9C27F', room: 'B', r: 0.60, mode: 'muet', slider: 0.3, lat: 150, f: 1450 }
   ];
@@ -136,6 +136,12 @@
     });
   }
   simUi();
+  el('btnSimsMute').addEventListener('click', function () { sims.forEach(function (s) { s.mode = 'muet'; }); saveSims(); simUi(); });
+  function renderSimsActive() {
+    var act = sims.filter(function (s) { return s.mode !== 'muet' && s.room !== 'X'; });
+    el('simsActive').textContent = act.length ? 'Actives : ' + act.map(function (s) { return s.name + ' (' + s.room + ', ' + s.mode + ')'; }).join(', ') + ' — tant qu\'une voix atteint l\'objet, il ne se vide pas.' : 'Aucune voix simulée active.';
+    el('simsActive').style.color = act.length ? 'var(--warn)' : '';
+  }
 
   function rnd(a, b) { return a + Math.random() * (b - a); }
   function simTarget(s, now) {
@@ -232,7 +238,10 @@
   var host = P.newObject(), client = P.newObject();
   var eps = { A: P.newEpisodes(), B: P.newEpisodes() };
   A.game.host = host; A.game.client = client; A.game.eps = eps; A.game.sims = sims; A.game.sofa = sofa;
-  var selfQueue = [], pubQueue = [], clientHist = [], acc = 0, simT = 0;
+  var selfQueue = [], pubQueue = [], clientHist = [], acc = 0, simT = 0, desc = null, lastDesc = null;
+  var heavy = A.load('heavy'); if (heavy === null) heavy = 1.1;
+  el('heavy').value = heavy; el('heavyV').textContent = fmt(heavy, 2);
+  el('heavy').addEventListener('input', function () { heavy = +el('heavy').value; el('heavyV').textContent = fmt(heavy, 2); A.store('heavy', heavy); });
   var shake = { until: 0, amp: 0 }, lastEvent = -1e9;
   var HIST = [];
 
@@ -271,6 +280,17 @@
       var hv = voicesAt(now, false, objRoom);
       P.tick(host, hv, objRoom, dragging, TICK, cfg, s1, now);
       if (host.event && role === 'hote') onEvent(now);
+      // diagnostic : une descente depuis l'avertissement dure-t-elle Vidange, ou est-elle bloquée hors silence ?
+      if (host.regime === 'ALARME') desc = null;
+      else if (!desc && host.charge >= P.seuilAv(cfg)) desc = { t: 0, bloquee: 0, depart: host.charge, zmem: host.zmem };
+      if (desc) {
+        desc.t += TICK; if (host.regime !== 'SILENCE') desc.bloquee += TICK; desc.zmem = Math.max(desc.zmem, host.zmem);
+        if (host.charge === 0) {
+          lastDesc = desc; desc = null;
+          A.log('descente', 'Retour au calme en ' + fmt(lastDesc.t, 2) + ' s, dont ' + fmt(lastDesc.bloquee, 2) + ' s sans silence complet',
+            { total_s: +lastDesc.t.toFixed(2), bloquee_hors_silence_s: +lastDesc.bloquee.toFixed(2), depart: +lastDesc.depart.toFixed(3), Zmem: lastDesc.zmem, Vidange: cfg.Vidange, variante: cfg.zizanie, voix: sims.map(function (s) { return s.name + ':' + s.room + ':' + s.mode; }) });
+        }
+      }
       ['A', 'B'].forEach(function (room) {
         var n = P.zizanieCount(hv, room, cfg, s1), out = P.episodeTick(eps[room], n, simT, cfg, false);
         if (out) A.log('zizanie', 'Pièce ' + room + ' : épisode ' + out.verdict + ' (' + fmt(out.dur, 2) + ' s)', { piece: room, duree_s: +out.dur.toFixed(2), verdict: out.verdict, variante: cfg.zizanie });
@@ -306,7 +326,8 @@
     }
 
     // portage : le canapé traîne derrière la souris selon le poids publié par l'hôte
-    var follow = 15 + (1.1 - 15) * weight, k = 1 - Math.exp(-follow * dt);
+    renderSimsActive();
+    var follow = 15 + (heavy - 15) * weight, k = 1 - Math.exp(-follow * dt);
     if (dragging) {
       var nx = sofa.x + (sofa.tx - sofa.x) * k, ny = sofa.y + (sofa.ty - sofa.y) * k;
       nx = Math.max(SW / 2, Math.min(W - SW / 2, nx)); ny = Math.max(SH / 2 + 30, Math.min(H - SH / 2, ny));
@@ -449,7 +470,7 @@
       semantique: blind ? 'aveugle' : cfg.semantique, zizanie: cfg.zizanie, T_objet: cfg.T_objet,
       Avertissement_ms: Math.round(cfg.Avertissement * 1000), Remplissage: cfg.Remplissage, Vidange: cfg.Vidange,
       Amorcage: cfg.Amorcage, h: cfg.h, k: cfg.k, Lenteur: cfg.Lenteur, k_z: cfg.k_z, z: cfg.z,
-      role: el('netRole').value, latence_ms: +el('netLat').value,
+      role: el('netRole').value, latence_ms: +el('netLat').value, mobilite_pleine_charge: heavy,
       son: el('chkSound').checked, tremblement: el('chkShake').checked, halo: el('chkHalo').checked,
       tau_attaque_ms: Math.round(s1.tauAttack * 1000), tau_relachement_ms: Math.round(s1.tauRelease * 1000), gamma: s1.gamma, Margin_dB: s1.Margin_dB,
       profil: A.profile ? { r: +A.rPrime().toFixed(3), lowRange: A.profile.lowRange, source: A.profile.source } : null,
@@ -458,7 +479,12 @@
   }
   var LABELS = { phrase: '« J\'ai eu le temps de me taire »', precharge: 'Pré-charge (VO-49)', tremblement: 'Tremblement seul (VO-48)', conversation: 'Conversation soutenue (E4)', zizanie: 'Zizanie' };
   document.querySelectorAll('[data-q]').forEach(function (b) {
-    b.addEventListener('click', function () { A.log(b.dataset.q, LABELS[b.dataset.q] + ' : ' + b.dataset.a, snapshot()); b.blur(); });
+    b.addEventListener('click', function () {
+      A.log(b.dataset.q, LABELS[b.dataset.q] + ' : ' + b.dataset.a, snapshot());
+      el('qNote').textContent = '✓ Noté dans le journal — ' + LABELS[b.dataset.q] + ' : ' + b.dataset.a + ' (' + new Date().toLocaleTimeString('fr-FR') + ')';
+      b.style.outline = '2px solid var(--calm)'; setTimeout(function () { b.style.outline = ''; }, 900);
+      b.blur();
+    });
   });
 
   var mystery = null;

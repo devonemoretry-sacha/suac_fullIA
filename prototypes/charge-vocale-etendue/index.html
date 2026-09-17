@@ -250,6 +250,7 @@
    </div>
    <div class="panel">
     <h2>Questions à trancher en jouant</h2>
+    <div class="note ok-text" id="qNote" aria-live="polite">Chaque réponse s'écrit dans le journal, avec la configuration du moment.</div>
     <div class="msg">« J'ai senti que ça montait, j'ai eu le temps de me taire. »</div>
     <div class="row"><button class="calm" data-q="phrase" data-a="oui">Oui</button><button class="bad" data-q="phrase" data-a="non">Non, trop tard</button></div>
     <div class="msg" style="margin-top:10px">Après un murmure, un cri : l'objet t'a paru…</div>
@@ -273,6 +274,8 @@
       <option value="1.2">Tolérant (témoin E4) — T_objet 1,2</option>
     </select>
     <div class="knob"><div class="lab"><span>T_objet libre</span><span class="val" id="tObjV">0,70</span></div><input type="range" id="tObj" min="0.1" max="2" step="0.05" value="0.7"></div>
+    <div class="knob"><div class="lab"><span>Mobilité à pleine charge</span><span class="val" id="heavyV">1,10</span></div><input type="range" id="heavy" min="0" max="1.5" step="0.05" value="1.1">
+      <div class="note">0 = l'objet ne bouge plus du tout. Ce que « lourd » veut dire appartient au portage (système 9).</div></div>
    </div>
    <div class="panel">
     <h2>Avertissement (E1)</h2>
@@ -308,6 +311,7 @@
    </div>
    <div class="panel">
     <h2>Voix simulées</h2>
+    <div class="row" style="margin-bottom:6px"><button class="ghost" id="btnSimsMute">Toutes muettes</button><span class="note" id="simsActive"></span></div>
     <div id="simBox"></div>
    </div>
    <div class="panel">

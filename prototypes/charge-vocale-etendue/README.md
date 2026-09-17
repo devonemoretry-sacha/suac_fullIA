@@ -1,6 +1,6 @@
 # Prototype — Charge vocale étendue
 
-**Statut : construit le 2026-09-17, en attente de ton premier essai.** Suite du banc
+**Statut : essai 1 fait le 2026-09-17, prototype corrigé, essai 2 attendu.** Suite du banc
 `prototypes/charge-vocale/`, étape 4 du plan de la passe groupée.
 
 Le banc testait des constantes de temps sur une seule voix, sans calibration. Celui-ci fait
@@ -108,4 +108,95 @@ fois le minimum atteint, ou au délai ; les points de mesure laissent 1,5 s pour
 l'étape 2 « dès que `n(V) ≥ VoicedMin` » (CAL-43) et n'écrit aucune porte « prêt » entre les étapes.
 Le mode découverte promet « aucune hâte » ; les règles ne la garantissaient pas.
 
-*Suite des résultats après la prochaine session.*
+### 2026-09-17 — essai 1, 11 h 22 – 11 h 40 · journal `sessions/2026-09-17-essai-1.json`
+
+**Matériel** : Logitech PRO X Gaming Headset (USB). Traitements du navigateur coupés
+(`echoCancellation`, `noiseSuppression`, `autoGainControl` à `false`). Piste à 48 kHz, contexte
+audio à 44,1 kHz : la branche 12 kHz n'existerait pas sur ce poste.
+
+#### Calibration — « ma voix de conversation est proche de ma voix forte »
+
+| Tentative | Silence (P95 / P50) | `Rest_dB` | `Scream_dB` | Fin de la montée | `r′` | Lecture |
+|---|---|---|---|---|---|---|
+| 1, avant le correctif | −22,2 / −80,0 | — | — | — | — | Le mot de l'étape 0 a débordé sur le silence : porte à −12 dB, étape 2 impossible |
+| 2, avant le correctif | −61,7 / −80,5 | −19,7 | −18,2 | plateau à 1,3 s | 0,95 | Montée coupée au niveau de la parole : les étapes s'enchaînaient |
+| 3, après le correctif | −74,7 / −79,5 | −21,4 | **−14,3** | plateau à 2,6 s | **0,86** | Le cri n'a pas dépassé le maximum de la parole posée (−14,3) : **7 dB** entre voix posée et cri |
+| 3 bis, parole et montée refaites | idem | −26,7 | −11,4 | plateau à 2,1 s | 0,71 | Accepté ; **15 dB** entre voix posée et cri |
+
+**Points de mesure** (profil `r′` 0,71, porte à −64,7 dB) :
+
+| Geste | Médiane | Au-dessus de la porte | Position | Lecture du prototype |
+|---|---|---|---|---|
+| Chuchotement | −27,2 dB | 37,5 dB | 0,70 | alarme sur un objet ordinaire |
+| Clavier | −25,7 dB | 39,0 dB | 0,73 | alarme sur un objet ordinaire |
+| Voix posée | −22,8 dB | 41,9 dB | 0,79 | alarme sur un objet ordinaire |
+| Note chantée douce | −38,7 dB | 26,0 dB | 0,49 | à la limite du seuil (0,50) |
+| Bruits de bouche | −51,5 dB (P90 −29,9) | 13,3 dB | 0,25 | alarme sur les pics |
+| Respiration | −80,1 dB | −15,4 dB | 0 | ne pèse rien — **exactement le niveau du silence** |
+
+**Lecture, à vérifier** : un chuchotement et un clavier aussi forts que la voix posée, une
+respiration strictement au niveau du silence, un cri seulement 7 à 15 dB au-dessus de la parole.
+C'est la signature d'un **traitement en amont du navigateur** : une porte de bruit, qui efface la
+respiration, suivie d'un compresseur et d'un limiteur, qui ramènent tout au même niveau. Le
+logiciel G HUB de Logitech en propose pour ce casque : « Blue VO!CE » comprend un filtre passe-haut, une réduction de bruit, un expandeur-porte, un de-esser, un compresseur et un limiteur (https://www.logitechg.com/en-us/software/guides/blue-voice, consulté le 2026-09-17). **Hypothèse non vérifiée** : la
+saturation n'était pas encore mesurée pendant cette session.
+
+**Si elle se confirme**, ce n'est pas un défaut des formules : c'est le cas limite « le périphérique
+traite le signal avant le jeu » de `voice-calibration.md` (OQ-C12), observé sur le casque du
+propriétaire. Le prérequis affiché au joueur devra nommer les logiciels des fabricants.
+
+**Silence** : `p` = 1,000 sur 8 s, 0,915 sur 30 s — au-dessus de la cible de 0,84. Scintillement à
+la porte : 0,33 bascule par seconde, pas de problème. Mesure « même pièce » : non interprétable, sans
+étiquette ni seconde personne identifiée.
+
+#### Jeu — réponses et ressenti
+
+**Biais qui touche toutes les réponses** : la voix simulée Lou était réglée par défaut sur
+« Converse », dans la pièce du canapé, contrairement au protocole. Sa conversation, à la position
+0,47, dépassait le seuil de l'objet ordinaire (0,33) : **elle mettait elle-même le canapé en alarme et
+empêchait tout silence complet**.
+
+| Question | Réponse | Ce qu'on peut en tirer |
+|---|---|---|
+| « J'ai eu le temps de me taire » | Oui | L'avertissement événement fonctionne |
+| Retour au calme | « Beaucoup trop long » | **Non concluant** : Lou empêchait le silence |
+| Pré-charge | « Déjà nerveux », mais « trop vite » | `k` = 0,85 laisse 52 ms : à baisser, par exemple 0,6 pour environ 140 ms |
+| Tremblement, son coupé | Remarqué | Le second canal passe (VO-48) |
+| Conversation soutenue, objet ordinaire | Jouable, l'objet avance plus lentement ; **pas assez punitif** | Le propriétaire veut un objet **figé ou presque** : réponse à OQ-11.1, qui appartient au portage |
+| Zizanie | Trop punitive dans les deux variantes | **À refaire** : les voix restaient actives pendant la descente |
+| Cri mystère | 7 réponses justes sur 9 | Les deux erreurs confondent Lou et Max, dans la même pièce, avec Lou qui parlait en continu |
+
+**Non fait** : comparaison aveugle de l'avertissement, objet tolérant, mode client.
+
+#### Corrigé dans le prototype après cet essai
+
+- **Les questions confirment la réponse** (« ✓ Noté dans le journal »). Les clics étaient enregistrés,
+  sans rien montrer.
+- **Les voix simulées sont muettes par défaut**, avec un bouton « Toutes muettes » et un avertissement
+  tant qu'une voix est active.
+- **Mobilité à pleine charge** réglable, jusqu'à 0 : l'objet ne bouge plus.
+- **Crête et saturation** mesurées sur chaque étape de calibration et chaque point de mesure ; la
+  calibration signale une saturation, ou un écart de moins de 12 dB entre voix posée et cri, en
+  pointant le matériel et jamais la voix. Crête affichée en direct dans « Capture ».
+- **Retour au calme journalisé** : durée totale, et part passée sans silence complet.
+- **Horloge `?horloge=audio`**, pour les vérifications dans un onglet caché.
+
+#### Pour l'essai 2
+
+1. **Dans G HUB, coupe Blue VO!CE** et tout traitement du micro ; vérifie aussi les améliorations
+   audio de Windows. Refais la calibration, puis chuchotement, clavier, respiration, voix posée.
+2. **Jeu avec toutes les voix muettes** : le journal dira si le retour au calme dure `Vidange` ou s'il
+   est bloqué.
+3. Essaie `k` à 0,6 et la mobilité à pleine charge vers 0,2, puis 0.
+4. Comparaison aveugle de l'avertissement ; objet tolérant ; zizanie, avec le relevé de descente.
+
+#### Conséquences pour les documents, à trancher à la re-revue
+
+- `voice-calibration.md` : nommer les logiciels des fabricants dans le prérequis ; détecter la
+  saturation et la compression (OQ-C2, OQ-C12) ; la porte « prêt » et la fin de parole par le joueur
+  (CAL-43).
+- `voice-object-effect.md` : `k` trop haut (pré-charge) ; la zizanie, à remesurer.
+- Système 9, sans document : « lourd » doit pouvoir figer l'objet sous une conversation soutenue
+  (OQ-11.1).
+
+*Suite des résultats après l'essai 2.*
