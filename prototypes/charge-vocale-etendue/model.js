@@ -52,7 +52,8 @@
     h: 0.2, k: 0.85, Lenteur: 10, T_objet: 0.7, k_z: 0.4, z: 0.5,
     DureeMin: 1.0, FusionMax: 10, Expiration: 0.200,
     semantique: 'evenement',   // 'evenement' | 'banc'
-    zizanie: 'duree'           // 'duree' | 'debit'
+    zizanie: 'duree',          // 'duree' | 'debit'
+    ancrage: 'voix'            // 'voix' (GDD : T_objet · r') | 'chuchotement' (piste du 2026-09-17)
   };
 
   function configErrors(c) {
@@ -69,6 +70,15 @@
   }
 
   function seuil(T, r) { return T <= 1 ? T * r : r + (T - 1) * (1 - r); }
+  // Piste du 2026-09-17 : le seuil part du chuchotement mesuré du joueur (w, en position) au lieu de 0.
+  // Si le chuchotement atteint la voix posée, plus rien ne les sépare : le seuil tombe sur la voix posée.
+  function seuilAncre(T, r, w) {
+    if (T > 1) return seuil(T, r);
+    if (!(w >= 0)) return seuil(T, r);
+    if (w >= r) return r;
+    return w + T * (r - w);
+  }
+  function seuilDe(c, v) { return c.ancrage === 'chuchotement' && v.w !== undefined && v.w !== null ? seuilAncre(c.T_objet, v.r, v.w) : seuil(c.T_objet, v.r); }
   function seuilZizanie(r, kz) { return r + kz * (1 - r); }
   function seuilAv(c) { return c.Avertissement / c.Remplissage; }
 
@@ -104,7 +114,7 @@
       if (L > 0) allZero = false;
       sum += L;
       if (L > max) { max = L; who = i; }
-      if (L > 0 && toPosition(L, s1) >= seuil(c.T_objet, v.r)) alarm = true;
+      if (L > 0 && toPosition(L, s1) >= seuilDe(c, v)) alarm = true;
     }
     var regime = allZero ? 'SILENCE' : (alarm ? 'ALARME' : 'MURMURE');
     var Z = zizanieFactor(zizanieCount(voices, objRoom, c, s1), c);
@@ -181,7 +191,10 @@
     step1: 7, WarmUp: 0.5, FloorMargin: 3, DeviceCheck: 5,
     VoicedMinSec: 2.0,      // VoicedMin = 100 trames à 50 Hz
     Step2Timeout: 15, PlateauDelta: 1.5, PlateauHold: 1.2, PeakTimeout: 10,
-    HardFloor: 6, QualityBand: 13, RestMax: 0.80
+    HardFloor: 6, QualityBand: 13, RestMax: 0.80,
+    WhisperMin: 4, WhisperTimeout: 12,
+    // diagnostic du prototype : une chaîne de capture qui écrase la dynamique, jamais un refus
+    EcartCriVoixMin: 12, EcartVoixChuchoteMin: 6
   };
 
   function percentile(arr, p) {
@@ -194,6 +207,15 @@
     if (!arr.length) return NaN;
     var a = arr.slice().sort(function (x, y) { return x - y; }), m = a.length >> 1;
     return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  // Ce que la chaîne de capture laisse passer de la dynamique du joueur — signale, ne refuse jamais
+  function dynamique(p, s6) {
+    var raisons = [];
+    if (p.scream - p.rest < s6.EcartCriVoixMin) raisons.push('cri');
+    if (p.whisper !== undefined && p.whisper !== null && p.rest - p.whisper < s6.EcartVoixChuchoteMin) raisons.push('chuchotement');
+    return { ecrasee: raisons.length > 0, raisons: raisons, criMoinsVoix: p.scream - p.rest,
+      voixMoinsChuchotement: (p.whisper !== undefined && p.whisper !== null) ? p.rest - p.whisper : null };
   }
 
   function validate(p, s1, s6, approximate) {
@@ -211,7 +233,7 @@
     S1: S1, S11: S11, S6: S6,
     rmsToDb: rmsToDb, envelopeStep: envelopeStep, gateDb: gateDb, position: position,
     loudness: loudness, toPosition: toPosition, restPosition: restPosition,
-    configErrors: configErrors, seuil: seuil, seuilZizanie: seuilZizanie, seuilAv: seuilAv,
+    configErrors: configErrors, seuil: seuil, seuilAncre: seuilAncre, seuilDe: seuilDe, dynamique: dynamique, seuilZizanie: seuilZizanie, seuilAv: seuilAv,
     lourdeur: lourdeur, zizanieCount: zizanieCount, zizanieFactor: zizanieFactor,
     newObject: newObject, tick: tick, newEpisodes: newEpisodes, episodeTick: episodeTick,
     percentile: percentile, median: median, validate: validate

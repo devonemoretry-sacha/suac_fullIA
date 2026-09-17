@@ -80,6 +80,7 @@
   #stage{width:100%;height:auto;cursor:grab;touch-action:none;user-select:none}
   #stage.dragging{cursor:grabbing}
   .overlay{position:absolute;left:0;right:0;top:8px;text-align:center;color:var(--muted);font-size:13px;pointer-events:none}
+  .micHint{position:absolute;left:10px;right:10px;bottom:10px;background:var(--surface-2);border:1px solid var(--warn);color:var(--ink);font-size:13px;padding:8px 10px}
   .micCut{position:absolute;right:8px;top:8px;background:var(--max);color:#1A0A08;font-weight:700;font-size:12px;padding:3px 8px;display:none}
   .sim{border-top:1px solid var(--line);padding:8px 0}
   .sim:first-child{border-top:none}
@@ -151,10 +152,11 @@
     <div id="profileBox" class="kv"></div>
     <div class="row" style="margin-top:8px">
       <button class="ghost" id="btnWitness">Profil témoin</button>
-      <span class="note">plancher / repos / cri, en dB :</span>
+      <span class="note">plancher / chuchotement / repos / cri, en dB :</span>
     </div>
     <div class="row" style="margin-top:6px">
       <input type="number" id="pfFloor" value="-55" step="1" aria-label="Floor_dB">
+      <input type="number" id="pfWhisper" value="-42" step="1" aria-label="Chuchotement, dB (facultatif)">
       <input type="number" id="pfRest" value="-30" step="1" aria-label="Rest_dB">
       <input type="number" id="pfScream" value="-10" step="1" aria-label="Scream_dB">
       <button class="ghost" id="btnManual">Appliquer</button>
@@ -181,7 +183,7 @@
     <h2>Calibration — système 6, version courte</h2>
     <div class="steps" id="calSteps">
       <span data-s="0">0 · Préparation</span><span data-s="1">1 · Silence</span>
-      <span data-s="2">2 · Parole posée</span><span data-s="3">3 · Montée</span><span data-s="4">Validation</span>
+      <span data-s="2">2 · Chuchotement</span><span data-s="3">3 · Parole posée</span><span data-s="4">4 · Montée</span><span data-s="5">Validation</span>
     </div>
     <div class="calstage">
       <div class="caltitle" id="calTitle">Mesurer ta voix</div>
@@ -202,7 +204,7 @@
 
    <div class="panel">
     <h2>Points de mesure — avec le profil actif</h2>
-    <p class="note">Chaque point te laisse 1,5 s pour te préparer, puis écoute 4 s. Fais le geste demandé pendant tout le point. « Seuil ordinaire » = <code>0,7 · r'</code>.</p>
+    <p class="note">Chaque point te laisse 1,5 s pour te préparer, puis écoute 4 s. Fais le geste demandé pendant tout le point. « Seuil ordinaire » : un objet à <code>T_objet</code> 0,7, selon le seuil de murmure choisi dans le jeu.</p>
     <div class="row">
       <button class="ghost" data-meas="Chuchotement">Chuchotement</button>
       <button class="ghost" data-meas="Respiration normale">Respiration</button>
@@ -243,6 +245,7 @@
      <canvas id="stage" width="960" height="460"></canvas>
      <div class="overlay" id="stageHint">Attrape le canapé à la souris et garde le bouton enfoncé : tu le portes. Relâche : tu le poses.</div>
      <div class="micCut" id="micCut">micro coupé</div>
+     <div class="micHint" id="micHint" hidden></div>
    </div>
    <div class="panel" id="devPanel" hidden style="padding:0">
      <div class="devtext" id="devText"></div>
@@ -276,6 +279,12 @@
     <div class="knob"><div class="lab"><span>T_objet libre</span><span class="val" id="tObjV">0,70</span></div><input type="range" id="tObj" min="0.1" max="2" step="0.05" value="0.7"></div>
     <div class="knob"><div class="lab"><span>Mobilité à pleine charge</span><span class="val" id="heavyV">1,10</span></div><input type="range" id="heavy" min="0" max="1.5" step="0.05" value="1.1">
       <div class="note">0 = l'objet ne bouge plus du tout. Ce que « lourd » veut dire appartient au portage (système 9).</div></div>
+   </div>
+   <div class="panel">
+    <h2>Seuil de murmure</h2>
+    <label class="chk"><input type="radio" name="ancr" value="voix" checked> Une fraction de ta voix posée (GDD)</label>
+    <label class="chk"><input type="radio" name="ancr" value="chuchotement"> Entre ton chuchotement mesuré et ta voix posée (piste)</label>
+    <p class="note">Sans chuchotement mesuré, la formule du GDD s'applique. Le seuil ne dépasse jamais ta voix posée.</p>
    </div>
    <div class="panel">
     <h2>Avertissement (E1)</h2>

@@ -265,15 +265,18 @@ var APP = (function () {
     var v = P.validate(p, A.s1, A.s6, !!p.approximate);
     if (v.refusal) { A.log('profil', 'Profil refusé (' + v.refusal + ') — non appliqué', p); return v; }
     A.profile = {
-      floor: p.floor, rest: p.rest, scream: p.scream, lowRange: v.lowRange,
-      approximate: !!p.approximate, source: source
+      floor: p.floor, rest: p.rest, scream: p.scream,
+      whisper: (p.whisper === undefined || p.whisper === null || isNaN(p.whisper)) ? null : p.whisper,
+      lowRange: v.lowRange, approximate: !!p.approximate, source: source
     };
+    A.profile.dyn = P.dynamique(A.profile, A.s6);
     A.store('profile', A.profile);
     A.log('profil', 'Profil appliqué (' + source + ')', Object.assign({}, A.profile, { r: +v.r.toFixed(3), deltaP: +v.deltaP.toFixed(1), raisonsLowRange: v.reasons }));
     renderProfile();
     return v;
   };
   A.rPrime = function () { return A.profile ? P.restPosition(A.profile, A.s1) : 0; };
+  A.wPrime = function () { return A.profile && A.profile.whisper !== null && A.profile.whisper !== undefined ? P.position(A.profile.whisper, A.profile, A.s1) : null; };
   function renderProfile() {
     var box = el('profileBox'); box.innerHTML = '';
     function row(k, v, cls) {
@@ -288,14 +291,17 @@ var APP = (function () {
     row('Rest_dB · Scream_dB', fmt(p.rest, 1) + ' · ' + fmt(p.scream, 1));
     row('Δ′', fmt(p.scream - g, 1) + ' dB');
     row("r′", fmt(P.restPosition(p, A.s1), 3));
+    row('Chuchotement', p.whisper === null || p.whisper === undefined ? 'non mesuré' : fmt(p.whisper, 1) + ' dB · position ' + fmt(P.position(p.whisper, p, A.s1), 3));
+    var dy = p.dyn || P.dynamique(p, A.s6);
+    row('Dynamique', dy.ecrasee ? 'écrasée (' + dy.raisons.join(', ') + ')' : 'complète', dy.ecrasee ? 'warn-text' : '');
     row('Drapeaux', (p.lowRange ? 'LowRange ' : '') + (p.approximate ? 'approximatif' : '') || '—', p.lowRange ? 'warn-text' : '');
     if (!(p.scream > g)) row('Garde', 'Scream_dB ≤ Gate_dB — profil invalide sous ce Margin_dB', 'bad-text');
   }
   el('btnWitness').addEventListener('click', function () {
-    A.setProfile({ floor: -55, rest: -30, scream: -10 }, 'témoin');
+    A.setProfile({ floor: -55, rest: -30, scream: -10, whisper: -42 }, 'témoin');
   });
   el('btnManual').addEventListener('click', function () {
-    A.setProfile({ floor: +el('pfFloor').value, rest: +el('pfRest').value, scream: +el('pfScream').value }, 'manuel');
+    A.setProfile({ floor: +el('pfFloor').value, whisper: el('pfWhisper').value === '' ? null : +el('pfWhisper').value, rest: +el('pfRest').value, scream: +el('pfScream').value }, 'manuel');
   });
 
   // ------------------------------------------------------------ journal : boutons

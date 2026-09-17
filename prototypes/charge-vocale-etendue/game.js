@@ -67,7 +67,7 @@
       r.addEventListener('change', function () { if (r.checked) { cfg[key] = r.value; A.store('s11', cfg); } });
     });
   }
-  radios('sem', 'semantique'); radios('ziz', 'zizanie');
+  radios('sem', 'semantique'); radios('ziz', 'zizanie'); radios('ancr', 'ancrage');
 
   // ============================================================ comparaison aveugle (E1)
   var blind = null;
@@ -249,12 +249,12 @@
     var net = +el('netLat').value, role = el('netRole').value;
     var selfLat = (role === 'client' && !forClient) ? net : 0;
     var selfL = delayed(selfQueue, now, selfLat);
-    var r = A.rPrime(), v = [{ L: selfL, raw: selfL, r: r > 0 ? r : 0, room: objRoom, who: 'toi' }];
+    var r = A.rPrime(), v = [{ L: selfL, raw: selfL, r: r > 0 ? r : 0, w: A.wPrime(), room: objRoom, who: 'toi' }];
     sims.forEach(function (s) {
       var lat = s.lat + (forClient && role === 'client' ? net : 0);
       var raw = delayed(s.queue, now, lat);
       var att = s.room === 'X' ? 0 : (s.room === objRoom ? 1 : 0.35);
-      v.push({ L: raw * att, raw: raw, r: s.r, room: s.room === 'X' ? 'X' : s.room, who: s.name });
+      v.push({ L: raw * att, raw: raw, r: s.r, w: 0.12, room: s.room === 'X' ? 'X' : s.room, who: s.name });
     });
     return v;
   }
@@ -341,8 +341,22 @@
     el('devPanel').hidden = !el('chkDev').checked;
   });
 
+  // Rappel au moment où la limite du micro se fait sentir : ta voix basse a déclenché l'alarme
+  var lastHint = -1e9;
+  function micHint(now) {
+    var p = A.profile;
+    if (!p || !p.dyn || !p.dyn.ecrasee || now - lastHint < 45000) return;
+    if (host.culprit !== 0 || !(A.x < A.rPrime())) return;
+    lastHint = now;
+    el('micHint').textContent = 'Ton micro a rapproché ta voix basse de ta voix normale : le jeu t\'a entendu parler. Couper le traitement de ton micro rendra le chuchotement plus sûr.';
+    el('micHint').hidden = false;
+    setTimeout(function () { el('micHint').hidden = true; }, 7000);
+    A.log('rappel micro', 'Rappel affiché : voix basse entendue comme une voix normale', { position: +A.x.toFixed(3), r: +A.rPrime().toFixed(3), raisons: p.dyn.raisons, ancrage: cfg.ancrage });
+  }
+
   function onEvent(now) {
     lastEvent = now;
+    micHint(now);
     if (cfg.semantique === 'evenement') {
       if (el('chkSound').checked && sound.ready) sound.stinger();
       if (el('chkShake').checked) { shake.until = now + 280; shake.amp = el('chkShakeAmp').checked ? 7 : 2.5; }
@@ -439,7 +453,7 @@
     lines.push('Régime ' + o.regime + ' · charge ' + fmt(o.charge, 3) + ' · seuil_av ' + fmt(sav, 3) + ' · plafond ' + fmt(cfg.k * sav, 3) +
       ' · lourdeur rendue ' + fmt(weight, 3) + ' · Zmém ' + fmt(o.zmem, 2) + ' · événements ' + o.events);
     lines.push('Pièce de l\'objet ' + objRoom + ' · N_z A ' + (eps.A.n || 0) + ' / B ' + (eps.B.n || 0) + ' · sémantique ' + (blind ? 'aveugle' : cfg.semantique) + ' · zizanie ' + cfg.zizanie + ' · objet porté ' + dragging);
-    lines.push('Toi : position ' + fmt(A.x, 3) + ' · seuil ' + fmt(r > 0 ? P.seuil(cfg.T_objet, r) : NaN, 3) + ' · r′ ' + fmt(r, 3));
+    lines.push('Toi : position ' + fmt(A.x, 3) + ' · seuil ' + fmt(r > 0 ? P.seuilDe(cfg, { r: r, w: A.wPrime() }) : NaN, 3) + ' (ancrage ' + cfg.ancrage + ') · r′ ' + fmt(r, 3) + ' · chuchotement ' + fmt(A.wPrime(), 3));
     sims.forEach(function (s) {
       lines.push(s.name + ' (' + s.room + ') : position ' + fmt(s.x, 3) + ' · seuil ' + fmt(P.seuil(cfg.T_objet, s.r), 3) + ' · zizanie ' + fmt(P.seuilZizanie(s.r, cfg.k_z), 3));
     });
@@ -467,13 +481,13 @@
   // ============================================================ questions et journal
   function snapshot() {
     return {
-      semantique: blind ? 'aveugle' : cfg.semantique, zizanie: cfg.zizanie, T_objet: cfg.T_objet,
+      semantique: blind ? 'aveugle' : cfg.semantique, zizanie: cfg.zizanie, ancrage: cfg.ancrage, T_objet: cfg.T_objet,
       Avertissement_ms: Math.round(cfg.Avertissement * 1000), Remplissage: cfg.Remplissage, Vidange: cfg.Vidange,
       Amorcage: cfg.Amorcage, h: cfg.h, k: cfg.k, Lenteur: cfg.Lenteur, k_z: cfg.k_z, z: cfg.z,
       role: el('netRole').value, latence_ms: +el('netLat').value, mobilite_pleine_charge: heavy,
       son: el('chkSound').checked, tremblement: el('chkShake').checked, halo: el('chkHalo').checked,
       tau_attaque_ms: Math.round(s1.tauAttack * 1000), tau_relachement_ms: Math.round(s1.tauRelease * 1000), gamma: s1.gamma, Margin_dB: s1.Margin_dB,
-      profil: A.profile ? { r: +A.rPrime().toFixed(3), lowRange: A.profile.lowRange, source: A.profile.source } : null,
+      profil: A.profile ? { r: +A.rPrime().toFixed(3), w: A.wPrime() === null ? null : +A.wPrime().toFixed(3), lowRange: A.profile.lowRange, dynamique: A.profile.dyn ? A.profile.dyn.raisons : null, source: A.profile.source } : null,
       voix: sims.map(function (s) { return s.name + ':' + s.room + ':' + s.mode + ':r' + s.r + ':' + s.lat + 'ms'; })
     };
   }

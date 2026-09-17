@@ -36,7 +36,8 @@ exige `localhost` : un fichier ouvert directement ou une page d'artefact ne l'ob
 1. **Capture.** Active le micro. Vérifie dans le cadre « Capture » qu'`echoCancellation`,
    `noiseSuppression` et `autoGainControl` sont à `false`, et note la fréquence affichée. Coche
    l'enregistrement brut si tu veux garder les sons pour la session hors ligne.
-2. **Calibration.** « Commencer », puis suis les consignes. Accepte le profil.
+2. **Calibration.** « Commencer », puis suis les consignes : silence, chuchotement, parole posée, montée.
+   Accepte le profil.
 3. **Points de mesure, dans cet ordre** : chuchotement, respiration, clavier, bruits de bouche,
    note douce, voix posée. Puis « Silence 8 s » deux fois, puis « Silence 30 s ». Puis « Note
    douce sur la porte ».
@@ -55,7 +56,7 @@ exige `localhost` : un fichier ouvert directement ou une page d'artefact ne l'ob
 - **Système 1** — RMS en dB avec `MinDb`, enveloppe `c = exp(−Δt/τ)` au pas réel, porte
   `Gate_dB = Floor_dB + Margin_dB`, position `x′`, `Loudness = x′^γ`, `ToPosition`. Facteur
   `LowRange` sur `τ`, commutable (B5). Réglages `τ`, `γ` et `Margin_dB` en direct (B4).
-- **Système 6, version courte** — étape 0 « dis un mot » ; **chaque mesure attend « Je suis prêt »** ;
+- **Système 6, version courte** — étape 0 « dis un mot » ; **étape chuchotement** (piste du 2026-09-17), entre le silence et la parole posée ; **chaque mesure attend « Je suis prêt »** ;
   silence de 7 s après un compte à rebours de 3 s, sans indicateur de niveau ; parole posée avec
   pulsation « on t'entend », **terminée par le joueur** avec « J'ai fini de parler » une fois le minimum
   atteint ; montée avec un objet qui s'alourdit, plateau calé sur le plancher dur, bouton d'arrêt. Validations V1, V2, V3 ; deux refus → profil approximatif.
@@ -227,5 +228,34 @@ chuchotement mesuré du joueur, plutôt que sur une fraction de sa voix posée.
 **À trancher à la re-revue** : `voice-calibration.md` — l'exigence sur les améliorations micro, et un
 éventuel point « chuchotement » dans la calibration ; système 2 et ADR-0003 — la capture en mode brut
 et le choix du micro physique.
+
+### 2026-09-17 — décision du propriétaire : ne jamais bloquer, dire ce qui est perdu
+
+**Décision** : ne jamais bloquer un joueur dont le micro écrase la dynamique. **L'informer de ce qu'il perd
+et d'où ça vient**, l'inviter à couper le traitement, puis le laisser jouer — qu'il y aille en connaissance
+de cause, et qu'il ne puisse pas conclure que le jeu est mal fait quand c'est son micro qui le bride.
+**Piste retenue pour le prototype** : calibrer le chuchotement.
+
+**Ajouté au prototype** :
+
+- **Étape « chuchotement »** : pas de pulsation, pour ne pas pousser à chuchoter plus fort ; l'ancre est
+  le P90 de tout le chuchotement, porte comprise.
+- **Seuil de murmure au choix** : « fraction de la voix posée » (GDD, `T_objet · r′`) ou « entre le
+  chuchotement mesuré et la voix posée » (`w + T_objet · (r′ − w)`, jamais au-delà de `r′`).
+- **Diagnostic de dynamique écrasée** : voix posée − chuchotement sous 6 dB, ou cri − voix posée sous
+  12 dB. Valeurs du prototype : elles signalent la chaîne de capture, ne refusent jamais.
+- **Message de fin de calibration** : ce que le micro fait perdre, en clair ; la cause probable ;
+  « Tu peux jouer comme ça » ; bouton « Jouer avec cette mesure ».
+- **Rappel en jeu, au moment où ça mord** : quand ta voix basse déclenche l'alarme, avec un profil
+  écrasé, un bandeau rappelle que c'est le micro — au plus une fois toutes les 45 s, journalisé.
+
+**Vérifié au générateur** : profil écrasé (chuchotement à 3 dB de la voix, cri à 7 dB) → message ; au
+seuil du GDD, le chuchotement déclenche l'alarme et le rappel ; au seuil ancré, le même chuchotement reste
+en murmure (seuil 0,78 contre 0,57). 36 contrôles Node, dont 7 pour la piste.
+
+**Conséquences à trancher à la re-revue** : `voice-calibration.md` — une étape de plus, le message et le
+drapeau de dynamique écrasée, le prérequis sur les améliorations micro remplacé par une invitation ;
+`voice-object-effect.md` — la formule du seuil ; ADR-0003 et décision E5 — **un second nombre, la
+position du chuchotement, partirait vers l'hôte** avec `r′`.
 
 *Suite des résultats après l'essai 2.*
