@@ -21,7 +21,7 @@
   function ui(title, instr) { el('calTitle').textContent = title; el('calInstr').textContent = instr; }
   function show(ids, on) { ids.forEach(function (id) { el(id).hidden = !on; }); }
   function resetUi() {
-    show(['calProgWrap', 'calPulseRow', 'calObj', 'calStop', 'calCancel', 'calResult'], false);
+    show(['calProgWrap', 'calPulseRow', 'calObj', 'calStop', 'calCancel', 'calResult', 'calGo', 'calDone'], false);
     el('calStart').hidden = true;
   }
   function result(html, buttons) {
@@ -32,6 +32,32 @@
       x.addEventListener('click', b[1]); row.appendChild(x);
     });
     box.appendChild(row);
+  }
+
+  // Chaque mesure attend que le joueur ait lu sa consigne : c'est lui qui lance l'étape.
+  var goAction = null;
+  function ready(step, title, instr, before, start) {
+    C.state = 'ready'; A.hideLevel = false;
+    resetUi(); showStep(step);
+    ui(title, (before ? before + ' ' : '') + instr);
+    show(['calGo', 'calCancel'], true);
+    goAction = start;
+    el('calGo').focus();
+  }
+  function readyFloor(before) {
+    ready(1, 'Silence', 'Quand tu cliques sur « Je suis prêt », reste silencieux une dizaine de secondes en respirant normalement. Un compte à rebours de 3 secondes te laisse le temps de t\x27installer.', before, startCountdown);
+  }
+  function readyRest(before) {
+    ready(2, 'Parole posée', 'Ensuite, parle normalement, comme si tu racontais ta journée à quelqu\x27un assis en face de toi. Continue jusqu\x27à ce que le bouton « J\x27ai fini de parler » apparaisse, puis arrête-toi quand tu veux.', before, startRest);
+  }
+  function readyPeak(before) {
+    ready(3, 'Montée', 'Ensuite, monte la voix progressivement, à ton rythme, jusqu\x27à ne plus pouvoir monter sans forcer. Le meuble réagit à ta voix. Si crier te fait mal, arrête-toi : le bouton « J\x27arrête ici » reste disponible.', before, startPeak);
+  }
+  function startCountdown() {
+    C.state = 'countdown'; C.t0 = performance.now();
+    A.hideLevel = true;
+    resetUi(); show(['calCancel'], true); showStep(1);
+    ui('Silence', 'Ne dis rien. La mesure commence dans 3…');
   }
 
   function goIdle(msg) {
@@ -48,6 +74,8 @@
   });
   el('calCancel').addEventListener('click', function () { C.refusals = 0; goIdle(); });
   el('calStop').addEventListener('click', function () { if (C.state === 'peak') endPeak('arrêt demandé'); });
+  el('calGo').addEventListener('click', function () { if (goAction) { var f = goAction; goAction = null; f(); } });
+  el('calDone').addEventListener('click', function () { if (C.state === 'rest') C.doneAsked = true; });
 
   function startPrep() {
     C.state = 'prep'; C.t0 = performance.now(); C.minSeen = Infinity;
@@ -62,7 +90,7 @@
     A.recStart('silence');
   }
   function startRest() {
-    C.state = 'rest'; C.t0 = performance.now(); C.G = []; C.gated = 0; C.max2 = A.s1.MinDb;
+    C.state = 'rest'; C.t0 = performance.now(); C.G = []; C.gated = 0; C.max2 = A.s1.MinDb; C.doneAsked = false;
     A.hideLevel = true;
     resetUi(); show(['calProgWrap', 'calPulseRow', 'calCancel'], true); showStep(2);
     ui('Parole posée', 'Parle normalement, comme si tu racontais ta journée à quelqu\'un assis en face de toi.');
@@ -78,9 +106,12 @@
 
   A.subs.push(function (now, dt) {
     var t = (now - C.t0) / 1000, s6 = A.s6, s1 = A.s1;
-    if (C.state === 'prep') {
+    if (C.state === 'countdown') {
+      el('calInstr').textContent = 'Ne dis rien. La mesure commence dans ' + Math.max(1, Math.ceil(3 - t)) + '…';
+      if (t >= 3) startFloor();
+    } else if (C.state === 'prep') {
       if (t > 0.3) C.minSeen = Math.min(C.minSeen, A.envDb);
-      if (t > 0.3 && A.envDb - C.minSeen >= 12) { A.log('calibration', 'Étape 0 : signal reçu', { apres_s: +t.toFixed(2) }); startFloor(); }
+      if (t > 0.3 && A.envDb - C.minSeen >= 12) { A.log('calibration', 'Étape 0 : signal reçu', { apres_s: +t.toFixed(2) }); readyFloor('On t\x27entend.'); }
       else if (t > s6.DeviceCheck) {
         C.state = 'wait'; resetUi(); show(['calCancel'], true);
         result('<div class="msg">On ne reçoit rien de ce micro — vérifie qu\'il est branché, sélectionné, et que le navigateur y a accès.</div>',
@@ -95,28 +126,32 @@
         C.buf.floor = Math.max(s1.MinDb + s6.FloorMargin, p95 + s6.FloorMargin);
         C.info.silence = { P95: +p95.toFixed(1), P50: +p50.toFixed(1), ecartP95_P50: +(p95 - p50).toFixed(1), trames: C.samples.length, Floor_dB: +C.buf.floor.toFixed(1) };
         A.log('calibration', 'Étape 1 : silence mesuré', C.info.silence);
-        startRest();
+        readyRest('Silence mesuré.');
       }
     } else if (C.state === 'rest') {
       var gate = C.buf.floor + s1.Margin_dB, on = A.envDb > gate;
       el('calPulse').classList.toggle('lit', on);
       if (on) { C.G.push(A.envDb); C.gated += dt; }
       C.max2 = Math.max(C.max2, A.envDb);
-      el('calProg').style.width = Math.min(100, t / s6.Step2Timeout * 100) + '%';
-      if (C.gated >= s6.VoicedMinSec || t >= s6.Step2Timeout) {
+      el('calProg').style.width = Math.min(100, C.gated / s6.VoicedMinSec * 100) + '%';
+      if (C.gated >= s6.VoicedMinSec && el('calDone').hidden) {
+        el('calDone').hidden = false;
+        el('calInstr').textContent = 'C\x27est suffisant pour mesurer. Continue si tu veux, et arrête-toi quand tu veux.';
+      }
+      if (C.doneAsked || t >= s6.Step2Timeout) {
         A.recStop();
         if (C.gated < s6.VoicedMinSec) {
           C.state = 'wait'; resetUi(); show(['calCancel'], true);
           var none = C.G.length === 0;
           A.log('calibration', 'Étape 2 : trop peu de parole', { secondes_au_dessus_de_la_porte: +C.gated.toFixed(2) });
           result('<div class="msg">' + (none ? 'On ne t\'entend pas du tout — vérifie le micro sélectionné.' : 'Continue encore un peu, comme si tu racontais quelque chose.') + '</div>',
-            [['Reprendre la parole posée', startRest]]);
+            [['Reprendre la parole posée', function () { readyRest(); }]]);
           return;
         }
         C.buf.rest = P.median(C.G);
-        C.info.parole = { Rest_dB: +C.buf.rest.toFixed(1), trames_G: C.G.length, max_etape2: +C.max2.toFixed(1), duree_s: +t.toFixed(1), PitchStatus: 'non mesuré (sans YIN)' };
+        C.info.parole = { Rest_dB: +C.buf.rest.toFixed(1), trames_G: C.G.length, max_etape2: +C.max2.toFixed(1), duree_s: +t.toFixed(1), fin: C.doneAsked ? 'bouton' : 'délai', PitchStatus: 'non mesuré (sans YIN)' };
         A.log('calibration', 'Étape 2 : parole posée mesurée', C.info.parole);
-        startPeak();
+        readyPeak('Parole posée mesurée.');
       }
     } else if (C.state === 'peak' || C.state === 'settle') {
       var g3 = C.buf.floor + s1.Margin_dB;
@@ -141,7 +176,7 @@
     C.state = 'settle'; C.settleAt = performance.now();
     el('calStop').hidden = true;
     el('calInstr').textContent = 'Mesure faite.';
-    setTimeout(validateNow, 700);
+    setTimeout(validateNow, 1500);
   }
 
   // l'objet de l'étape 3 : une conséquence, pas une jauge — échelle élastique, jamais de butée
@@ -183,10 +218,10 @@
       A.log('calibration', 'Refus ' + v.refusal + ' (refus consécutifs : ' + C.refusals + ')', { profil: p, deltaP: +v.deltaP.toFixed(1) });
       var msg = v.refusal === 'V1' ? 'On n\'a pas capté de montée — on refait juste cette étape, à ton rythme.'
         : 'On n\'arrive pas à distinguer ta voix calme de ta voix plus forte — rapproche un peu le micro.';
-      var btns = [['Refaire la montée', startPeak]];
+      var btns = [['Refaire la montée', function () { readyPeak(); }]];
       if (C.refusals >= 2) {
         msg += '</div><div class="msg">Tu peux entrer avec une mesure approximative : le jeu réagira un peu moins finement, et tu pourras la refaire quand tu veux.';
-        btns = [['Entrer avec une mesure approximative', approximate, 'calm'], ['Réessayer', startPeak, 'ghost']];
+        btns = [['Entrer avec une mesure approximative', approximate, 'calm'], ['Réessayer', function () { readyPeak(); }, 'ghost']];
       }
       result('<div class="msg">' + msg + '</div>' + details, btns);
       return;
@@ -199,7 +234,7 @@
     A.log('calibration', 'Profil accepté' + (v.lowRange ? ' — LowRange (' + v.reasons.join(', ') + ')' : ''), { profil: p, r: +v.r.toFixed(3), deltaP: +v.deltaP.toFixed(1), infos: C.info });
     result(msgs.map(function (m) { return '<div class="msg">' + m + '</div>'; }).join('') + details,
       [['Utiliser ce profil', function () { A.setProfile(p, 'calibration'); C.refusals = 0; goIdle('Profil en place. Tu peux refaire ta mesure quand tu veux.'); }, 'calm'],
-       ['Refaire la parole posée', startRest, 'ghost'], ['Refaire la montée', startPeak, 'ghost'], ['Tout refaire', startPrep, 'ghost']]);
+       ['Refaire la parole posée', function () { readyRest(); }, 'ghost'], ['Refaire la montée', function () { readyPeak(); }, 'ghost'], ['Tout refaire', startPrep, 'ghost']]);
   }
   function kv(k, v) { return '<span class="k">' + k + '</span><span class="v">' + v + '</span>'; }
 
@@ -228,7 +263,7 @@
     return true;
   }
   function run(label, seconds, done) {
-    M.running = { label: label, t0: performance.now(), dur: seconds, warm: 0.6, frames: [] };   // 0,6 s écartées : l’enveloppe retombe du geste précédent
+    M.running = { label: label, t0: performance.now(), dur: seconds, warm: 1.5, frames: [] };   // 1,5 s pour se préparer ; l’enveloppe retombe aussi du geste précédent
     A.hideLevel = true;
     A.recStart(label);
     document.querySelectorAll('[data-meas],#btnSil8,#btnSil30,#btnFlicker,#btnSameRoom').forEach(function (b) { b.disabled = true; });
@@ -238,7 +273,8 @@
     var m = M.running; if (!m) return;
     var t = (now - m.t0) / 1000;
     if (t >= m.warm) m.frames.push({ env: A.envDb, L: A.L, x: A.x });
-    el('measStatus').textContent = m.label + ' — ' + fmt(Math.max(0, m.dur + m.warm - t), 1) + ' s';
+    el('measStatus').textContent = t < m.warm ? 'Prépare-toi : ' + m.label.toLowerCase() + '…'
+      : 'Mesure en cours : ' + m.label.toLowerCase() + ' — ' + fmt(Math.max(0, m.dur + m.warm - t), 1) + ' s';
     if (t >= m.dur + m.warm) {
       M.running = null; A.hideLevel = false; A.recStop();
       document.querySelectorAll('[data-meas],#btnSil8,#btnSil30,#btnFlicker,#btnSameRoom').forEach(function (b) { b.disabled = false; });

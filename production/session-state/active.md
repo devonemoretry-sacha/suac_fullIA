@@ -179,7 +179,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 ## Prototype étendu — démarré le 2026-09-17 (plan, étape 4)
 
 **Dossier** : `prototypes/charge-vocale-etendue/` · lancement `node prototypes/charge-vocale-etendue/serve.js` → http://localhost:4322 (micro : localhost obligatoire, comme le banc).
-**Chemin** : navigateur (décidé dans le plan). **Phase** : 6 — construit et vérifié le 2026-09-17 (29 contrôles Node, parcours complet au générateur) ; en attente du premier essai au micro du propriétaire, protocole dans le README.
+**Chemin** : navigateur (décidé dans le plan). **Phase** : 6 — construit et vérifié le 2026-09-17 (29 contrôles Node, parcours complet au générateur) ; premier essai interrompu : calibration trop rapide, corrigée (porte « Je suis prêt », fin de parole par le joueur) — à reporter dans voice-calibration.md à la re-revue (CAL-43) ; nouvel essai attendu.
 
 **Hypothèses** :
 - **H1 (E1)** — l'avertissement « événement au franchissement » laisse le temps de se taire au moins aussi bien que l'indice dès l'attaque du banc ; signal : choix en comparaison aveugle + lecture de la pré-charge (VO-49).

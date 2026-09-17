@@ -55,9 +55,10 @@ exige `localhost` : un fichier ouvert directement ou une page d'artefact ne l'ob
 - **Système 1** — RMS en dB avec `MinDb`, enveloppe `c = exp(−Δt/τ)` au pas réel, porte
   `Gate_dB = Floor_dB + Margin_dB`, position `x′`, `Loudness = x′^γ`, `ToPosition`. Facteur
   `LowRange` sur `τ`, commutable (B5). Réglages `τ`, `γ` et `Margin_dB` en direct (B4).
-- **Système 6, version courte** — étape 0 « dis un mot », silence de 7 s sans indicateur de niveau,
-  parole posée avec pulsation « on t'entend », montée avec un objet qui s'alourdit, plateau calé
-  sur le plancher dur, bouton d'arrêt. Validations V1, V2, V3 ; deux refus → profil approximatif.
+- **Système 6, version courte** — étape 0 « dis un mot » ; **chaque mesure attend « Je suis prêt »** ;
+  silence de 7 s après un compte à rebours de 3 s, sans indicateur de niveau ; parole posée avec
+  pulsation « on t'entend », **terminée par le joueur** avec « J'ai fini de parler » une fois le minimum
+  atteint ; montée avec un objet qui s'alourdit, plateau calé sur le plancher dur, bouton d'arrêt. Validations V1, V2, V3 ; deux refus → profil approximatif.
 - **Système 11** — la boucle normative de *Formulas* §3 : `SILENCE` prioritaire, murmure plafonné sous
   l'avertissement, alarme au maximum, objet posé qui ne décharge qu'au silence, seuils en positions,
   zizanie par pièce avec épisodes, avertissement événement ou banc. Hôte au tick fixe de 50 Hz ; en
@@ -93,4 +94,18 @@ exige `localhost` : un fichier ouvert directement ou une page d'artefact ne l'ob
 
 ## Résultats
 
-*À remplir après la première session.*
+### 2026-09-17 — premier essai, interrompu : la calibration va trop vite
+
+**Constat du propriétaire** : les étapes s'enchaînaient sans laisser le temps de lire la consigne ni
+de la faire. Chaque étape démarrait dès la fin de la précédente, et la parole posée s'arrêtait seule
+dès 2 s de voix captée.
+
+**Corrigé dans le prototype** : chaque mesure attend « Je suis prêt » ; le silence part après un
+compte à rebours de 3 s ; la parole posée se termine par « J'ai fini de parler », qui n'apparaît qu'une
+fois le minimum atteint, ou au délai ; les points de mesure laissent 1,5 s pour se préparer.
+
+**Conséquence pour `voice-calibration.md`, à trancher à la re-revue** : le document fait finir
+l'étape 2 « dès que `n(V) ≥ VoicedMin` » (CAL-43) et n'écrit aucune porte « prêt » entre les étapes.
+Le mode découverte promet « aucune hâte » ; les règles ne la garantissaient pas.
+
+*Suite des résultats après la prochaine session.*

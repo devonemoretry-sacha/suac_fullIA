@@ -191,7 +191,9 @@
       <canvas id="calObj" width="520" height="190" hidden></canvas>
       <div class="row">
         <button id="calStart">Commencer</button>
+        <button id="calGo" hidden>Je suis prêt</button>
         <button class="ghost" id="calStop" hidden>J'arrête ici</button>
+        <button class="calm" id="calDone" hidden>J'ai fini de parler</button>
         <button class="ghost" id="calCancel" hidden>Annuler</button>
       </div>
       <div class="result" id="calResult" hidden></div>
@@ -200,7 +202,7 @@
 
    <div class="panel">
     <h2>Points de mesure — avec le profil actif</h2>
-    <p class="note">Chaque point écoute 4 s, après 0,6 s écartées. Fais le geste demandé pendant tout le point. « Seuil ordinaire » = <code>0,7 · r'</code>.</p>
+    <p class="note">Chaque point te laisse 1,5 s pour te préparer, puis écoute 4 s. Fais le geste demandé pendant tout le point. « Seuil ordinaire » = <code>0,7 · r'</code>.</p>
     <div class="row">
       <button class="ghost" data-meas="Chuchotement">Chuchotement</button>
       <button class="ghost" data-meas="Respiration normale">Respiration</button>
