@@ -359,7 +359,7 @@
     micHint(now);
     if (cfg.semantique === 'evenement') {
       if (el('chkSound').checked && sound.ready) sound.stinger();
-      if (el('chkShake').checked) { shake.until = now + 280; shake.amp = el('chkShakeAmp').checked ? 7 : 2.5; }
+      if (el('chkShake').checked) { shake.until = now + 280; shake.amp = el('chkShakeAmp').checked ? 12 : 5; }
     }
   }
 
@@ -388,8 +388,8 @@
     var sx = 0, sy = 0, amp = 0;
     if (el('chkShake').checked) {
       if (now < shake.until) amp = shake.amp * (shake.until - now) / 280;
-      if (cfg.semantique === 'banc' && o.warnState) amp = Math.max(amp, (el('chkShakeAmp').checked ? 5 : 1.8));
-      if (o.charge >= P.seuilAv(cfg)) amp = Math.max(amp, 0.8 * o.lourdeur * (el('chkShakeAmp').checked ? 2.5 : 1));
+      if (cfg.semantique === 'banc' && o.warnState) amp = Math.max(amp, (el('chkShakeAmp').checked ? 9 : 3.5));
+      if (o.charge >= P.seuilAv(cfg)) amp = Math.max(amp, 1.5 * o.lourdeur * (el('chkShakeAmp').checked ? 2.5 : 1));
       sx = (Math.random() - 0.5) * 2 * amp; sy = (Math.random() - 0.5) * 2 * amp;
     }
     cx.save(); cx.setTransform(1, 0, 0, 1, sx, sy);

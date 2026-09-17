@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype etendu — essai 1 analyse, corrections faites ; essai 2 attendu (Blue VO!CE coupe, voix simulees muettes)
+Task: Prototype etendu — essais 1 et 2 analyses (Blue VO!CE confirme) ; essai 3 attendu
 <!-- /STATUS -->
 
 ---

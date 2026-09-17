@@ -239,10 +239,10 @@ de cause, et qu'il ne puisse pas conclure que le jeu est mal fait quand c'est so
 **Ajouté au prototype** :
 
 - **Étape « chuchotement »** : pas de pulsation, pour ne pas pousser à chuchoter plus fort ; l'ancre est
-  le P90 de tout le chuchotement, porte comprise.
+  la médiane de tout le chuchotement, porte comprise — d'abord le P90, corrigé après l'essai 2.
 - **Seuil de murmure au choix** : « fraction de la voix posée » (GDD, `T_objet · r′`) ou « entre le
   chuchotement mesuré et la voix posée » (`w + T_objet · (r′ − w)`, jamais au-delà de `r′`).
-- **Diagnostic de dynamique écrasée** : voix posée − chuchotement sous 6 dB, ou cri − voix posée sous
+- **Diagnostic de dynamique écrasée** : voix posée − chuchotement sous 4 dB (d'abord 6, corrigé après l'essai 2), ou cri − voix posée sous
   12 dB. Valeurs du prototype : elles signalent la chaîne de capture, ne refusent jamais.
 - **Message de fin de calibration** : ce que le micro fait perdre, en clair ; la cause probable ;
   « Tu peux jouer comme ça » ; bouton « Jouer avec cette mesure ».
@@ -258,4 +258,70 @@ drapeau de dynamique écrasée, le prérequis sur les améliorations micro rempl
 `voice-object-effect.md` — la formule du seuil ; ADR-0003 et décision E5 — **un second nombre, la
 position du chuchotement, partirait vers l'hôte** avec `r′`.
 
-*Suite des résultats après l'essai 2.*
+### 2026-09-17 — essai 2, Blue VO!CE coupé, 12 h 04 – 12 h 08 · journal `sessions/2026-09-17-essai-2.json`
+
+Version du prototype : celle d'avant l'étape chuchotement (commit `bd5497f`). Voix simulées muettes,
+crête et saturation mesurées, retour au calme journalisé.
+
+#### L'hypothèse Blue VO!CE est confirmée
+
+| Mesure | Essai 1, **avec** Blue VO!CE | Essai 2, **sans** |
+|---|---|---|
+| Silence, P50 | −79,5 à −80,5 dB — porte de bruit | −74,3 dB — le vrai bruit de la pièce |
+| Voix posée (`Rest_dB`) | −21,4 à −26,7 dB | **−39,4 dB** |
+| Cri (`Scream_dB`) | −11,4 à −14,3 dB | −10,0 dB, crête à −1,9 dBFS, sans saturation |
+| **Cri − voix posée** | **7 à 15 dB** | **29,4 dB** |
+| `r′` | 0,71 à 0,86 | **0,44** |
+| Chuchotement, médiane | −27,2 dB — au niveau de la voix | **−46,5 dB** |
+| Clavier, médiane | −25,7 dB — alarme | −57,0 dB — murmure |
+| Respiration | au niveau du silence | sous la porte, à 0,3 dB du bruit de la pièce |
+
+Le traitement du casque remontait la voix posée d'environ 15 dB et écrasait l'écart jusqu'au cri : **une
+vingtaine de décibels de dynamique perdus**, que la calibration ne pouvait pas rendre.
+
+#### Deux découvertes, même sans traitement
+
+**1. Le chuchotement est tout juste sous le seuil d'un objet ordinaire, et ses pointes le dépassent.**
+Médiane à la position 0,308 pour un seuil à 0,31 (`0,7 · r′`) ; P90 à 0,509. À un micro-perche, les
+bouffées de souffle montent au niveau de la voix posée : le P90 du chuchotement (−35,9 dB) est plus fort
+que la médiane de la voix (−39,4 dB). **C'est le risque H2 : le registre sûr existe, sans marge.**
+
+**Conséquence sur la piste du chuchotement, corrigée** : l'ancre était le P90. Sur cet essai, elle aurait
+atteint la voix posée et déclaré ta dynamique écrasée **alors que Blue VO!CE était coupé** — le message
+aurait accusé ton micro à tort. L'ancre est désormais la **médiane** du chuchotement, et le diagnostic
+passe à **4 dB** entre voix posée et chuchotement : 0,5 dB avec Blue VO!CE, 7,1 dB sans. Avec la médiane,
+le seuil ancré d'un objet ordinaire monterait de 0,31 à **0,40** : le chuchotement typique garde une marge,
+ses pointes restent en alarme.
+
+**2. Taper au clavier fait murmurer l'objet.** Médiane 5,8 dB au-dessus de la porte, 79 % des trames non
+nulles : un joueur qui tape empêche le silence complet, donc la décharge. Donnée pour `Margin_dB` (B1).
+
+#### Jeu, voix simulées muettes
+
+| Question | Réponse | Lecture |
+|---|---|---|
+| « J'ai eu le temps de me taire » | Oui | Deuxième confirmation |
+| Retour au calme | cinq descentes : 1,2 à 1,7 s en silence réel ; une de 4,0 s, dont 2,5 s sans silence complet | **Le « trop long » de l'essai 1 venait de Lou.** En silence, la descente dure `Vidange` ; de petits bruits la bloquent |
+| Pré-charge | **« L'avertissement a disparu »** | **Échec de VO-49**, cohérent avec « trop vite » à l'essai 1 : `k` = 0,85 est trop haut |
+| Tremblement seul, son coupé | **Non** | **Échec de VO-48** cette fois. Amplitude corrigée : 5 px au lieu de 2,5 (12 px amplifié) |
+| Conversation soutenue | Jouable | Mobilité restée à 1,10 : la question « figer l'objet » reste à essayer |
+| Zizanie | « Juste » | **Non fondé sur cet essai** : aucun épisode de zizanie n'a été journalisé |
+
+**Non fait** : silence et `p`, comparaison aveugle, objet tolérant, cri mystère, mode client.
+
+#### Corrigé après l'essai 2
+
+- Ancre du chuchotement : médiane au lieu du P90 ; diagnostic de dynamique écrasée à 4 dB.
+- Tremblement doublé.
+- Lecture des points de mesure : « murmure sur un objet ordinaire, mais les pointes déclenchent
+  l'alarme » quand la médiane est sous le seuil et le P90 au-dessus.
+
+#### Pour l'essai 3
+
+1. **Blue VO!CE coupé**, nouvelle version : calibration avec chuchotement ; au jeu, les deux seuils de
+   murmure, en chuchotant.
+2. `k` à 0,6 puis la pré-charge ; tremblement son coupé ; mobilité à 0,2 puis 0 en conversation soutenue.
+3. Une vraie zizanie : Lou et Max en « Panique » dans ta pièce, et toi qui cries.
+4. **Blue VO!CE rallumé**, calibration refaite : le message et le rappel en jeu, tels qu'un joueur les lirait.
+
+*Suite des résultats après l'essai 3.*

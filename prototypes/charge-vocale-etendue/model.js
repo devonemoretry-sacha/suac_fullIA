@@ -194,7 +194,7 @@
     HardFloor: 6, QualityBand: 13, RestMax: 0.80,
     WhisperMin: 4, WhisperTimeout: 12,
     // diagnostic du prototype : une chaîne de capture qui écrase la dynamique, jamais un refus
-    EcartCriVoixMin: 12, EcartVoixChuchoteMin: 6
+    EcartCriVoixMin: 12, EcartVoixChuchoteMin: 4     // essai 1 (Blue VO!CE) : 0,5 dB ; essai 2 (sans) : 7,4 dB
   };
 
   function percentile(arr, p) {

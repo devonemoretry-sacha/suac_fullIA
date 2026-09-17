@@ -150,9 +150,10 @@
       }
       if (C.doneAsked || t >= s6.WhisperTimeout) {
         A.recStop();
-        // l'ancre est le P90 de tout le chuchotement, porte comprise : un chuchotement sous la porte vaut une ancre sous la porte
-        C.buf.whisper = P.percentile(C.W, 0.9);
-        C.info.chuchotement = Object.assign({ P50: +P.percentile(C.W, 0.5).toFixed(1), P90_ancre: +C.buf.whisper.toFixed(1),
+        // l'ancre est la médiane de tout le chuchotement, porte comprise : un chuchotement sous la porte vaut une ancre sous la porte.
+        // Pas le P90 : à un micro-perche, les bouffées de souffle montent au niveau de la voix (essai 2, 2026-09-17)
+        C.buf.whisper = P.percentile(C.W, 0.5);
+        C.info.chuchotement = Object.assign({ P50_ancre: +C.buf.whisper.toFixed(1), P90: +P.percentile(C.W, 0.9).toFixed(1),
           part_au_dessus_porte: +(C.Wover / Math.max(0.001, t - 0.5)).toFixed(3), duree_s: +t.toFixed(1), fin: C.doneAsked ? 'bouton' : 'délai' }, A.dynStop(C.dyn));
         A.log('calibration', 'Étape 2 : chuchotement mesuré', C.info.chuchotement);
         readyRest('Chuchotement mesuré.');
@@ -346,9 +347,11 @@
         var sFrag = P.seuilDe(Object.assign({}, A.s11, { T_objet: 0.4 }), { r: r, w: A.wPrime() });
         var envs = m.frames.map(function (f) { return f.env; }), xs = m.frames.map(function (f) { return f.x; });
         var med = P.median(envs), p90 = P.percentile(envs, 0.9), xm = P.median(xs), on = m.frames.filter(function (f) { return f.L > 0; }).length / m.frames.length;
+        var x90 = P.percentile(xs, 0.9);
         var lecture = on < 0.05 ? 'sous la porte : ne pèse rien'
-          : P.percentile(xs, 0.9) < sFrag ? 'murmure même sur un objet fragile'
-          : P.percentile(xs, 0.9) < sOrd ? 'murmure sur un objet ordinaire, alarme sur un fragile'
+          : x90 < sFrag ? 'murmure même sur un objet fragile'
+          : x90 < sOrd ? 'murmure sur un objet ordinaire, alarme sur un fragile'
+          : xm < sOrd ? 'murmure sur un objet ordinaire, mais les pointes déclenchent l\'alarme'
           : 'alarme sur un objet ordinaire';
         if (m.dynRes.saturation_pct > 0.05) lecture += ' · le micro sature';
         addRow([m.label, fmt(med, 1), fmt(med - room, 1), fmt(med - g, 1), fmt(xm, 3), Math.round(on * 100) + ' %', lecture]);
