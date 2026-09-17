@@ -199,4 +199,33 @@ empêchait tout silence complet**.
 - Système 9, sans document : « lourd » doit pouvoir figer l'objet sous une conversation soutenue
   (OQ-11.1).
 
+### 2026-09-17 — retour du propriétaire : exiger de couper Blue VO!CE est une friction
+
+**Constat** : demander aux joueurs de couper les fonctions de leur casque, ou de régler quoi que
+ce soit hors du jeu, freine les joueurs qui ne maîtrisent pas leur ordinateur. **L'idéal : jouer
+avec son installation habituelle.** Ce retour remet en cause l'exigence que `voice-calibration.md`
+place « au même rang que le casque » (*UI Requirements*, « Le casque et les améliorations micro »).
+
+**Trois endroits où un traitement peut se loger, trois réponses possibles** :
+
+| Où est le traitement | Exemple | Ce que le jeu peut faire sans réglage externe |
+|---|---|---|
+| Dans le matériel du casque | PRO X : d'après un test, les réglages Blue VO!CE s'enregistrent dans la carte son USB — *à vérifier* | Rien pour le contourner : **mesurer et s'adapter** |
+| Dans Windows, comme effet audio | Améliorations audio, effets de pilotes | Demander le flux brut au système (mode « raw » de WASAPI), si le pilote le permet — *piste pour le système 2, à vérifier* |
+| Dans un micro virtuel | Logiciels qui créent un second micro « traité » | Proposer le micro physique dans le sélecteur du jeu |
+
+**Ce que la calibration absorbe déjà, et ce qu'elle ne peut pas rendre** : un traitement stable est
+mesuré tel quel, et les seuils personnels s'y rangent. Une porte de bruit aide même le silence. Mais
+un compresseur écrase l'écart entre chuchotement, voix et cri, et aucune calibration ne recrée un
+écart qui n'arrive plus. Le cœur « tais-toi » tient ; la nuance chuchoter / parler / crier se perd.
+
+**Ce que les essais doivent mesurer avant de trancher** : l'essai 1 a été fait avec Blue VO!CE,
+l'essai 2 sans. La comparaison dira combien de nuance on perd, et une partie jouée **avec** Blue VO!CE
+dira si le jeu reste jouable. **Piste à prototyper ensuite** : ancrer le seuil de murmure sur le
+chuchotement mesuré du joueur, plutôt que sur une fraction de sa voix posée.
+
+**À trancher à la re-revue** : `voice-calibration.md` — l'exigence sur les améliorations micro, et un
+éventuel point « chuchotement » dans la calibration ; système 2 et ADR-0003 — la capture en mode brut
+et le choix du micro physique.
+
 *Suite des résultats après l'essai 2.*
