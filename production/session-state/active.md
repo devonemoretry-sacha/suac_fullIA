@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Passe groupee terminee (etapes 1 a 5) ; prochaine etape du plan : prototype etendu dans le navigateur
+Task: Prototype etendu construit (prototypes/charge-vocale-etendue) ; attente du premier essai au micro
 <!-- /STATUS -->
 
 ---
@@ -173,3 +173,20 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 **Principe utilisateur du 2026-09-14** : les seuils sont personnels ; une constante ne détecte qu'une mesure cassée, jamais une voix inhabituelle. Consigné dans `.claude/rules/design-docs.md` et en mémoire.
 
 **Découverte qui change le sens du seul chiffre mesuré** : au banc, le halo s'allumait dès la première trame parlée et les 350 ms fixaient le début du poids réel (`prototypes/charge-vocale/index.html` l. 629, `heaviness()` l. 543–548). La question E1 est à poser à l'utilisateur : qu'a-t-il jugé « le meilleur » ?
+
+---
+
+## Prototype étendu — démarré le 2026-09-17 (plan, étape 4)
+
+**Dossier** : `prototypes/charge-vocale-etendue/` · lancement `node prototypes/charge-vocale-etendue/serve.js` → http://localhost:4322 (micro : localhost obligatoire, comme le banc).
+**Chemin** : navigateur (décidé dans le plan). **Phase** : 6 — construit et vérifié le 2026-09-17 (29 contrôles Node, parcours complet au générateur) ; en attente du premier essai au micro du propriétaire, protocole dans le README.
+
+**Hypothèses** :
+- **H1 (E1)** — l'avertissement « événement au franchissement » laisse le temps de se taire au moins aussi bien que l'indice dès l'attaque du banc ; signal : choix en comparaison aveugle + lecture de la pré-charge (VO-49).
+- **H2 (E2, B1, B2)** — un chuchotement sous le seuil personnel fait frémir sans alerte ni poids ; signal : position mesurée du vrai chuchotement sous `T_objet · r'`, et `p ≥ 0,84` sur silence.
+- **H3** — avec trois voix simulées, le maximum désigne un coupable identifiable et la zizanie « durée » se sent ; signal : quiz d'attribution, préférence durée / débit.
+- **H4 (E4)** — la conversation soutenue près d'un objet ordinaire est-elle jouable, comparée à l'objet tolérant.
+- **Risque le plus haut testable en solo** : l'existence d'une fenêtre de chuchotement à l'échelle personnelle (B1) — mesurée d'abord.
+
+**Périmètre** : mini-calibration du système 6 (sans YIN : repli `Rest_dB` sur `G`) ; chaîne du système 1 (dB, enveloppe `c = exp(−Δt/τ)`, `Gate_dB`, `x'`, `γ`, `ToPosition`) ; modèle du système 11 (boucle, régimes, seuils en positions, plafond, événement / banc, zizanie durée / débit, épisodes) ; trois voix simulées avec pièce, `r'`, latence ; objet fragile / ordinaire / tolérant ; latence réseau et prédiction de sa seule voix ; son en trois états, tremblement caméra ; mesures B1–B7, même pièce ; journal exportable.
+**Coupé** : YIN, jitter, hauteur, porte sur note tenue, écrêtage, réseau réel.
