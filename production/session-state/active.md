@@ -1,11 +1,11 @@
 # Session State — Active
 
-**Dernière mise à jour**: 2026-09-16
+**Dernière mise à jour**: 2026-09-18
 
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype solo clos (5 essais) ; a decider : reporter les acquis dans les GDD, puis outiller le test a plusieurs
+Task: Acquis du prototype reportes dans les GDD ; a decider : la forme du test a plusieurs
 <!-- /STATUS -->
 
 ---
@@ -166,7 +166,7 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 1. [x] Archiver la revue du système 6, règle de méthode « atteignabilité + témoin »
 2. [x] Revue full du système 11 → re-revue full du système 1 (NEEDS REVISION)
 3. [x] **Décisions obtenues le 2026-09-15 — les 10 recommandations acceptées.** Étape 1 (système 1), étape 2 (ADR-0003/0004/0005/0007/0008, index, `mvp-scope.md`) , étape 3 (système 6, `voice-calibration.md` réécrit, CAL-40 à 66, OQ-C12 à C16) et étape 4 (système 11, `voice-object-effect.md` révisé ; ADR-0002 et ADR-0003 amendés ; note `voice-weight-response.md` : provenance), puis étape 5 (`mvp-scope.md` : conditions bloquantes des tests à plusieurs ; `game-concept.md` : risques ; index : gel des systèmes 3 et 12) **faites le 2026-09-16** ; impacts transverses dans `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json`. (§6 de `design/gdd/reviews/voice-analysis-2026-09-14.md`). Passe groupée en cours, ordre : système 1 → ADR et documents transverses → système 6 → système 11 → `mvp-scope.md` / `game-concept.md`
-4. [ ] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
+4. [x] Prototype étendu dans le navigateur : mini-calibration + modèle du système 11 + trois voix simulées (+ les deux sémantiques d'avertissement commutables, un objet témoin tolérant, latence simulée, micro-tremblement caméra)
 5. [ ] Test à plusieurs humains — **dont au moins une session dans la même pièce** (OQ-8)
 6. [ ] Puis les GDD suivants
 
@@ -190,3 +190,32 @@ silence, les joueurs croiront avoir gagné alors que le jeu aura perdu. Le contr
 
 **Périmètre** : mini-calibration du système 6 (sans YIN : repli `Rest_dB` sur `G`) ; chaîne du système 1 (dB, enveloppe `c = exp(−Δt/τ)`, `Gate_dB`, `x'`, `γ`, `ToPosition`) ; modèle du système 11 (boucle, régimes, seuils en positions, plafond, événement / banc, zizanie durée / débit, épisodes) ; trois voix simulées avec pièce, `r'`, latence ; objet fragile / ordinaire / tolérant ; latence réseau et prédiction de sa seule voix ; son en trois états, tremblement caméra ; mesures B1–B7, même pièce ; journal exportable.
 **Coupé** : YIN, jitter, hauteur, porte sur note tenue, écrêtage, réseau réel.
+
+---
+
+## Report du prototype dans les documents — fait le 2026-09-18
+
+**Consigne** : « les documents d'abord » ; la forme du test à plusieurs (banc navigateur ou POC Unity) reste **non tranchée**.
+
+| Document | Ce qui y est entré | Commit |
+|---|---|---|
+| `design/gdd/voice-calibration.md` | Étape de **chuchotement** (`Whisper_dB`, médiane, *Formulas* §2a) ; porte « Je suis prêt » + décompte devant chaque mesure ; l'étape de parole se termine au geste du joueur ; `PlateauMinDuree_s` ; **diagnostic de chaîne de capture** §4a (`souffle` → `MontéeFaible` → `DynamiqueEcrasee`, ne refuse jamais) ; `StabilityMax_dB` sort d'EN ATTENTE à 12 dB ; améliorations micro **du prérequis à l'invitation** ; CAL-67 à CAL-78 ; OQ-C17 | `86d4109` |
+| `design/gdd/voice-object-effect.md` | **Plafond de charge par niveau de voix** (*Formulas* §3) ; coupable = **plus grand dépassement de son propre seuil** ; avertissement devenu **porte de niveau** ; `k` 0,85 → **0,6** ; `Douceur` ; thèse « punie par la durée » réduite à la descente ; VO-52 à VO-55 ; OQ-11.20 à 11.22 | `fbb1e7d` |
+| `design/gdd/voice-analysis.md` | B1 à moitié répondu — le chuchotement passe la porte avec **15,8 dB** de marge, scission de `Margin_dB` non justifiée ; **mesure de `p` invalidée** (porte de bruit de casque) | `0fff270` |
+| `docs/architecture/adr-0003-*.md` | Note à l'étape 5 : OQ-11.20 ferait passer à **deux** les nombres dérivés du profil ; E5 non amendée tant que la question est ouverte | `0fff270` |
+| `design/gdd/systems-index.md` | Statuts et journal du 2026-09-18 | `0fff270` |
+
+### Les trois arbitrages ouverts, par ordre d'impact
+
+1. **OQ-11.20 — seuil de murmure ancré sur le chuchotement mesuré.** Coût : un second scalaire vers l'hôte, donc ADR-0003 amendée. Gain : le chuchotement cesse d'être classé « alarme ». Le plafond par niveau a retiré l'urgence — reste la justesse de l'attribution.
+2. **OQ-11.21 — la décision E4 dépend désormais du profil.** Une conversation posée n'alerte que si `r' ≥ 0,50` ; les deux profils mesurés encadrent la frontière (0,474 et 0,537).
+3. **OQ-11.22 — déplacer la contrainte vers le chat vocal.** Change la formulation du Pilier 1 et rend le chat de proximité bloquant ; n'appartient pas au système 11.
+
+**Aucun des trois ne se tranche seul** : tous attendent le test à plusieurs.
+
+### Reste à faire
+
+- [ ] **Décider la forme du test à plusieurs** : banc navigateur synchronisé en LAN, ou POC Unity en situation réelle. *Non tranché par l'utilisateur.*
+- [ ] Re-revues `full` des systèmes 6 et 11 (toutes deux marquées « re-revue à faire »)
+- [ ] Session « même pièce » — condition bloquante de `mvp-scope.md`
+- [ ] GDD suivants
