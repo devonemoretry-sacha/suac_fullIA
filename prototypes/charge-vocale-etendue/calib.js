@@ -190,7 +190,8 @@
         C.hist.push({ t: t, M: C.M });
         var past = null;
         for (var i = C.hist.length - 1; i >= 0; i--) if (C.hist[i].t <= t - s6.PlateauHold) { past = C.hist[i]; break; }
-        var plateau = t >= s6.PlateauHold && past && (C.M - past.M) < s6.PlateauDelta && (C.M - g3) >= s6.HardFloor;
+        // garde du prototype : jamais de plateau avant PlateauMinDuree, pour ne pas couper une montée lente
+        var plateau = t >= Math.max(s6.PlateauHold, s6.PlateauMinDuree) && past && (C.M - past.M) < s6.PlateauDelta && (C.M - g3) >= s6.HardFloor;
         if (plateau) endPeak('plateau');
         else if (t >= s6.PeakTimeout) endPeak('délai écoulé');
       }
@@ -249,6 +250,7 @@
       kv('Chuchotement (P90) · position', (p.whisper === undefined ? '—' : fmt(p.whisper, 1) + ' dB · ' + fmt(P.position(p.whisper, p, A.s1), 3))) +
       kv('Voix posée − chuchotement', p.whisper === undefined ? '—' : fmt(p.rest - p.whisper, 1) + ' dB') +
       kv('Cri − voix posée', fmt(p.scream - p.rest, 1) + ' dB') +
+      kv('Cri − plus fort de la parole', C.info.parole ? fmt(p.scream - C.info.parole.max_etape2, 1) + ' dB' : '—') +
       kv('Crête · saturation, parole', (C.info.parole.crete_dBFS === null ? '—' : fmt(C.info.parole.crete_dBFS, 1)) + ' dBFS · ' + fmt(C.info.parole.saturation_pct, 2) + ' %') +
       kv('Crête · saturation, montée', (C.info.montee.crete_dBFS === null ? '—' : fmt(C.info.montee.crete_dBFS, 1)) + ' dBFS · ' + fmt(C.info.montee.saturation_pct, 2) + ' %') + '</div></details>';
     if (v.refusal) {
@@ -271,7 +273,13 @@
     // Diagnostic du prototype, pas une règle du GDD : il pointe le matériel, jamais la voix
     if (C.info.montee.saturation_pct > 0.05) msgs.push('<span class="warn-text">Ton micro sature : baisse son volume d\'entrée ou éloigne-le légèrement, puis refais la montée.</span>');
     // Décision du propriétaire du 2026-09-17 : ne jamais bloquer, dire ce qui est perdu et d'où ça vient, inviter, laisser jouer
-    if (dyn.ecrasee) {
+    // Une montée qui ne dépasse pas les pointes de la parole n'accuse pas le micro : elle accuse la montée
+    var monteeFaible = C.info.parole && (p.scream - C.info.parole.max_etape2) < 3;
+    if (monteeFaible) {
+      msgs.push('<span class="warn-text">Ta montée n\'a pas dépassé le plus fort moment de ta parole posée (' +
+        fmt(p.scream - C.info.parole.max_etape2, 1) + ' dB d\'écart). Refais juste la montée, en montant franchement, jusqu\'à ne plus pouvoir monter sans forcer.</span>');
+    }
+    if (dyn.ecrasee && (dyn.raisons.indexOf('chuchotement') >= 0 || !monteeFaible)) {
       var perte = [];
       if (dyn.raisons.indexOf('chuchotement') >= 0) perte.push('ton chuchotement arrive presque aussi fort que ta voix normale (' + fmt(dyn.voixMoinsChuchotement, 0) + ' dB d\'écart) : le jeu aura du mal à les distinguer, et <strong>chuchoter pourra alourdir les meubles comme si tu parlais</strong>');
       if (dyn.raisons.indexOf('cri') >= 0) perte.push('ton cri n\'arrive que ' + fmt(dyn.criMoinsVoix, 0) + ' dB au-dessus de ta voix normale : <strong>le jeu fera moins de différence entre parler et crier</strong>');

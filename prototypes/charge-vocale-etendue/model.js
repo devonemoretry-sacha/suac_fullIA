@@ -190,11 +190,13 @@
   var S6 = {
     step1: 7, WarmUp: 0.5, FloorMargin: 3, DeviceCheck: 5,
     VoicedMinSec: 2.0,      // VoicedMin = 100 trames à 50 Hz
-    Step2Timeout: 15, PlateauDelta: 1.5, PlateauHold: 1.2, PeakTimeout: 10,
+    Step2Timeout: 15, PlateauDelta: 1.5, PlateauHold: 1.2, PlateauMinDuree: 2, PeakTimeout: 10,
     HardFloor: 6, QualityBand: 13, RestMax: 0.80,
     WhisperMin: 4, WhisperTimeout: 12,
     // diagnostic du prototype : une chaîne de capture qui écrase la dynamique, jamais un refus
-    EcartCriVoixMin: 12, EcartVoixChuchoteMin: 4     // essai 1 (Blue VO!CE) : 0,5 dB ; essai 2 (sans) : 7,4 dB
+    // Séparation mesurée : avec Blue VO!CE 0,5 et 5,5 dB ; sans 7,1 et 14,5 dB. La marge est mince :
+    // le message reste une hypothèse, et la montée faible est testée avant d'accuser le micro.
+    EcartCriVoixMin: 12, EcartVoixChuchoteMin: 6
   };
 
   function percentile(arr, p) {

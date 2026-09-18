@@ -324,4 +324,66 @@ nulles : un joueur qui tape empêche le silence complet, donc la décharge. Donn
 3. Une vraie zizanie : Lou et Max en « Panique » dans ta pièce, et toi qui cries.
 4. **Blue VO!CE rallumé**, calibration refaite : le message et le rappel en jeu, tels qu'un joueur les lirait.
 
-*Suite des résultats après l'essai 3.*
+### 2026-09-18 — essai 3, deux calibrations · journal `sessions/2026-09-18-essai-3.json`
+
+#### A — sans Blue VO!CE : la montée n'a pas dépassé la parole
+
+| Mesure | Valeur |
+|---|---|
+| Silence | P95 −71,2 · P50 −73,6 → `Floor_dB` −68,2 |
+| Chuchotement | médiane **−48,5** · P90 −34,9 · 66 % au-dessus de la porte |
+| Voix posée | **−34,1** · plus fort moment **−19,8** |
+| Cri | **−21,2**, plateau à 1,8 s, maximum atteint à **0,6 s** |
+| Écarts | cri − voix **12,9 dB** · voix − chuchotement **14,5 dB** · `r′` **0,678** |
+
+**Le cri est plus faible que le plus fort moment de la parole posée** (−21,2 contre −19,8). La montée a
+donc duré moins de deux secondes et n'a rien ajouté : c'est elle qui gonfle `r′` à 0,68, pas le micro.
+
+#### B — Blue VO!CE rallumé : le message accusait le micro pour la mauvaise raison
+
+| Mesure | Valeur |
+|---|---|
+| Silence | P95 −71,9 · **P50 −80,2** — la porte de bruit du casque |
+| Chuchotement | médiane **−26,0** · 87 % au-dessus de la porte |
+| Voix posée | **−20,5** · Cri −13,1 |
+| Écarts | cri − voix **7,4 dB** · voix − chuchotement **5,5 dB** · `r′` **0,848** |
+
+Le diagnostic n'a signalé que le cri, parce que le seuil du chuchotement était passé à 4 dB après
+l'essai 2 : à 5,5 dB, il ne déclenchait plus. Le message a donc **accusé le micro sur le seul critère du
+cri**, alors que la montée était elle aussi très courte.
+
+**Séparation réellement mesurée sur les quatre calibrations** : voix − chuchotement vaut 0,5 et 5,5 dB
+**avec** Blue VO!CE, 7,1 et 14,5 dB **sans**. La marge est mince, et un seul seuil ne suffit pas.
+
+#### Corrigé après l'essai 3
+
+- **La montée faible est testée avant d'accuser le micro** : si le cri ne dépasse pas de 3 dB le plus fort
+  moment de la parole posée, le message propose de refaire la montée, et le micro n'est mis en cause que
+  si le chuchotement est lui aussi écrasé.
+- **Seuil du chuchotement remis à 6 dB**, la seule valeur qui sépare les quatre calibrations.
+- **Aucun plateau avant 2 secondes** (`PlateauMinDuree`, garde du prototype) : une montée lente n'est plus
+  coupée. *Candidat pour `voice-calibration.md` : le document n'a pas cette garde.*
+- La vue mesure affiche **cri − plus fort de la parole**.
+
+#### Jeu — trois réglages confirmés
+
+| Question | Réponse | Lecture |
+|---|---|---|
+| « J'ai eu le temps de me taire » | Oui | Troisième confirmation |
+| Pré-charge, avec **`k` = 0,6** | **« Déjà nerveux »** | **Corrigé** : à 0,85 c'était « l'avertissement a disparu ». `k` = 0,6 laisse 140 ms |
+| Tremblement seul, son coupé | **Oui** | **Corrigé** par l'amplitude doublée |
+| Zizanie | « Juste » | **Fondé cette fois** : un épisode de 3,92 s compté en pièce A, `Zmém` 1,5, descente de 2,74 s au lieu de 1,5 |
+| Conversation soutenue | Jouable | Mobilité restée à 1,10 : la piste « figer l'objet » n'a pas été essayée |
+
+**Non fait** : comparaison des deux seuils de murmure, comparaison aveugle de l'avertissement, objet
+tolérant, cris mystère, `p` sans Blue VO!CE.
+
+#### Pour l'essai 4
+
+1. **Sans Blue VO!CE**, refais la calibration avec **une vraie montée** — monte jusqu'à ne plus pouvoir,
+   et tiens deux secondes. Vérifie que `r′` redescend vers 0,45.
+2. **Chuchote près du canapé**, avec « Seuil de murmure » sur la version du document, puis sur la piste.
+3. **Mobilité à 0,2 puis 0** pendant une conversation soutenue.
+4. **Comparaison aveugle** de l'avertissement, et l'objet tolérant.
+
+*Suite des résultats après l'essai 4.*
