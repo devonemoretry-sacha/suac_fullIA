@@ -276,8 +276,8 @@ normative est *Formulas* §3 :
 | | **Silence** | **Murmure** | **Alarme** |
 |---|---|---|---|
 | Condition | Aucune contribution | Toutes les voix sous le seuil de l'objet | **Au moins une** voix au seuil ou au-dessus |
-| Combinaison | — | **Somme** des contributions | **Maximum** — la plus forte pilote |
-| Effet sur la charge | **Elle descend** | Elle monte très lentement, **jusqu'à un plafond sous l'avertissement** ; au-dessus, elle tient | Elle monte à pleine vitesse |
+| Combinaison | — | **Somme** des contributions | **Le plus grand dépassement** — celui qui s'écarte le plus de sa propre voix posée |
+| Effet sur la charge | **Elle descend** | Elle monte très lentement, **jusqu'à un plafond sous l'avertissement** ; au-dessus, elle tient | Elle monte à pleine vitesse **jusqu'au plafond de ce niveau de voix**, puis s'y tient |
 | Coupable | — | Aucun — l'effet est collectif | **Un seul, et tout le monde l'a entendu** |
 
 > **Pourquoi la somme n'est pas injuste en murmure, alors qu'elle l'était en alarme.**
@@ -307,24 +307,35 @@ tient. **Pour récupérer, il faut réellement se taire** — ce qui crée une d
 
 #### Le régime alarme
 
-Le maximum pilote. Les voix sous le seuil **ne s'ajoutent pas** : dès qu'il y a un coupable,
-c'est lui qu'on entend et c'est lui qui charge.
+**Le plus grand dépassement pilote, et il fixe une destination.** Les voix sous le seuil ne
+s'ajoutent pas : dès qu'il y a un coupable, c'est lui qu'on entend et c'est lui qui charge. Ce qui
+est comparé n'est pas le volume absolu mais **de combien chacun dépasse sa propre voix posée** —
+entre deux joueurs aux registres différents, c'est bien celui que la pièce a entendu forcer.
+
+**Et l'objet ne va pas plus loin que ce que ce niveau mérite.** Chaque niveau de voix a son plafond
+de charge : il y monte à pleine vitesse, puis s'y tient. Chuchoter tout près d'un objet l'installe
+à un poids léger et l'y laisse ; seul un cri le remplit. La version normative est *Formulas* §3,
+« Chaque niveau de voix a sa destination ».
 
 > **Aucune voix n'est jamais réellement invisible.** Elle n'est masquée qu'à l'instant : **dès
-> que le plus bruyant se tait, c'est le suivant qui devient le maximum** — s'il est encore au
-> seuil, la charge continue de monter ; s'il est dessous, l'objet repasse en murmure et la
-> charge tient. Se cacher derrière quelqu'un ne coûte rien tant qu'il crie, et ne fait rien
-> redescendre quand il s'arrête.
+> que le plus bruyant se tait, c'est le suivant qui devient le dépassement maximal** — s'il est
+> encore au seuil, l'objet reste en alarme, mais son plafond redescend au niveau de ce
+> suivant, et la charge **tient** sans monter davantage. Se cacher derrière quelqu'un ne coûte
+> rien tant qu'il crie, et ne fait rien redescendre quand il s'arrête.
 
 #### Le silence, et lui seul, décharge
 
 **La montée dépend du niveau, la descente non.** Un retour dont la durée dépendrait de la
 faute passée serait perçu comme une punition, pas comme une mécanique.
 
-> **La panique collective est punie par la durée, pas par le débit.** Quatre joueurs qui
-> hurlent ne chargent pas quatre fois plus vite — mais **les quatre** doivent se taire pour
-> que ça redescende, là où un seul coupable suffit à se calmer. Et une pièce passée en
-> zizanie **allonge la descente** (plus bas).
+> **La panique collective est punie par la descente, pas par le débit.** Quatre joueurs qui
+> hurlent ne chargent pas quatre fois plus vite, et ne vont pas plus loin que le plus fort d'entre
+> eux — mais **les quatre** doivent se taire pour que ça redescende, là où un seul coupable suffit
+> à se calmer. Et une pièce passée en zizanie **allonge la descente** (plus bas).
+>
+> **Depuis le 2026-09-18, la durée seule ne punit plus** : un niveau donné a une destination, et
+> parler longtemps n'y change rien (*Formulas* §3). Ce qui reste du raisonnement est ici, dans la
+> descente collective.
 
 #### Un objet posé
 
@@ -360,6 +371,11 @@ seuil entre la voix posée et le cri, jamais au-delà du cri.
 > objet témoin tolérant**, `T_objet ≥ 1`, pour mesurer le vrai risque : la conversation
 > **soutenue**. Une annonce brève (« gauche ! ») reste sous l'avertissement et se vide en une
 > fraction de seconde.
+>
+> **Attention, depuis le 2026-09-18** : « être une alarme » ne veut plus dire « finir par tout
+> remplir ». Une conversation posée s’installe à une charge faible et, selon le profil du joueur,
+> déclenche ou non l’avertissement — la frontière tombe à `r' ≈ 0,50` (*Formulas* §5). E4 reste
+> la décision ; ce qu’elle produit concrètement est à reprendre (OQ-11.21).
 
 **Ce que cet ancrage garantit, pour tous.** Tout ce qui reste sous la porte du joueur vaut 0 et
 ne charge rien. Au-dessus, un son reste en murmure tant que sa position est sous
@@ -393,9 +409,10 @@ chaos. C'est un **état de la pièce**, ni du mobilier ni du groupe dispersé.
   party-game.
 
 **Ce que la zizanie multiplie : la durée de la descente.** Un objet qui a traversé une zizanie
-redescend plus lentement quand tout le monde se tait. C'est cohérent avec la thèse — la panique
-collective est punie par la durée —, insensible au plafond de charge, et perceptible à la
-seconde. Deux objets d'une même pièce subissent la même zizanie : c'est le lieu qui est en
+redescend plus lentement quand tout le monde se tait. **C'est devenu le seul endroit où la panique
+collective coûte quelque chose** : depuis le plafond par niveau (*Formulas* §3), parler longtemps ne
+remplit plus un objet, et la zizanie porte à elle seule ce que la durée portait avant. Insensible au
+plafond de charge, et perceptible à la seconde. Deux objets d'une même pièce subissent la même zizanie : c'est le lieu qui est en
 chaos, pas le meuble. *La variante « la zizanie accélère la montée » est comparée dans le
 prototype.*
 
@@ -562,6 +579,43 @@ de la porte. L'hôte ne connaît aucun décibel : ce calcul sert à lire les té
 au-dessus de la porte est **la même fraction du registre de chacun** ; qu'elle couvre le vrai
 chuchotement d'un joueur donné est une mesure du prototype (B1 du système 1).
 
+#### Le chuchotement mesuré, et le seuil qu'on pourrait y ancrer
+
+La dernière phrase ci-dessus est désormais mesurée, et la réponse est **non, pas avec cette
+formule**. Sur le seul profil réel dont on dispose (`r' = 0,537`, prototype étendu, 2026-09-18) :
+
+| | Position | Seuil d'un objet ordinaire (`T` 0,7) | Verdict |
+|---|---|---|---|
+| Chuchotement, médiane | **0,293** | 0,376 | murmure |
+| Chuchotement, pointes (P90) | **0,425** | 0,376 | **alarme** |
+| Chuchotement, extrêmes | 0,75 | 0,376 | alarme |
+
+Sur un objet **fragile** (`T` 0,4, seuil 0,215), même la médiane passe en alarme. **Le registre que
+le Pilier 1 protège n'a donc pas de marge** : le joueur qui chuchote correctement est classé
+coupable dès qu'il souffle un peu.
+
+**La piste, non retenue à ce stade** : ancrer le seuil sur le chuchotement mesuré plutôt que sur une
+fraction de la voix posée, `w` étant sa position (`voice-calibration.md`, *Formulas* §2a) :
+
+```
+Seuil_i  =  w_i + T_objet · (r'_i − w_i)            si 0 < T_objet ≤ 1        ← variante ancrée
+```
+
+Le seuil de l'objet ordinaire passerait de 0,376 à **0,464** — environ 5 dB gagnés — et la médiane
+**comme** les pointes du chuchotement redeviendraient du murmure.
+
+**Ce qui la retient**, et c'est à trancher (OQ-11.20) :
+
+- Elle exige un **second scalaire par joueur sur l'hôte**, ce qui amende la décision E5 d'ADR-0003
+  (« un seul scalaire quitte la machine »).
+- Le **plafond par niveau** (§3) a déjà retiré l'essentiel du mal : les pointes du chuchotement
+  s'installent à une charge de 0,08 et n'alertent jamais. Ce qui reste est une question de
+  **classement**, pas de punition — être désigné coupable au sonomètre pour un chuchotement.
+- `w` est plus fragile que `r'` : il dépend de ce que le joueur appelle « chuchoter » un jour
+  donné, et une chaîne de capture qui écrase la dynamique le remonte au niveau de la voix posée,
+  auquel cas la variante ancrée **ne change plus rien** — elle dégénère en `Seuil ≈ T · r'`.
+
+
 ### 2. Le régime, et la combinaison des voix
 
 ```
@@ -569,8 +623,12 @@ SILENCE  ⟺  pour tout i :  L_i = 0
 ALARME   ⟺  non SILENCE  ET  il existe i :  x_i ≥ Seuil_i            borne incluse
 MURMURE  ⟺  sinon
 
-MURMURE :  L_mur  = min( 1 , Σ L_i )
-ALARME  :  L_eff  = max( L_i )
+MURMURE :  L_mur    = min( 1 , Σ L_i )
+
+ALARME  :  excès_i  = clamp( (x_i − Seuil_i) / (1 − Seuil_i) , 0 , 1 )     0 si Seuil_i ≥ 1
+           e        = max_i excès_i           dépassement, 0 au seuil et 1 au cri
+           coupable = le i qui réalise ce maximum
+           L_eff    = max( L_i )              variante « palier » seulement (§3)
 
 ZIZANIE :  N_z(pièce) = #{ i dans la pièce :  xb_i ≥ T_ziz,i }
            Z(pièce)   = 1 + z · (N_z − 2)     si N_z ≥ 3,   sinon 1
@@ -581,9 +639,16 @@ ZIZANIE :  N_z(pièce) = #{ i dans la pièce :  xb_i ≥ T_ziz,i }
 - **`SILENCE` est atteignable avec de vraies trames**, pas seulement par injection : quatre joueurs
   sous leur porte, ou hors de portée, donnent `L_i = 0` exactement. Ce qu'il exige du système 1 est
   en §3, « Ce que le silence exige ».
+- **Le dépassement est personnel, et c'est ce qui désigne le coupable.** `excès_i` mesure de combien
+  `i` dépasse **son** seuil, pas combien il est fort dans l'absolu. Entre deux joueurs aux profils
+  différents, celui qui pousse le plus **au-dessus de sa propre voix posée** l'emporte — ce qui est
+  exactement ce que la pièce a entendu. Le maximum sur `L_i` désignait le plus fort en décibels
+  normalisés, ce qui n'est pas la même personne.
 - **La pièce et la voix brute**, deux filtres pour deux rôles : la pièce décide *qui compte*, la
   position brute *si la personne braille*. Deux objets d'une même pièce subissent la même `Z`.
-- **Témoin de la borne** : `x_i = Seuil_i` exactement → `ALARME`.
+- **Témoin de la borne** : `x_i = Seuil_i` exactement → `ALARME`, avec `e = 0` : l'objet passe en
+  alarme et son plafond est celui du murmure. **Franchir le seuil n'est pas être puni** ; c'est
+  être vu.
 
 ### 3. La boucle de mise à jour et la charge
 
@@ -594,15 +659,19 @@ ZIZANIE :  N_z(pièce) = #{ i dans la pièce :  xb_i ≥ T_ziz,i }
       si  r'_i non reçu  OU  âge(dernière trame de i) > Expiration :   Loudness_i = 0
 
   pour chaque objet o :
-      L_i      = Atténuation(i, o) · Loudness_i                  système 3 ; 0 au-delà de la portée
-      Régime   = §2, seuils relus depuis le r'_i courant
+      L_i         = Atténuation(i, o) · Loudness_i               système 3 ; 0 au-delà de la portée
+      Régime      = §2, seuils relus depuis le r'_i courant
       si charge(o) > 0 :   Zmém(o) = max( Zmém(o) , Z(pièce(o)) )
+
+      Plafond_mur = k · seuil_av                                 §4
+      Plafond_al  = max( Plafond_mur , e ^ Douceur )             e = dépassement du seuil, §2
 
       si o est porté :
           SILENCE :  charge −= dt / (Vidange × Zmém(o))
-          MURMURE :  si charge < Plafond :  charge = min( charge + L_mur · dt / (Remplissage × Lenteur) , Plafond )
-                     sinon :                inchangée
-          ALARME  :  charge += L_eff · dt / Remplissage
+          MURMURE :  si charge < Plafond_mur :  charge = min( charge + L_mur · dt / (Remplissage × Lenteur) , Plafond_mur )
+                     sinon :                    inchangée
+          ALARME  :  si charge < Plafond_al  :  charge = min( charge + dt / Remplissage , Plafond_al )
+                     sinon :                    inchangée
       sinon, o est posé :
           SILENCE :  charge −= dt / (Vidange × Zmém(o))
           sinon :    inchangée
@@ -614,23 +683,58 @@ ZIZANIE :  N_z(pièce) = #{ i dans la pièce :  xb_i ≥ T_ziz,i }
 
 | Variable | Description |
 |---|---|
-| `Remplissage` | Durée de 0 à charge pleine à `L_eff = 1` |
+| `Remplissage` | Durée de 0 à charge pleine **en alarme** — la vitesse de montée ne dépend plus du niveau, seule la destination en dépend |
 | `Vidange` | Durée de charge pleine à 0 en silence, hors zizanie. **Ne dépend pas du niveau précédent** |
 | `Lenteur` | Facteur de ralentissement du murmure, `≥ 1` |
-| `Plafond` | `k · seuil_av` (§4) — **sous** l'avertissement |
+| `Douceur` | Exposant du dépassement. `1` = plafond proportionnel ; plus haut = bas de l'échelle plus permissif |
+| `Plafond_mur` | `k · seuil_av` (§4) — **sous** l'avertissement |
+| `Plafond_al` | Plafond du niveau de voix courant, jamais sous `Plafond_mur` |
 | `Zmém(o)` | La plus forte zizanie traversée par l'objet depuis sa dernière charge nulle |
 | `Expiration` | Âge au-delà duquel une trame reçue ne vaut plus rien |
 
-- **Le plafond ne borne que la montée**, jamais la charge. Une charge de 0,60 héritée d'une alarme
-  **reste à 0,60** en murmure : rabattre la charge au plafond ferait du murmure une récupération
-  plus rapide que le silence.
-- **Témoin de l'ancienne contradiction** : charge 0,60, quatre joueurs à `L = 0,05` → `MURMURE`,
-  charge au-dessus du plafond → **inchangée**. Les quatre passent sous leur porte → `SILENCE` → la
-  charge descend.
-- **La zizanie multiplie la durée de la descente, pas le débit de la montée.** Aucune borne `min(1, …)`
-  ne peut donc la neutraliser.
-- **Variante comparée au prototype — « débit hors plafond »** : `ALARME : charge += L_eff · Z(pièce) · dt / Remplissage`
-  et `SILENCE : charge −= dt / Vidange`, sans `Zmém`. Elle n'est pas le modèle.
+#### Chaque niveau de voix a sa destination
+
+**C'est le changement du 2026-09-18, et il vaut d'être dit en clair** : la charge ne monte plus
+« à la vitesse du niveau, sans fin ». Elle monte **à pleine vitesse vers le plafond de ce
+niveau-là**, puis s'y tient. Chuchoter près d'un objet l'installe à un poids léger et ne l'emmènera
+jamais plus loin ; seul un cri le remplit.
+
+**Pourquoi.** Sous l'ancien modèle, franchir le seuil suffisait : la charge montait ensuite
+**presque aussi vite qu'au cri**, et il ne restait qu'une question de temps avant l'alerte et le
+blocage. Mesuré au prototype avec un profil réel : les pointes d'un chuchotement remplissaient
+l'objet en **2,6 s**, une voix posée en **2,2 s**, un cri en **1,5 s** — trois registres pour un
+seul résultat. Le propriétaire l'a vécu ainsi : *« en deux phrases chuchotées, on est en alarme,
+et le truc commence à bloquer »* (2026-09-18).
+
+- **Le plafond ne borne que la montée, jamais la charge.** Une charge de 0,60 héritée d'un cri
+  **reste à 0,60** quand on redescend à une voix posée : rabattre la charge ferait d'un registre
+  plus bas une récupération, alors que **seul le silence décharge**. C'est la même règle qu'au
+  murmure, généralisée.
+- **`Plafond_al ≥ Plafond_mur` par construction.** Sans cette borne, une voix qui franchit tout
+  juste le seuil chargerait **moins** qu'un murmure resté dessous : la frontière produirait une
+  inversion absurde. Avec elle, le passage du murmure à l'alarme est continu en destination, et ce
+  qui change au franchissement est ailleurs — l'avertissement, le coupable, la vitesse.
+- **La zizanie multiplie la durée de la descente, pas le débit de la montée.** Aucune borne
+  `min(1, …)` ne peut donc la neutraliser.
+
+> **Ce que ce modèle affaiblit, et il faut le dire.** « La panique collective est punie par la
+> durée » perd la moitié de sa force : **parler longtemps ne remplit plus un objet**, seul le
+> niveau décide de la destination. Ce qui reste du raisonnement est la **descente** — les quatre
+> doivent se taire pour que ça redescende, là où un seul coupable suffit à se calmer — et elle est
+> intacte. La décision E4 tient tant que `Douceur` reste à 1 : une conversation soutenue déclenche
+> encore l'avertissement, mais ne pèse presque rien (§5).
+
+> **Statut : éprouvé seul, pas à plusieurs.** Le propriétaire a essayé les trois variantes au
+> prototype et retenu celle-ci — *« je crois qu'on tient la bonne piste, mais il faudra l'éprouver
+> à plusieurs »* (2026-09-18). Ce document la spécifie comme le modèle ; **le test à plusieurs
+> humains peut encore la renvoyer** (OQ-11.6).
+
+- **Variante comparée au prototype — « palier », le modèle d'avant le 2026-09-18** :
+  `ALARME : charge += L_eff · dt / Remplissage`, sans plafond. Elle reste dans le prototype pour
+  comparaison ; elle n'est plus le modèle.
+- **Variante comparée — « débit hors plafond »** : `ALARME : charge += L_eff · Z(pièce) · dt / Remplissage`
+  et `SILENCE : charge −= dt / Vidange`, sans `Zmém`. Elle n'est pas le modèle non plus.
+
 
 #### Ce que le silence exige du système 1 — `p`
 
@@ -655,7 +759,7 @@ Une configuration est **refusée au chargement** si l'une de ces conditions éch
 
 ```
 seuil_av   = Avertissement / Remplissage
-Plafond    = k · seuil_av
+Plafond_mur = k · seuil_av                     §3
 
 AVERTISSEMENT — événement :
     armé  ET  charge(t − dt) < seuil_av ≤ charge(t)       →  émettre ; désarmer
@@ -668,20 +772,28 @@ lourdeur   = min( 1 , amorçage + principal · (1 − Amorçage) )
 
 | Variable | Description |
 |---|---|
-| `Avertissement` | Durée jusqu'à l'avertissement **depuis une charge nulle, à `L_eff = 1`**. Provenance en §6 |
+| `Avertissement` | Durée jusqu'à l'avertissement **depuis une charge nulle, en alarme** — la vitesse de montée ne dépend plus du niveau (§3). Provenance en §6 |
 | `h` | Marge de réarmement, en fraction de `seuil_av` |
-| `k` | Hauteur du plafond du murmure, en fraction de `seuil_av` |
+| `k` | Hauteur du plafond du murmure, en fraction de `seuil_av`. **Aussi le plancher du plafond d'alarme** (§3) |
 | `Amorçage` | Part de lourdeur atteinte au seuil d'avertissement — imperceptible, mais présente dès le début |
 
-**Le temps jusqu'à l'avertissement n'est pas une constante.** Depuis une charge `c₀`, en alarme :
-`(seuil_av − c₀) · Remplissage / L_eff`.
+**L'avertissement est devenu une porte de niveau, pas seulement de durée.** Avec le plafond par
+niveau (§3), l'objet n'atteint `seuil_av` que si le plafond de ce niveau le dépasse :
 
-- **Depuis le calme** : `Avertissement / L_eff` — **350 ms est un plancher**, atteint à pleine voix ;
-  389 ms à 0,9, 700 ms à 0,5. Une petite transgression laisse plus de temps qu'un cri.
-- **Depuis le plafond du murmure — la pré-charge** : `(1 − k) · Avertissement / L_eff` — **52 ms** à
-  pleine voix. « Le meuble est déjà nerveux » ou « l'avertissement a disparu » : mesure du prototype.
+```
+avertissement atteignable  ⟺  e ^ Douceur ≥ seuil_av  ⟺  e ≥ seuil_av ^ (1 / Douceur)
+```
 
-**En murmure, la lourdeur ne dépasse jamais `k · Amorçage`** — 0,13 : l'amorce seule, jamais le poids
+- **En deçà, il ne sonne jamais**, quelle que soit la durée. Une voix qui effleure le seuil de
+  l'objet ne déclenche rien, même au bout d'une minute — ce que l'ancien modèle ne permettait pas.
+- **Au-delà, le délai ne dépend plus du niveau** : depuis une charge `c₀`, `(seuil_av − c₀) · Remplissage`.
+  Depuis le calme, c'est **`Avertissement` exactement** — 350 ms, la valeur mesurée, redevenue une
+  constante au lieu d'un plancher.
+- **Depuis le plafond du murmure — la pré-charge** : `(1 − k) · Avertissement`, soit **140 ms** avec
+  `k = 0,6`. Mesuré au prototype : à `k = 0,85` (52 ms) le testeur rapportait « l'avertissement a
+  disparu » ; à 0,6 il rapporte « le meuble est déjà nerveux », qui est l'effet visé.
+
+**En murmure, la lourdeur ne dépasse jamais `k · Amorçage`** — 0,09 : l'amorce seule, jamais le poids
 principal. **À `charge = seuil_av`, la lourdeur est continue** : `amorçage = Amorçage`, `principal = 0`.
 
 **La prédiction du client.** Il part du dernier état de l'objet publié par l'hôte, y intègre **sa
@@ -708,28 +820,51 @@ montant. La réconciliation avec l'état suivant de l'hôte appartient au systè
 
 Configuration de référence : valeurs de la liste canonique, joueurs au profil
 `Gate −48 · Rest −30 · Scream −10` (`r' = 0,474`), `T_objet = 0,7` → seuil à la position 0,332,
-soit `Loudness` ≈ 0,49 ; seuil de zizanie à la position 0,684, soit `Loudness` ≈ 0,78.
+soit `Loudness` ≈ 0,49 ; seuil de zizanie à la position 0,684, soit `Loudness` ≈ 0,78 ;
+`seuil_av = 0,233`, `Plafond_mur = 0,14`, `Douceur = 1`.
 
-| Situation | Régime | `L_eff` ou `L_mur` | Charge pleine en | Avertissement à | Zizanie → descente depuis le plein |
-|---|---|---|---|---|---|
-| Un joueur à 0,9, trois muets | alarme | 0,90 | **1,67 s** | 389 ms | non → 1,5 s |
-| Deux joueurs à 0,8 | alarme | 0,80 | **1,88 s** | 438 ms | non → 1,5 s |
-| **Quatre joueurs à 0,5** — position 0,344 | alarme | 0,50 | **3,00 s** | 700 ms | non → 1,5 s |
-| Un à 0,9 et trois à 0,6 | alarme | 0,90 | 1,67 s | 389 ms | non → 1,5 s |
-| Trois joueurs à 0,8 dans la pièce — position 0,709 | alarme | 0,80 | 1,88 s | 438 ms | **×1,5 → 2,25 s** |
-| Quatre joueurs à 0,8 dans la pièce | alarme | 0,80 | 1,88 s | 438 ms | **×2,0 → 3,0 s** |
-| Quatre chuchotements à 0,2 — position 0,084 | murmure | 0,80 | **plafond 0,198 en 3,7 s**, jamais plus | jamais | — |
-| Un chuchotement à 0,2 | murmure | 0,20 | plafond en **14,9 s** | jamais | — |
+| Situation | Régime | Position | Dépassement `e` | Plafond de ce niveau | Atteint en | Avertissement | Poids une fois posé |
+|---|---|---|---|---|---|---|---|
+| Cri, `L = 1,0` | alarme | 1,000 | 1,000 | **1,00** | 1,50 s | 0,35 s | 1,00 |
+| `L = 0,9` | alarme | 0,850 | 0,776 | **0,78** | 1,16 s | 0,35 s | 0,75 |
+| `L = 0,8` | alarme | 0,710 | 0,565 | **0,57** | 0,85 s | 0,35 s | 0,52 |
+| `L = 0,63` — la voix la plus basse qui alerte | alarme | 0,488 | 0,233 | **0,23** | 0,35 s | 0,35 s, tout juste | 0,15 |
+| **Quatre joueurs à 0,5** | alarme | 0,344 | 0,019 | **0,14** — celui du murmure | 0,21 s | **jamais** | 0,09 |
+| Un à 0,9 et trois à 0,6 | alarme | 0,850 | 0,776 | 0,78 | 1,16 s | 0,35 s | 0,75 |
+| Quatre chuchotements à 0,2 | murmure | 0,084 | — | 0,14 | 2,6 s | jamais | 0,09 |
+| Un chuchotement à 0,2 | murmure | 0,084 | — | 0,14 | 10,5 s | jamais | 0,09 |
 
-**La ligne qui justifie tout le modèle** : quatre joueurs modérés mettent **3,00 s**, deux joueurs
-bruyants **1,88 s** — un rapport de **1,6**, qui vaut `0,8 / 0,5` et **ne dépend pas de `z`**,
-puisque la zizanie n'agit plus sur la montée. L'intensité individuelle reste le signal ; le nombre
-de joueurs n'en est pas un.
+**Descente, depuis le plafond atteint** : `charge × Vidange × Zmém`. Depuis le plein, 1,5 s ; depuis
+0,57, **0,85 s** ; depuis 0,14, 0,21 s. Une pièce passée en zizanie à trois voix multiplie ces durées
+par 1,5 — 1,27 s depuis 0,57. **La zizanie n'agit que là**, jamais sur la montée.
 
-**Aucune voix n'est invisible** : dans « un à 0,9 et trois à 0,6 », les trois n'ajoutent rien *pendant
-que* le premier crie. Qu'il se taise : le maximum devient 0,6, position 0,456, au-dessus du seuil —
-la charge continue de monter, plus lentement. À 0,4 — position 0,244, sous le seuil —, l'objet
-repasse en murmure et **la charge tient** : elle ne redescend pas.
+**La ligne qui a changé de sens.** Sous l'ancien modèle, quatre joueurs modérés remplissaient l'objet
+en 3,0 s et deux joueurs bruyants en 1,88 s : un rapport de 1,6, et les deux finissaient au plein.
+Aujourd'hui **ils ne finissent pas au même endroit** : les quatre modérés s'installent à 0,14 et
+n'alertent jamais ; les bruyants montent à 0,57 et alertent en 0,35 s. Le niveau individuel ne
+change plus la vitesse — il change la **destination**, ce qui est plus lisible pour le joueur : « à
+ce volume-là, l'objet devient *ça*. »
+
+#### Le seuil d'alerte tombe à hauteur de la voix posée — et de quel côté dépend du joueur
+
+L'avertissement se déclenche depuis la position `Seuil + seuil_av^(1/Douceur) · (1 − Seuil)`. En
+remplaçant `Seuil = T_objet · r'`, une **conversation posée** déclenche l'avertissement d'un objet
+ordinaire si et seulement si :
+
+```
+r'  ≥  seuil_av / ( 1 − T_objet + T_objet · seuil_av )
+```
+
+soit **`r' ≥ 0,50`** avec les valeurs de référence. Les deux seuls profils réels mesurés encadrent
+cette frontière : **0,474** (la conversation n'alerte pas) et **0,537** (elle alerte, à 0,35 s, pour
+un poids de 0,18 — vérifié au prototype le 2026-09-18).
+
+**Ce n'est pas un défaut de calcul, c'est une décision à reprendre.** La décision E4 — « une
+conversation soutenue près d'un objet ordinaire doit rester inconfortable » — était prise sous un
+modèle où toute alarme finissait par tout remplir. Sous le plafond par niveau, elle se joue à
+quelques centièmes de `r'`, c'est-à-dire **au hasard du profil vocal**. Trois curseurs la
+déplacent : `Douceur`, le rapport `Avertissement / Remplissage`, et `T_objet` par objet (OQ-11.21).
+
 
 ### 6. Provenance de l'avertissement — mesuré sous un autre modèle
 
@@ -739,7 +874,7 @@ conduit à 350 ms, choisi au curseur par un seul testeur, le concepteur, avec `R
 
 | | **Banc** | **Ce document** |
 |---|---|---|
-| Débit de charge | `charge += (0,35 + 0,65 · above) · dt / fill`, `above` sur une rampe de 25 dB — **plancher de 35 %** dès le seuil franchi (l. 618–619) | `L_eff · dt / Remplissage`, `L_eff` normalisée par la calibration |
+| Débit de charge | `charge += (0,35 + 0,65 · above) · dt / fill`, `above` sur une rampe de 25 dB — **plancher de 35 %** dès le seuil franchi (l. 618–619) | `dt / Remplissage` vers un **plafond par niveau** `e^Douceur` (§3, 2026-09-18). Le banc n'avait ni plafond ni seconde voix |
 | Seuil | Un niveau en dB **réglé à la main**, `thresh = −45` (l. 328, 613) ; aucune calibration | Positions contre `T_objet · r'_i`, personnelles |
 | Avertissement | Un **état** : `warnActive = charge > 0 && charge < warnAt · 1,6 && voiced` (l. 629) — **allumé dès la première trame au-dessus du seuil**, éteint au silence ou à 1,6 × `warnAt` | Un **événement** au franchissement de `seuil_av`, réarmé sous `seuil_av · (1 − h)` |
 | Ce que fixaient les 350 ms | `warnAt = warnMs / fill` (l. 616) : **le début du poids principal** dans `heaviness()` (l. 543–548) | Le seuil de l'événement **et** le début du poids principal |
@@ -764,7 +899,8 @@ les seuls de ce document ; partout ailleurs, on y renvoie.
 | `Vidange` | 1,5 s | 1,0 – 2,0 s | PROVISOIRE — jamais isolée au banc | Prototype étendu |
 | `Amorçage` | 15 % | 10 – 20 % | PROVISOIRE — jamais isolé | Prototype étendu |
 | `h` — réarmement | 0,2 | 0,1 – 0,3 | PROVISOIRE | Prototype : aucun re-déclenchement sur une charge qui oscille |
-| `k` — plafond du murmure | 0,85 | 0,6 – 0,95 | PROVISOIRE | Prototype : lecture de la pré-charge |
+| `k` — plafond du murmure, plancher du plafond d'alarme | **0,6** | 0,5 – 0,8 | PROVISOIRE — **une lecture réelle**, 2026-09-18 | Prototype : « déjà nerveux » à 0,6, « l'avertissement a disparu » à 0,85 (VO-49) |
+| `Douceur` — exposant du plafond par niveau | 1 | 1 – 3 | PROVISOIRE — **jamais éprouvé à plusieurs** | Prototype à plusieurs humains ; à 1, une conversation alerte encore (OQ-11.21) |
 | `Lenteur` | 10 | 6 – 15 | PROVISOIRE | Prototype : « l'objet frémit » sans s'alourdir |
 | `T_objet`, objets du MVP | 0,4 – 0,9 | `]0 ; 2]` | PROVISOIRE — par objet, système 13 | Prototype, **avec un objet témoin à `T_objet ≥ 1`** |
 | `k_z` | 0,4 | 0,3 – 0,6 | PROVISOIRE — jamais éprouvé | Prototype à trois voix simulées, puis playtest à trois ou plus |
@@ -776,7 +912,7 @@ les seuls de ce document ; partout ailleurs, on y renvoie.
 | `γ`, `Margin_dB` | — | — | **Système 1** | voir `voice-analysis.md` |
 
 **Décisions, hors de la liste parce qu'elles n'attendent pas de mesure** : trois voix minimum pour
-une zizanie ; la priorité de `SILENCE` ; le maximum en alarme et la somme en murmure ; la zizanie
+une zizanie ; la priorité de `SILENCE` ; **le plus grand dépassement** en alarme et la somme en murmure ; la zizanie
 sur la durée ; la cadence du tick de l'hôte, qui relève de l'ADR du fil d'exécution de l'hôte.
 
 **Aucune de ces valeurs n'a été éprouvée à plusieurs joueurs.** Le banc était monojoueur ; tout ce
@@ -886,7 +1022,7 @@ plusieurs — une porte sur une note tenue — n'est pas un objet porté : elle 
 - **Si une trame arrive après une trame plus récente** : elle est ignorée. **Cosmétique.**
 - **Si la prédiction locale diverge de l'hôte** : **attendu et admis** (ADR-0002). La prédiction ne porte
   que l'avertissement de sa propre voix ; le poids réel vient de l'hôte.
-- **Si la voix de l'hôte arrive sans délai réseau** : ses cris entrent dans `max(L_i)` plus tôt que ceux des
+- **Si la voix de l'hôte arrive sans délai réseau** : ses cris entrent dans le calcul du dépassement plus tôt que ceux des
   autres, d'environ un aller simple. **Dégradant, documenté** — un biais d'attribution en faveur des
   clients.
 - **Si un co-porteur n'est pas l'hôte** : il sent le poids avec deux allers-retours de retard sur sa propre
@@ -962,7 +1098,7 @@ autres non.
 
 > **L'exigence la plus structurante de ce document, et elle précède la question des bandes.**
 > La propagation doit livrer **une valeur par source**, pas un agrégat. Sans identité de source,
-> `max(L_i)` est incalculable, et **tout le modèle s'effondre** — plus de coupable, plus
+> le dépassement par joueur est incalculable, et **tout le modèle s'effondre** — plus de coupable, plus
 > d'attribution. La question antérieure à « scalaire ou bandes » est « agrégé ou par source »,
 > et sa réponse n'est pas négociable.
 
@@ -1051,16 +1187,24 @@ décoratif.
 système rend **le silence plus rentable**, donc aggrave exactement le défaut qu'on croyait
 corriger.
 
+> **Le plafond par niveau est un adoucissement, et c'est assumé** (2026-09-18). Il a été adopté
+> parce que l'inverse était pire : sous l'ancien modèle, chuchoter finissait par bloquer l'objet,
+> donc **se taire était la seule tactique** — le défaut ci-dessus, en pire. Le plafond rend le bas
+> de l'échelle jouable ; ce qu'il coûte est écrit en *Formulas* §3, et `Douceur` est le curseur par
+> lequel il peut aller trop loin. **À `Douceur` élevée, parler cesse d'avoir une conséquence et le
+> Pilier 2 redevient décoratif.**
+
 ### Les curseurs
 
 | Curseur | Ce qu'il gouverne | Trop haut | Trop bas |
 |---|---|---|---|
 | `Avertissement` | Délai de l'événement depuis le calme, à pleine voix | le signal se décroche de sa cause ; au banc, chute nette entre 400 et 430 ms | il se déclenche sur tout, y compris les mots qu'on allait cesser, et cesse d'informer |
-| `Remplissage` | Vitesse de la sanction | la faute met trop longtemps à se payer, l'attribution s'étiole | la sanction arrive avant qu'on ait pu réagir |
+| `Remplissage` | Vitesse de la montée, désormais **la même à tous les niveaux** | la faute met trop longtemps à se payer, l'attribution s'étiole | la sanction arrive avant qu'on ait pu réagir |
 | `Vidange` | Durée du retour au transportable | une erreur pèse trop longtemps, la partie devient une punition continue | le bruit n'a plus de conséquence durable |
 | `Amorçage` | Ralentissement avant l'avertissement | il cesse d'être imperceptible et devient une sanction avant l'heure | plus de préavis physique |
 | `h` | Réarmement de l'avertissement | un second cri proche n'avertit plus | l'événement se redéclenche sur une charge qui oscille |
-| `k` | Hauteur du plafond du murmure, sous l'avertissement | la pré-charge efface l'avertissement du cri qui suit | le murmure ne se voit plus |
+| `k` | Hauteur du plafond du murmure, et plancher du plafond d'alarme | la pré-charge efface l'avertissement du cri qui suit — mesuré à 0,85 | le murmure ne se voit plus, et une voix qui effleure le seuil ne fait plus rien du tout |
+| `Douceur` | Permissivité du bas de l'échelle : la destination d'un niveau de voix donné | chuchoter et parler cessent d'avoir des conséquences distinctes ; à 3, une conversation ne déclenche plus rien | le modèle retombe vers le palier : franchir le seuil coûte presque autant qu'un cri |
 | `Lenteur` | Vitesse du murmure | le murmure ne fait plus rien, tout devient binaire | chuchoter devient coûteux |
 | `T_objet` *(par objet)* | Tolérance de l'objet, en fractions de voix posée | l'objet tolère la conversation : exception délibérée | la fenêtre de murmure se referme sur la porte |
 | `k_z` | Seuil de zizanie entre voix posée et cri | la zizanie ne se déclenche jamais | elle se déclenche dès que le groupe hausse le ton, et se confond avec l'alarme |
@@ -1076,8 +1220,9 @@ plafond du murmure vaut `k · seuil_av`. **Changer `Remplissage` change le sens 
 les deux se remesurent ensemble.
 
 **`k` contre `Avertissement` — la pré-charge.** Après un murmure, un cri atteint l'avertissement en
-`(1 − k) · Avertissement / L_eff`. Monter `k` rend le murmure plus visible et raccourcit ce délai ;
-le baisser fait l'inverse. **Ils se règlent ensemble, sur la lecture de la pré-charge.**
+`(1 − k) · Avertissement` — 140 ms avec les valeurs actuelles, quel que soit le niveau depuis le
+plafond par niveau. Monter `k` rend le murmure plus visible et raccourcit ce délai ; le baisser fait
+l'inverse. **Ils se règlent ensemble, sur la lecture de la pré-charge.**
 
 **`T_objet` contre `Lenteur`.** Un `T_objet` bas fait de l'alarme le cas courant, et `Lenteur` ne sert
 presque plus. Un `T_objet` haut fait vivre le jeu en murmure, et `Lenteur` devient le curseur
@@ -1108,7 +1253,9 @@ le système 5.
 - **`N_z ≥ 3`** — une décision de conception. À deux, on ne fait pas une zizanie.
 - **La priorité de `SILENCE`, et le fait que seul le silence décharge.** C'est ce qui rend la panique
   collective coûteuse sans paramètre.
-- **Le maximum en alarme, la somme en murmure.** C'est le modèle.
+- **Le plus grand dépassement en alarme, la somme en murmure.** C'est le modèle.
+- **Un plafond de charge par niveau de voix** — chaque niveau a sa destination. `Douceur` se règle ;
+  l'existence du plafond, non (2026-09-18).
 - **La charge portée par l'objet.** C'est le Pilier 2 en structure de données.
 - **Des seuils en positions**, et `γ` hors des seuils.
 - **Le plafond sous l'avertissement** — décision E2. `k` se règle, `k < 1` non.
@@ -1131,7 +1278,11 @@ reculons, surveille une porte, cherche son coéquipier.
 
 > **Un signal visuel sur l'objet arriverait dans un angle mort.** L'avertissement est porté par le
 > **son** et par le **mouvement de l'objet dans les mains**, pas par un effet qu'il faut avoir dans
-> son champ de vision.
+son champ de vision.
+>
+> **Et il doit être ample.** Au prototype, le tremblement de caméra est passé inaperçu au premier
+> essai, son coupé ; **doublé**, il a été remarqué (2026-09-18). Un tremblement « discret et
+> élégant » est un avertissement raté pour qui n'entend pas.
 
 **Et le son seul ne suffit pas.** Un joueur sourd ou malentendant n'a pas d'haptique au clavier et à
 la souris, et l'amorce de lourdeur est imperceptible par définition. **L'avertissement est donc
@@ -1323,11 +1474,15 @@ la suite (*Revision History*).
 | VO-11b | GIVEN trois hurleurs **dans trois pièces différentes** THEN **aucune zizanie nulle part** | `[UNIT]` |
 | VO-11c | GIVEN deux objets **dans la même pièce** THEN ils subissent **la même** `Z` | `[UNIT]` |
 | VO-12 | GIVEN `N_z` croissant THEN `Z` **croît strictement** — propriété de structure | `[UNIT]` |
-| VO-13 | GIVEN l'alarme dans la forme « durée » THEN `L_eff = max(L_i)`, **indépendante de `Z`** ; GIVEN la variante « débit » activée par configuration THEN la montée vaut `max(L_i) · Z · dt / Remplissage`, **sans borne `min(1, …)`** | `[UNIT]` |
+| VO-13 | GIVEN l'alarme THEN la vitesse de montée vaut `dt / Remplissage`, **indépendante du niveau et de `Z`** ; GIVEN la variante « débit » activée par configuration THEN le pas est multiplié par `Z(pièce)`, **sans borne `min(1, …)`** | `[UNIT]` |
 | VO-14 | **Aucune voix n'est invisible.** GIVEN deux joueurs en alarme WHEN le plus fort se tait THEN si le second est au seuil, la charge **continue de monter** ; s'il est sous le seuil, le régime passe en murmure et la charge **tient** | `[UNIT]` |
-| VO-15 | **Punition par la durée.** GIVEN quatre hurleurs qui passent un par un **sous leur porte** THEN la charge **ne décroît pas** tant qu'une contribution reste non nulle, et décroît dès que la dernière est nulle | `[UNIT]` |
+| VO-15 | **Punition par la descente.** GIVEN quatre hurleurs qui passent un par un **sous leur porte** THEN la charge **ne décroît pas** tant qu'une contribution reste non nulle, et décroît dès que la dernière est nulle | `[UNIT]` |
 | VO-16 | GIVEN le calcul de `N_z` THEN il lit la position du `Loudness` **brut**, jamais `L_i` | `[UNIT]` |
 | VO-41 | GIVEN un objet ayant traversé une zizanie `Z = 1 + z`, puis le silence THEN la descente depuis le plein dure `Vidange × (1 + z)` ; GIVEN la charge revenue à 0 THEN `Zmém = 1` et la descente suivante dure `Vidange` | `[UNIT]` |
+| VO-52 | **Le plafond par niveau.** GIVEN une voix tenue au-dessus du seuil THEN la charge monte à `dt / Remplissage` jusqu'à `max(Plafond_mur, e^Douceur)` et **n'y monte plus** ; GIVEN une charge héritée supérieure à ce plafond THEN elle est **inchangée** — le plafond ne rabat jamais | `[UNIT]` |
+| VO-53 | **Pas d'inversion à la frontière.** GIVEN `x_i = Seuil_i` exactement — `e = 0` THEN le plafond vaut celui du murmure ; GIVEN une voix juste sous le seuil et une voix juste au-dessus THEN la seconde ne charge **jamais moins** que la première | `[UNIT]` |
+| VO-54 | **L'avertissement est une porte de niveau.** GIVEN `e^Douceur < seuil_av` maintenu THEN **aucun avertissement n'est émis**, quelle que soit la durée ; GIVEN `e^Douceur ≥ seuil_av` depuis le calme THEN il tombe à `Avertissement` exactement, indépendamment du niveau | `[UNIT]` |
+| VO-55 | **Le coupable est le plus grand dépassement.** GIVEN deux joueurs, le premier plus fort en `Loudness` mais moins au-dessus de son propre seuil THEN le coupable désigné est **le second** | `[UNIT]` |
 
 ### D — Silence, objet posé, discrimination
 
@@ -1345,7 +1500,7 @@ la suite (*Revision History*).
 |---|---|---|
 | VO-21 | GIVEN `charge = 0` THEN `lourdeur = 0` ; GIVEN `charge = 1` THEN `lourdeur = 1` | `[UNIT]` |
 | VO-22 | GIVEN `charge = seuil_av` THEN `lourdeur = Amorçage` **exactement** | `[UNIT]` |
-| VO-23 | **Les 350 ms sont un plancher.** GIVEN l'alarme à `L_eff = x` depuis une charge nulle THEN l'événement survient après `Avertissement / x` ; depuis `Plafond` THEN après `(1 − k) · Avertissement / x`. **Paramétré sur `x` ∈ {1,0 ; 0,9 ; 0,5}** ; une assertion unique à « 350 ms » échoue la revue | `[UNIT]` |
+| VO-23 | **Les 350 ms sont devenus une constante, sous condition de niveau.** GIVEN un niveau dont le plafond atteint `seuil_av` THEN l'événement survient après `Avertissement` exactement depuis une charge nulle, et après `(1 − k) · Avertissement` depuis `Plafond_mur` — **indépendamment du niveau** ; GIVEN un niveau dont le plafond reste sous `seuil_av` THEN **aucun événement**. Le test lit les constantes nommées ; une assertion en dur à « 350 ms » échoue la revue | `[UNIT]` |
 | VO-42 | **L'avertissement est un événement.** GIVEN une charge qui franchit `seuil_av` en montant THEN **un** événement ; GIVEN une charge qui oscille ensuite entre `seuil_av · (1 − h)` exclu et 1 THEN **aucun autre** ; GIVEN une redescente strictement sous `seuil_av · (1 − h)` puis un nouveau franchissement THEN **un second** événement. Borne exacte : `charge = seuil_av` en montant → émis | `[UNIT]` |
 
 ### F — La zizanie comme épisode
@@ -1443,7 +1598,7 @@ pré-charge, l'objet tolérant. Le reste vient des voisins.
 
 | # | Question | Chez qui |
 |---|---|---|
-| OQ-11.1 | **Ce que « lourdeur = 1 » veut dire mécaniquement**, et si cela rend le transport **impossible ou seulement pénible** | **9 — Portage** |
+| OQ-11.1 | **Ce que « lourdeur = 1 » veut dire mécaniquement**, et si cela rend le transport **impossible ou seulement pénible**. Le plafond par niveau change la donne : un poids plein ne s'obtient plus qu'en criant, donc rarement et brièvement — un blocage total y serait plus supportable qu'auparavant | **9 — Portage** |
 | OQ-11.2 | **La forme et la portée de l'atténuation**, et ses exigences préalables : **une valeur par source**, **une coupure nette** | **3 — Propagation** |
 | OQ-11.3 | **La partition en pièces**, et la requête « dans quelle pièce est ce point » | **10 — Appartement** |
 | OQ-11.4 | **Le point de référence d'un objet** pour déterminer sa pièce — décisif dans les embrasures | **9 et 10** |
@@ -1494,23 +1649,84 @@ Trois régimes, un maximum, une somme plafonnée, une zizanie par pièce qui all
 de tout cela n'a été ressenti.** Le rapport de 1,6 entre quatre joueurs modérés et deux bruyants est
 calculé ; un rapport calculé n'est pas un ressenti vérifié.
 
-### Ce que le prototype étendu doit faire
+#### OQ-11.20 — Le seuil ancré sur le chuchotement : un second scalaire, ou rien
 
-Le plan de la passe groupée le prévoit dans le navigateur, **avant** le test à plusieurs humains :
+**Mesuré** (*Formulas* §1, « Le chuchotement mesuré ») : avec `Seuil = T_objet · r'`, les pointes
+d'un chuchotement réel passent en alarme sur un objet ordinaire, et sa médiane y passe sur un objet
+fragile. **Le registre que le Pilier 1 protège n'a pas de marge.** La variante ancrée
+`Seuil = w + T_objet · (r' − w)` la lui rend — seuil à 0,464 au lieu de 0,376, environ 5 dB.
 
-- **Mini-calibration** avec l'objet qui s'alourdit (décision D1 du système 6), **un point
-  « chuchotement »**, et la mesure de `p` sur l'étape de silence.
-- **Trois voix simulées, plus la vraie**, chacune assignable à une pièce, **avec une latence simulée**
-  sur les trois voix artificielles : sa propre voix immédiate, celle des autres retardée.
-- **Les deux sémantiques de l'avertissement, commutables** (E1) : l'indice dès l'attaque du banc, et
-  l'événement retardé.
-- **Les deux variantes de zizanie, commutables** : « durée » et « débit ».
-- **Un objet témoin tolérant**, `T_objet ≥ 1` (E4), pour mesurer la conversation soutenue.
-- **Le micro-tremblement de caméra** comme second canal de l'avertissement, joué sans le son.
-- **La lecture de la pré-charge** (VO-49).
+Ce qu'il faut trancher, et ce n'est pas seulement un réglage :
 
-**Ce que ça ne teste pas** : le social — l'attribution, la comédie, la même pièce. C'est l'objet du
-test à plusieurs humains qui suit, **dont une session dans la même pièce**.
+| | Garder `T · r'` | Passer à l'ancrage sur `w` |
+|---|---|---|
+| Réseau | un scalaire par joueur, décision E5 d'ADR-0003 intacte | **deux** — ADR-0003 à amender |
+| Chuchotement | classé en alarme dès qu'il souffle, **mais** ne charge presque rien depuis le plafond par niveau | classé en murmure, médiane et pointes |
+| Ce qui reste faux | le coupable désigné et le Sonomètre pointent quelqu'un qui chuchote | `w` dépend de ce que le joueur appelle « chuchoter » ce jour-là |
+| Chaîne de capture écrasée | sans effet | **dégénère** : si le chuchotement arrive au niveau de la voix, `w → r'` et le seuil revient à `r'` |
+
+**Le plafond par niveau a désamorcé l'urgence** : être en alarme en chuchotant coûte 0,03 de charge
+et aucun avertissement. Ce qui reste est une question de **justesse du classement**, pas de
+punition — ce qui rend la question moins pressante, et pas moins réelle.
+
+**Ce qui la tranchera** : le test à plusieurs humains, où l'attribution se vit. Un joueur montré du
+doigt par le Sonomètre alors qu'il chuchotait est un défaut que le solo ne peut pas révéler.
+
+#### OQ-11.21 — La décision E4 se joue à quelques centièmes de `r'`
+
+Sous le plafond par niveau, une conversation posée ne déclenche l'avertissement d'un objet ordinaire
+que si `r' ≥ 0,50` (*Formulas* §5). Les deux profils réels mesurés tombent **de part et d'autre** :
+0,474 et 0,537.
+
+E4 disait « une conversation soutenue près d'un objet ordinaire doit rester inconfortable ». Telle
+quelle, la règle est devenue **dépendante du profil vocal du joueur** : deux joueurs côte à côte,
+même comportement, verdicts différents. Trois curseurs la déplacent — `Douceur`, le rapport
+`Avertissement / Remplissage`, et `T_objet` par objet — et le choix appartient au propriétaire, pas
+au document.
+
+#### OQ-11.22 — Déplacer la contrainte vers le chat vocal
+
+Piste du propriétaire, 2026-09-18 : **ne pas exiger le chuchotement pour la physique** — seuils
+permissifs — et **filtrer le chat vocal** pour que les joueurs doivent parler fort pour s'entendre.
+Ce ne sont plus les objets qui obligent à se taire, c'est **le besoin d'être compris** qui oblige à
+parler ; les objets facturent.
+
+**Ce que ça apporte** : la mesure n'a plus besoin d'être fine, donc un micro qui écrase la dynamique
+cesse d'être un problème ; le dosage devient continu ; le chuchotement redevient une tactique.
+
+**Ce que ça coûte** : un chat externe — Discord — contourne toute la contrainte, qui serait alors la
+seule ; l'intelligibilité baisse pour les joueurs malentendants et les non-natifs ; l'attribution
+s'affaiblit, puisque la voix en est le premier canal ; et **le Pilier 1 change de formulation**.
+
+**Ce n'est pas notre question à trancher** : elle appartient au système 14 pour le filtre, à
+`game-concept.md` pour le pilier et à `mvp-scope.md` pour le chat de proximité, qui deviendrait
+bloquant. Elle est ici parce que **nos seuils en dépendent** : permissifs sous cette piste, mesurés
+sans elle. Un curseur de filtre existe au prototype ; ce que le joueur doit faire pour être entendu
+**ne se teste qu'à plusieurs**.
+
+
+### Ce que le prototype étendu a fait, et ce qu'il n'a pas pu faire
+
+**Phase solo close le 2026-09-18** — `prototypes/charge-vocale-etendue/`, cinq essais, journaux dans
+`sessions/`. Le README porte le détail ; voici ce qui remonte ici.
+
+| Fait | Résultat |
+|---|---|
+| Mini-calibration avec l'objet qui s'alourdit, **point « chuchotement »** | Le chuchotement n'a pas de marge avec `T · r'` (§1) |
+| Les deux sémantiques de l'avertissement (E1) | **Non fait** — la comparaison aveugle n'a pas été menée |
+| Les deux variantes de zizanie | « Durée » jugée juste une fois, sur un épisode de 3,9 s ; jamais comparée à « débit » en aveugle |
+| Le micro-tremblement, joué sans le son | **Remarqué, après avoir doublé l'amplitude** (*Visual/Audio Requirements*) |
+| La lecture de la pré-charge (VO-49) | « Déjà nerveux » à `k = 0,6` ; « l'avertissement a disparu » à 0,85 → `k` corrigé |
+| Le régime alarme en chuchotant et en parlant | **Brutal en bas d'échelle** → plafond par niveau (*Formulas* §3) |
+| Un objet témoin tolérant, `T_objet ≥ 1` (E4) | **Non fait** |
+| La mesure de `p` sur l'étape de silence | **Non faite** sans traitement de casque |
+
+**Ce que ça ne teste pas, et ça n'a pas changé** : le social — l'attribution entre vrais joueurs, la
+comédie, la zizanie vécue, la même pièce. C'est l'objet du test à plusieurs humains, **dont une
+session dans la même pièce**, condition bloquante de `mvp-scope.md`. S'y ajoutent désormais le
+plafond par niveau à plusieurs voix (OQ-11.6), le seuil ancré (OQ-11.20) et le filtre du chat
+(OQ-11.22).
+
 
 ### Appartient ailleurs
 
@@ -1525,7 +1741,7 @@ test à plusieurs humains qui suit, **dont une session dans la même pièce**.
 | OQ-11.16 | **Une option contre les sons soudains** : la logique reste instantanée, seule l'attaque perçue du signal varierait | Accessibilité, direction audio |
 | OQ-11.17 | **Un canal de coordination non vocal** comme condition de sortie du MVP | Périmètre — `mvp-scope.md` |
 | OQ-11.18 | **Santé vocale et dysarthrie** dans un jeu où le chuchotement est le registre sûr, sur la durée d'une partie | Accessibilité ; question portée aussi par le système 6 |
-| OQ-11.19 | **Le maximum sur `Loudness` normalisée peut désigner un autre coupable que celui que l'oreille entend** : le plus fort pour lui-même n'est pas le plus fort dans la pièce | Playtest — à surveiller |
+| OQ-11.19 | **Le coupable désigné peut n'être pas celui que l'oreille entend** : le plus fort pour lui-même n'est pas le plus fort dans la pièce. Le passage au plus grand dépassement (2026-09-18) **ne la résout pas** — il compare une autre grandeur normalisée, et l'écarte encore du volume absolu | Playtest — à surveiller |
 
 **Différé sciemment**, avec ses raisons — pas de zizanie à deux, bus de mix pour les streamers,
 hiérarchie de sonie, polyphonie, volume d'assets sonores : `design/gdd/reviews/voice-object-effect-2026-09-14.md`,
@@ -1552,3 +1768,4 @@ qu'aucun des systèmes 3, 5, 9 ou 10 n'existe.
 | 2026-09-14 | Revue `full` : MAJOR REVISION NEEDED | `design/gdd/reviews/voice-object-effect-2026-09-14.md` |
 | 2026-09-15 | Décisions du propriétaire E1 à E5 et F1 à F5 acceptées | `design/gdd/reviews/voice-analysis-2026-09-14.md` §6 |
 | 2026-09-16 | **Révision, passe groupée, étape 4.** *Boucle* : une boucle unique à trois régimes, `SILENCE` prioritaire ; objet posé qui ne décharge qu'au silence. *Seuils* : `L_repos` remplacé par `r'` ; comparaison de positions par `ToPosition`, `γ` hors des seuils ; `T_objet` au-delà de 1 défini jusqu'au cri ; seuil de zizanie ancré sur la voix posée. *Murmure* : plafond sous l'avertissement, `k · seuil_av` (E2) ; les durées de murmure corrigées, « 1,36 » supprimé. *Avertissement* : un événement réarmé ; provenance des 350 ms écrite avec ses écarts ; deux sémantiques au prototype (E1) ; canal multimodal, règles de mix. *Zizanie* : elle allonge la descente au lieu d'accélérer la montée, variante comparée au prototype ; machine à états d'épisode, `FusionMax`. *Réseau* : « chaque client reçoit les `VoiceFrame` » supprimé ; `r'` seul vers l'hôte (E5) ; horloge et expiration à l'hôte ; prédiction de sa seule voix. *Accessibilité* : « Question close » rouverte et scindée en trois. *Dépendances* : systèmes 5 et 15 ; cible `p` adressée au système 1. *Critères* : VO-09, VO-13, VO-15, VO-17, VO-23, VO-26, VO-27 à VO-30 réécrits ; VO-31 rendu `[UNIT]` par injection ; VO-37 à VO-51 et VO-NET-01 ajoutés ; déclencheur pour chaque `[BLOQUÉ]`. *Questions* : OQ-11.13 à OQ-11.19 ajoutées. Encadrés datés fondus dans le texte, comptes supprimés | Revue du 2026-09-14 ; `design/gdd/reviews/voice-analysis-2026-09-14/impacts-passe-groupee.json` |
+| 2026-09-18 | **Report du prototype étendu** (`prototypes/charge-vocale-etendue/`, phase solo close). *Boucle* : **un plafond de charge par niveau de voix** remplace la montée sans fin — la charge monte à vitesse constante vers `max(Plafond_mur, e^Douceur)` puis s'y tient ; le plafond ne rabat jamais une charge héritée ; `Plafond_al ≥ Plafond_mur` interdit l'inversion à la frontière. *Coupable* : le **plus grand dépassement de son propre seuil** remplace le maximum sur `Loudness` — OQ-11.19 n'en est pas résolue. *Avertissement* : devenu une **porte de niveau** — sous `e^Douceur < seuil_av` il ne sonne jamais ; au-dessus, le délai vaut `Avertissement` exactement, et les 350 ms cessent d'être un plancher. *Valeurs* : `k` 0,85 → **0,6** sur la lecture de la pré-charge (VO-49) ; `Douceur` ajoutée. *Thèse* : « la panique collective est punie par la durée » est réduite à la descente, dont la zizanie devient le seul porteur. *Seuils* : le chuchotement réel n'a pas de marge avec `T · r'` — mesures en *Formulas* §1 ; la variante ancrée sur `w` est décrite et **non retenue** (OQ-11.20). *Critères* : VO-13, VO-15 et VO-23 réécrits, VO-52 à VO-55 ajoutés. *Questions* : OQ-11.20 (seuil ancré), OQ-11.21 (E4 se joue à `r' ≈ 0,50`), OQ-11.22 (déplacer la contrainte vers le chat vocal) | `prototypes/charge-vocale-etendue/README.md` ; essais des 2026-09-17 et 18 |
