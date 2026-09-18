@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype etendu — essais 1 a 3 analyses ; k=0,6 et tremblement valides ; essai 4 attendu (vraie montee, seuils de murmure)
+Task: Prototype etendu — essais 1 a 4 ; H2 mesure (le seuil ancre rend le chuchotement sur : +5 dB) ; essai 5 : comparer les seuils en jouant
 <!-- /STATUS -->
 
 ---

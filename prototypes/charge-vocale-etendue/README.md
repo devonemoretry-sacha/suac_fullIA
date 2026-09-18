@@ -386,4 +386,55 @@ tolérant, cris mystère, `p` sans Blue VO!CE.
 3. **Mobilité à 0,2 puis 0** pendant une conversation soutenue.
 4. **Comparaison aveugle** de l'avertissement, et l'objet tolérant.
 
-*Suite des résultats après l'essai 4.*
+### 2026-09-18 — essai 4 : une vraie montée, et la réponse à H2 · journal `sessions/2026-09-18-essai-4.json`
+
+**La calibration est propre pour la première fois**, sans Blue VO!CE et avec une montée franche :
+
+| Mesure | Valeur |
+|---|---|
+| Silence | P95 −70,5 · P50 −73,2 → `Floor_dB` −67,5 · porte **−60,5** |
+| Chuchotement | médiane **−44,7** · P90 −37,6 · 80 % au-dessus de la porte |
+| Voix posée | **−31,5** · plus fort moment −19,9 |
+| Cri | **−6,5**, plateau à 2,5 s, crête −1,9 dBFS, **sans saturation** |
+| Écarts | cri − voix **25,0 dB** · voix − chuchotement **13,2 dB** · `Δ′` **54,0 dB** · `r′` **0,537** |
+
+La montée franche fait tomber `r′` de 0,678 à **0,537** : c'était bien la montée, pas la voix.
+
+#### La question centrale : le chuchotement a-t-il une place sûre ?
+
+Positions du chuchotement dans la plage utile : **médiane 0,293**, **P90 0,425**, pointes extrêmes 0,75.
+
+| Objet | Seuil du GDD (`T · r′`) | Verdict | Seuil ancré sur le chuchotement | Verdict |
+|---|---|---|---|---|
+| Fragile, `T` 0,4 | 0,215 — 11,6 dB au-dessus de la porte | **médiane en alarme** | 0,391 — 21,1 dB | médiane en murmure, **pointes en alarme** |
+| Ordinaire, `T` 0,7 | 0,376 — 20,3 dB | médiane en murmure, **pointes en alarme** | 0,464 — 25,1 dB | **médiane et pointes en murmure** |
+| Tolérant, `T` 1,2 | 0,630 — 34,0 dB | tout en murmure | 0,630 | tout en murmure |
+
+**Ce que ça dit :**
+
+- **Avec la formule du GDD, le chuchotement n'est pas un registre sûr** : sur un objet ordinaire ses
+  bouffées de souffle déclenchent l'alarme, et sur un objet fragile il la déclenche en permanence.
+- **Le seuil ancré sur le chuchotement mesuré rend l'objet ordinaire sûr en entier** — il gagne environ
+  5 dB — et laisse au fragile un chuchotement typiquement sûr, avec des pointes qui mordent.
+- **La conversation reste une alarme dans les deux cas** (`r′` 0,537 ≥ seuil), donc la décision E4 tient.
+
+**C'est le premier argument mesuré en faveur de la piste du chuchotement.** Il porte sur une personne, un
+micro-perche, une pièce : à confirmer sur d'autres voix, et **à éprouver en jouant** — la comparaison en
+chuchotant près du canapé n'a pas encore été faite.
+
+#### Ajouté au prototype
+
+Le cadre « Profil actif » affiche désormais, pour chaque type d'objet, où tombent la médiane et les
+pointes du chuchotement contre les deux seuils. Plus besoin de calculer à la main.
+
+#### Jeu
+
+Les cinq réponses de l'essai 3 sont reconduites à l'identique en dix secondes (phrase, pré-charge à
+`k` = 0,6, tremblement, conversation, zizanie) : à lire comme une confirmation rapide, pas comme un
+nouveau test. Une seule descente journalisée, 1,66 s depuis le plein, dont 0,14 s sans silence complet —
+conforme à `Vidange`.
+
+**Toujours pas fait** : comparaison des deux seuils **en chuchotant en jeu**, comparaison aveugle de
+l'avertissement, objet tolérant, mobilité à 0,2 puis 0, cris mystère, `p` sans Blue VO!CE.
+
+*Suite des résultats après l'essai 5.*

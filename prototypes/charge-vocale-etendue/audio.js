@@ -267,6 +267,7 @@ var APP = (function () {
     A.profile = {
       floor: p.floor, rest: p.rest, scream: p.scream,
       whisper: (p.whisper === undefined || p.whisper === null || isNaN(p.whisper)) ? null : p.whisper,
+      whisper90: (p.whisper90 === undefined || p.whisper90 === null || isNaN(p.whisper90)) ? null : p.whisper90,
       lowRange: v.lowRange, approximate: !!p.approximate, source: source
     };
     A.profile.dyn = P.dynamique(A.profile, A.s6);
@@ -294,6 +295,19 @@ var APP = (function () {
     row('Chuchotement', p.whisper === null || p.whisper === undefined ? 'non mesuré' : fmt(p.whisper, 1) + ' dB · position ' + fmt(P.position(p.whisper, p, A.s1), 3));
     var dy = p.dyn || P.dynamique(p, A.s6);
     row('Dynamique', dy.ecrasee ? 'écrasée (' + dy.raisons.join(', ') + ')' : 'complète', dy.ecrasee ? 'warn-text' : '');
+    // Ce que ton chuchotement donne contre chaque seuil — la question centrale du Pilier 1
+    if (p.whisper !== null && p.whisper !== undefined) {
+      var r = P.restPosition(p, A.s1), w = P.position(p.whisper, p, A.s1);
+      var w90 = p.whisper90 === null || p.whisper90 === undefined ? null : P.position(p.whisper90, p, A.s1);
+      [['Objet fragile (0,4)', 0.4], ['Objet ordinaire (0,7)', 0.7], ['Objet tolérant (1,2)', 1.2]].forEach(function (o) {
+        var sg = P.seuil(o[1], r), sa = P.seuilAncre(o[1], r, w);
+        function lire(s) {
+          return (w < s ? 'médiane murmure' : 'médiane ALARME') + (w90 === null ? '' : ', ' + (w90 < s ? 'pointes murmure' : 'pointes ALARME'));
+        }
+        row(o[0], 'seuil GDD ' + fmt(sg, 2) + ' → ' + lire(sg) + '  ·  ancré ' + fmt(sa, 2) + ' → ' + lire(sa),
+          (w90 !== null && w90 >= sa) ? 'warn-text' : '');
+      });
+    }
     row('Drapeaux', (p.lowRange ? 'LowRange ' : '') + (p.approximate ? 'approximatif' : '') || '—', p.lowRange ? 'warn-text' : '');
     if (!(p.scream > g)) row('Garde', 'Scream_dB ≤ Gate_dB — profil invalide sous ce Margin_dB', 'bad-text');
   }

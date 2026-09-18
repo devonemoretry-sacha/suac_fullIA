@@ -153,6 +153,7 @@
         // l'ancre est la médiane de tout le chuchotement, porte comprise : un chuchotement sous la porte vaut une ancre sous la porte.
         // Pas le P90 : à un micro-perche, les bouffées de souffle montent au niveau de la voix (essai 2, 2026-09-17)
         C.buf.whisper = P.percentile(C.W, 0.5);
+        C.buf.whisper90 = P.percentile(C.W, 0.9);
         C.info.chuchotement = Object.assign({ P50_ancre: +C.buf.whisper.toFixed(1), P90: +P.percentile(C.W, 0.9).toFixed(1),
           part_au_dessus_porte: +(C.Wover / Math.max(0.001, t - 0.5)).toFixed(3), duree_s: +t.toFixed(1), fin: C.doneAsked ? 'bouton' : 'délai' }, A.dynStop(C.dyn));
         A.log('calibration', 'Étape 2 : chuchotement mesuré', C.info.chuchotement);
@@ -237,7 +238,7 @@
   }
 
   function validateNow() {
-    var p = { floor: C.buf.floor, rest: C.buf.rest, scream: C.buf.scream, whisper: C.buf.whisper };
+    var p = { floor: C.buf.floor, rest: C.buf.rest, scream: C.buf.scream, whisper: C.buf.whisper, whisper90: C.buf.whisper90 };
     var v = P.validate(p, A.s1, A.s6, false);
     var dyn = P.dynamique(p, A.s6);
     C.state = 'result'; A.hideLevel = false;
@@ -295,7 +296,7 @@
   function kv(k, v) { return '<span class="k">' + k + '</span><span class="v">' + v + '</span>'; }
 
   function approximate() {
-    var p = { floor: C.buf.floor, rest: C.buf.rest, scream: Math.max(C.buf.scream, C.info.parole ? C.info.parole.max_etape2 : -Infinity), whisper: C.buf.whisper, approximate: true };
+    var p = { floor: C.buf.floor, rest: C.buf.rest, scream: Math.max(C.buf.scream, C.info.parole ? C.info.parole.max_etape2 : -Infinity), whisper: C.buf.whisper, whisper90: C.buf.whisper90, approximate: true };
     var v = P.validate(p, A.s1, A.s6, true);
     if (v.refusal) {
       A.log('calibration', 'Profil approximatif impossible — rien n\'a franchi la porte', p);
