@@ -19,6 +19,7 @@
     ['Lenteur', 'Lenteur', '', 1, 30, 0.5, 1],
     ['k_z', 'k_z — seuil de zizanie', '', 0.1, 0.9, 0.05, 1],
     ['z', 'z — zizanie', '', 0, 2, 0.05, 1],
+    ['douceur', 'Douceur du bas de l\'échelle', '', 1, 4, 0.1, 1],
     ['DureeMin', 'Durée minimale d\'épisode', 's', 0.2, 3, 0.1, 1],
     ['FusionMax', 'Fusion maximale', 's', 2, 60, 1, 1]
   ];
@@ -457,7 +458,8 @@
     lines.push('Régime ' + o.regime + ' · charge ' + fmt(o.charge, 3) + ' · seuil_av ' + fmt(sav, 3) + ' · plafond ' + fmt(cfg.k * sav, 3) +
       ' · lourdeur rendue ' + fmt(weight, 3) + ' · Zmém ' + fmt(o.zmem, 2) + ' · événements ' + o.events);
     lines.push('Pièce de l\'objet ' + objRoom + ' · N_z A ' + (eps.A.n || 0) + ' / B ' + (eps.B.n || 0) + ' · sémantique ' + (blind ? 'aveugle' : cfg.semantique) + ' · zizanie ' + cfg.zizanie + ' · objet porté ' + dragging);
-    lines.push('Montée ' + cfg.montee + ' · dépassement ' + fmt(o.exces || 0, 3) + ' · filtre du chat ' + el('chatFiltre').value);
+    lines.push('Montée ' + cfg.montee + ' (douceur ' + fmt(cfg.douceur, 1) + ') · dépassement ' + fmt(o.exces || 0, 3) +
+      ' · plafond de ce niveau ' + fmt(Math.pow(o.exces || 0, cfg.douceur), 3) + ' · filtre du chat ' + el('chatFiltre').value);
     lines.push('Toi : position ' + fmt(A.x, 3) + ' · seuil ' + fmt(r > 0 ? P.seuilDe(cfg, { r: r, w: A.wPrime() }) : NaN, 3) + ' (ancrage ' + cfg.ancrage + ') · r′ ' + fmt(r, 3) + ' · chuchotement ' + fmt(A.wPrime(), 3));
     sims.forEach(function (s) {
       lines.push(s.name + ' (' + s.room + ') : position ' + fmt(s.x, 3) + ' · seuil ' + fmt(P.seuil(cfg.T_objet, s.r), 3) + ' · zizanie ' + fmt(P.seuilZizanie(s.r, cfg.k_z), 3));

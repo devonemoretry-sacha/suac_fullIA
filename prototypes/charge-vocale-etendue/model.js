@@ -54,8 +54,10 @@
     semantique: 'evenement',   // 'evenement' | 'banc'
     zizanie: 'duree',          // 'duree' | 'debit'
     ancrage: 'voix',           // 'voix' (GDD : T_objet · r') | 'chuchotement' (piste du 2026-09-17)
-    montee: 'palier'           // 'palier' (GDD : la charge monte à max(L)) | 'progressive' (piste du 2026-09-18 :
-                               // la vitesse suit le dépassement du seuil, nulle au seuil, pleine au cri)
+    montee: 'palier',          // 'palier' (GDD : la charge monte à max(L))
+                               // 'progressive' : la vitesse suit le dépassement du seuil, nulle au seuil, pleine au cri
+                               // 'plafond'     : chaque niveau de voix a son propre plafond de charge, atteint puis tenu
+    douceur: 1                 // exposant appliqué au dépassement : 1 = linéaire, plus haut = plus permissif en bas
   };
 
   function configErrors(c) {
@@ -68,6 +70,7 @@
     if (!(c.T_objet > 0 && c.T_objet <= 2)) e.push('T_objet hors ]0 ; 2]');
     if (!(c.k_z > 0 && c.k_z < 1)) e.push('k_z hors ]0 ; 1[');
     if (!(c.z >= 0)) e.push('z < 0');
+    if (!(c.douceur >= 1)) e.push('douceur < 1');
     return e;
   }
 
@@ -137,9 +140,16 @@
       else if (regime === 'MURMURE') {
         if (o.charge < plafond) o.charge = Math.min(o.charge + Math.min(1, sum) * dt / (c.Remplissage * c.Lenteur), plafond);
       } else {
-        var base = c.montee === 'progressive' ? exces : max;
-        var rate = c.zizanie === 'debit' ? base * Z : base;
-        o.charge += rate * dt / c.Remplissage;
+        if (c.montee === 'plafond') {
+          // chaque niveau a son plafond : la charge y monte à pleine vitesse, puis s'y tient. Seul le silence la fait redescendre.
+          var cible = Math.pow(exces, c.douceur);
+          var pas = dt / c.Remplissage * (c.zizanie === 'debit' ? Z : 1);
+          if (o.charge < cible) o.charge = Math.min(cible, o.charge + pas);
+        } else {
+          var base = c.montee === 'progressive' ? Math.pow(exces, c.douceur) : max;
+          var rate = c.zizanie === 'debit' ? base * Z : base;
+          o.charge += rate * dt / c.Remplissage;
+        }
       }
     } else if (regime === 'SILENCE') {
       o.charge -= dt / vid;

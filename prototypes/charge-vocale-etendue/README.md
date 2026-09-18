@@ -506,4 +506,30 @@ pour le test à plusieurs humains, avec la session en même pièce.
 (formulation du Pilier 1), `mvp-scope.md` (le chat de proximité devient bloquant), `voice-object-effect.md`
 (seuils plus permissifs, montée progressive).
 
+### 2026-09-18 — « pas du tout smooth » : un plafond de charge par niveau de voix
+
+**La montée progressive ne suffisait pas**, et la raison est nette : elle ralentit le début, mais la charge
+**continue de s'accumuler** tant qu'on chuchote. L'alerte finit donc toujours par tomber, et l'objet par
+bloquer. Ce n'est pas une question de vitesse, c'est une question de **destination**.
+
+**Troisième variante ajoutée — « un plafond de charge par niveau de voix »** : chaque niveau a sa charge
+maximale, atteinte à pleine vitesse puis tenue. Chuchoter s'installe à un poids léger et n'ira jamais plus
+loin ; seul un cri remplit l'objet. Le curseur **Douceur** règle la permissivité du bas de l'échelle.
+
+| Voix tenue (profil de l'essai 4) | Palier (GDD) | Progressive | **Plafond** |
+|---|---|---|---|
+| Chuchotement, pointes | plein en 2,6 s, poids 1,00 | plein en 19 s | **charge 0,08 · poids 0,05 · aucune alerte** |
+| Voix posée | plein en 2,2 s | plein en 5,8 s | **charge 0,26 · poids 0,18 · alerte à 0,4 s** |
+| Voix un peu forte | plein en 1,8 s | plein en 1,0 s | charge 0,60 · poids 0,56 |
+| Cri | plein en 1,5 s | plein en 1,5 s | plein en 1,5 s |
+
+**Vérifié dans le navigateur**, chaîne audio réelle, variante plafond et douceur 1 : six secondes au niveau
+des pointes de chuchotement donnent une charge de 0,033 et **aucun avertissement** ; cinq secondes de voix
+posée donnent 0,239 et **un** avertissement ; deux secondes et demie de cri donnent 0,92.
+
+**Ce que cette variante change dans la thèse du GDD, et il faut le dire** : « la panique collective est punie
+par la durée » s'affaiblit — parler longtemps ne remplit plus l'objet, seul le niveau compte. Le plafond du
+murmure devient un cas particulier d'une règle générale. La décision E4 tient si la douceur reste à 1 : la
+conversation déclenche encore l'avertissement, mais ne pèse presque rien.
+
 *Suite des résultats après l'essai 5.*

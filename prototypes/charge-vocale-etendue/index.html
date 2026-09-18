@@ -301,7 +301,10 @@
     <h2>Montée en alarme</h2>
     <label class="chk"><input type="radio" name="mont" value="palier" checked> Pleine vitesse dès le seuil (GDD)</label>
     <label class="chk"><input type="radio" name="mont" value="progressive"> Vitesse selon le dépassement du seuil (piste)</label>
-    <p class="note">En progressive, un souffle qui dépasse à peine le seuil ne charge presque rien ; un cri charge à pleine vitesse.</p>
+    <label class="chk"><input type="radio" name="mont" value="plafond"> Un plafond de charge par niveau de voix (piste)</label>
+    <p class="note">En progressive, un souffle qui dépasse à peine le seuil charge très lentement — mais il charge toujours.
+      En plafond, chaque niveau de voix a sa charge maximale : chuchoter s'installe à un poids léger et n'ira jamais plus loin,
+      seul un cri remplit l'objet. Le curseur « Douceur » règle les deux.</p>
    </div>
    <div class="panel">
     <h2>Filtre du chat vocal (piste)</h2>
