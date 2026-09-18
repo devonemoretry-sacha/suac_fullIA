@@ -298,6 +298,20 @@
     <div class="note" id="blindNote"></div>
    </div>
    <div class="panel">
+    <h2>Montée en alarme</h2>
+    <label class="chk"><input type="radio" name="mont" value="palier" checked> Pleine vitesse dès le seuil (GDD)</label>
+    <label class="chk"><input type="radio" name="mont" value="progressive"> Vitesse selon le dépassement du seuil (piste)</label>
+    <p class="note">En progressive, un souffle qui dépasse à peine le seuil ne charge presque rien ; un cri charge à pleine vitesse.</p>
+   </div>
+   <div class="panel">
+    <h2>Filtre du chat vocal (piste)</h2>
+    <div class="knob"><div class="lab"><span>Seuil d'audibilité des autres</span><span class="val" id="chatFiltreV">0,00</span></div>
+      <input type="range" id="chatFiltre" min="0" max="0.8" step="0.05" value="0"></div>
+    <p class="note">Au-dessus de 0, tu n'entends les voix simulées que si elles parlent assez fort. L'idée à éprouver :
+      rendre la contrainte sociale, et non les objets, exigeante — mais ce que <em>toi</em> tu dois faire pour être
+      entendu ne se teste qu'à plusieurs.</p>
+   </div>
+   <div class="panel">
     <h2>Zizanie</h2>
     <label class="chk"><input type="radio" name="ziz" value="duree" checked> Allonge la descente (GDD)</label>
     <label class="chk"><input type="radio" name="ziz" value="debit"> Accélère la montée (variante)</label>

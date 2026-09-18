@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype etendu — essais 1 a 4 ; H2 mesure (le seuil ancre rend le chuchotement sur : +5 dB) ; essai 5 : comparer les seuils en jouant
+Task: Prototype etendu — montee progressive et filtre du chat ajoutes ; piste : deplacer la contrainte vers le chat vocal (a trancher)
 <!-- /STATUS -->
 
 ---

@@ -67,7 +67,7 @@
       r.addEventListener('change', function () { if (r.checked) { cfg[key] = r.value; A.store('s11', cfg); } });
     });
   }
-  radios('sem', 'semantique'); radios('ziz', 'zizanie'); radios('ancr', 'ancrage');
+  radios('sem', 'semantique'); radios('ziz', 'zizanie'); radios('ancr', 'ancrage'); radios('mont', 'montee');
 
   // ============================================================ comparaison aveugle (E1)
   var blind = null;
@@ -233,6 +233,7 @@
     }
   };
   el('vol').addEventListener('input', function () { el('volV').textContent = el('vol').value + ' %'; });
+  el('chatFiltre').addEventListener('input', function () { el('chatFiltreV').textContent = fmt(+el('chatFiltre').value, 2); });
 
   // ============================================================ modèle : hôte et client
   var host = P.newObject(), client = P.newObject();
@@ -375,6 +376,9 @@
     sims.forEach(function (s, i) {
       var heard = el('chkSimAudio').checked ? delayed(s.queue, now, s.lat) : 0;
       var att = s.room === 'X' ? 0 : (s.room === objRoom ? 1 : 0.45);
+      // Piste du 2026-09-18 : le chat vocal n'entend que les voix assez fortes — il faut parler fort pour être compris
+      var a = +el('chatFiltre').value;
+      if (a > 0) { var xs = P.toPosition(heard, s1); heard *= Math.max(0, Math.min(1, (xs - a) / (1 - a))); }
       sound.set(sound.voices[i].g, heard * att * 0.35);
       if (sound.voices[i].pan.pan) {
         var slot = SLOTS[s.room === 'X' ? 'A' : s.room][i] || [W / 2, 0];
@@ -453,6 +457,7 @@
     lines.push('Régime ' + o.regime + ' · charge ' + fmt(o.charge, 3) + ' · seuil_av ' + fmt(sav, 3) + ' · plafond ' + fmt(cfg.k * sav, 3) +
       ' · lourdeur rendue ' + fmt(weight, 3) + ' · Zmém ' + fmt(o.zmem, 2) + ' · événements ' + o.events);
     lines.push('Pièce de l\'objet ' + objRoom + ' · N_z A ' + (eps.A.n || 0) + ' / B ' + (eps.B.n || 0) + ' · sémantique ' + (blind ? 'aveugle' : cfg.semantique) + ' · zizanie ' + cfg.zizanie + ' · objet porté ' + dragging);
+    lines.push('Montée ' + cfg.montee + ' · dépassement ' + fmt(o.exces || 0, 3) + ' · filtre du chat ' + el('chatFiltre').value);
     lines.push('Toi : position ' + fmt(A.x, 3) + ' · seuil ' + fmt(r > 0 ? P.seuilDe(cfg, { r: r, w: A.wPrime() }) : NaN, 3) + ' (ancrage ' + cfg.ancrage + ') · r′ ' + fmt(r, 3) + ' · chuchotement ' + fmt(A.wPrime(), 3));
     sims.forEach(function (s) {
       lines.push(s.name + ' (' + s.room + ') : position ' + fmt(s.x, 3) + ' · seuil ' + fmt(P.seuil(cfg.T_objet, s.r), 3) + ' · zizanie ' + fmt(P.seuilZizanie(s.r, cfg.k_z), 3));
@@ -481,7 +486,8 @@
   // ============================================================ questions et journal
   function snapshot() {
     return {
-      semantique: blind ? 'aveugle' : cfg.semantique, zizanie: cfg.zizanie, ancrage: cfg.ancrage, T_objet: cfg.T_objet,
+      semantique: blind ? 'aveugle' : cfg.semantique, zizanie: cfg.zizanie, ancrage: cfg.ancrage, montee: cfg.montee,
+      filtre_chat: +el('chatFiltre').value, T_objet: cfg.T_objet,
       Avertissement_ms: Math.round(cfg.Avertissement * 1000), Remplissage: cfg.Remplissage, Vidange: cfg.Vidange,
       Amorcage: cfg.Amorcage, h: cfg.h, k: cfg.k, Lenteur: cfg.Lenteur, k_z: cfg.k_z, z: cfg.z,
       role: el('netRole').value, latence_ms: +el('netLat').value, mobilite_pleine_charge: heavy,

@@ -437,4 +437,73 @@ conforme à `Vidange`.
 **Toujours pas fait** : comparaison des deux seuils **en chuchotant en jeu**, comparaison aveugle de
 l'avertissement, objet tolérant, mobilité à 0,2 puis 0, cris mystère, `p` sans Blue VO!CE.
 
+### 2026-09-18 — en chuchotant, la punition tombe d'un coup
+
+**Constat du propriétaire, en jouant** : « en deux phrases chuchotées, on est en alarme, et le truc
+commence à bloquer ». Il demande quelque chose de **plus progressif** : chuchoter doit rester une façon de
+réussir, quitte à être mal entendu des autres.
+
+**Ce que disent les chiffres, avec son profil de l'essai 4.** Le régime alarme charge à `max(L)` : dès que
+la position dépasse le seuil, la charge monte **presque aussi vite que sous un cri**. Le passage est tout
+ou rien.
+
+| Ce qu'il fait | Seuil du GDD, palier | Seuil du GDD, **progressive** | Seuil ancré, palier | Seuil ancré, progressive |
+|---|---|---|---|---|
+| Chuchotement, pointes (0,425) | **2,6 s** | 19,2 s | jamais | jamais |
+| Chuchotement, extrêmes (0,75) | 1,8 s | 2,5 s | 1,8 s | 2,8 s |
+| Voix posée (0,537) | 2,2 s | 5,8 s | 2,2 s | 11,0 s |
+| Cri (1,0) | 1,5 s | 1,5 s | 1,5 s | 1,5 s |
+
+*(Temps pour charger l'objet à fond, à niveau tenu.)*
+
+#### Ajouté : la montée progressive
+
+Nouvelle variante commutable, **« Montée en alarme »** : la vitesse de charge suit le **dépassement du
+seuil** — nulle juste au seuil, pleine au cri — au lieu d'être `max(L)` dès le seuil. Vérifié au
+générateur : au niveau des pointes de chuchotement, la charge atteint 1,00 en palier et **0,05 en
+progressive** après trois secondes.
+
+Elle ne touche ni le silence, ni le murmure, ni l'avertissement : seul le débit du régime alarme change.
+*Candidat pour `voice-object-effect.md`, §3 de Formulas.*
+
+#### La piste du propriétaire : déplacer la contrainte vers le chat vocal
+
+> « Ne pas vraiment exiger le chuchotement pour la physique — monter les seuils, être plus permissif — et
+> mettre un filtre sur le chat vocal du jeu qui baisse la voix des joueurs, pour qu'ils soient obligés de
+> parler fort pour s'entendre. »
+
+**Ce que ça change de fond.** Aujourd'hui, ce sont les objets qui obligent à se taire. Là, ce serait
+**le besoin d'être compris** qui obligerait à parler fort, et les objets ne feraient que facturer. La
+tension du Pilier 2 — se coordonner coûte — passe de la mesure à la conversation.
+
+**Ce que ça apporte :**
+
+- **La mesure n'a plus besoin d'être fine.** Avec des seuils permissifs, le chuchotement est sûr quel que
+  soit le micro — y compris un micro qui compresse. C'est la réponse la plus solide au problème du
+  2026-09-17 : plus besoin de demander au joueur de couper Blue VO!CE pour que son chuchotement compte.
+- **Le dosage devient continu** : « à quel point je veux être compris » remplace « est-ce que je dépasse un
+  seuil », ce que le propriétaire demande en parlant de progressivité.
+- **Le chuchotement redevient une tactique**, pas une contrainte à la limite du mesurable.
+
+**Ce que ça coûte, et il faut le dire :**
+
+- **Un chat externe contourne tout.** Si les joueurs passent par Discord, ils s'entendent parfaitement en
+  chuchotant et la contrainte disparaît — alors qu'elle est désormais la seule. `mvp-scope.md` justifiait
+  déjà le chat de proximité par ce risque ; cette piste rend le chat **indispensable**, pas seulement utile.
+- **L'accessibilité en prend un coup** : les joueurs malentendants, les non-natifs, ceux qui jouent dans une
+  pièce bruyante perdent de l'intelligibilité, et le jeu la leur retire volontairement.
+- **L'attribution s'affaiblit** : la revue a établi que la voix est le premier canal pour savoir *qui*
+  alourdit l'objet. Une voix atténuée, c'est un Sonomètre qui devient le canal principal.
+- **Le pilier change de formulation** : « la Voice-Physics récompense le contrôle » deviendrait « le jeu
+  récompense le contrôle **de ce que tu dis et à qui**, et les objets facturent le volume ».
+
+**Ce que le prototype peut en tester, et ce qu'il ne peut pas.** Un curseur **« Filtre du chat vocal »**
+atténue les voix simulées tant qu'elles ne parlent pas assez fort : tu entends ce que vivrait celui qui
+écoute. **Ce que toi tu devrais faire pour être entendu ne se teste qu'à plusieurs** — c'est une question
+pour le test à plusieurs humains, avec la session en même pièce.
+
+**Où ça atterrirait dans les documents** : système 14 (le filtre lui-même et son réglage), `game-concept.md`
+(formulation du Pilier 1), `mvp-scope.md` (le chat de proximité devient bloquant), `voice-object-effect.md`
+(seuils plus permissifs, montée progressive).
+
 *Suite des résultats après l'essai 5.*

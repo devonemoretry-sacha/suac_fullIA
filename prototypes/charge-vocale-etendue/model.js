@@ -53,7 +53,9 @@
     DureeMin: 1.0, FusionMax: 10, Expiration: 0.200,
     semantique: 'evenement',   // 'evenement' | 'banc'
     zizanie: 'duree',          // 'duree' | 'debit'
-    ancrage: 'voix'            // 'voix' (GDD : T_objet · r') | 'chuchotement' (piste du 2026-09-17)
+    ancrage: 'voix',           // 'voix' (GDD : T_objet · r') | 'chuchotement' (piste du 2026-09-17)
+    montee: 'palier'           // 'palier' (GDD : la charge monte à max(L)) | 'progressive' (piste du 2026-09-18 :
+                               // la vitesse suit le dépassement du seuil, nulle au seuil, pleine au cri)
   };
 
   function configErrors(c) {
@@ -107,14 +109,21 @@
 
   // voices : [{ L (atténuée), raw (brute), r, room }] ; renvoie l'état après le tick
   function tick(o, voices, objRoom, carried, dt, c, s1, now) {
-    var allZero = true, alarm = false, sum = 0, max = 0, who = -1;
+    var allZero = true, alarm = false, sum = 0, max = 0, who = -1, exces = 0, quiExces = -1;
     for (var i = 0; i < voices.length; i++) {
       var v = voices[i];
       var L = (v.r > 0) ? v.L : 0;                    // r' non reçu → 0
       if (L > 0) allZero = false;
       sum += L;
       if (L > max) { max = L; who = i; }
-      if (L > 0 && toPosition(L, s1) >= seuilDe(c, v)) alarm = true;
+      if (L > 0) {
+        var xi = toPosition(L, s1), si = seuilDe(c, v);
+        if (xi >= si) {
+          alarm = true;
+          var e = si >= 1 ? 0 : (xi - si) / (1 - si);     // dépassement, 0 au seuil et 1 au cri
+          if (e > exces) { exces = e; quiExces = i; }
+        }
+      }
     }
     var regime = allZero ? 'SILENCE' : (alarm ? 'ALARME' : 'MURMURE');
     var Z = zizanieFactor(zizanieCount(voices, objRoom, c, s1), c);
@@ -128,7 +137,8 @@
       else if (regime === 'MURMURE') {
         if (o.charge < plafond) o.charge = Math.min(o.charge + Math.min(1, sum) * dt / (c.Remplissage * c.Lenteur), plafond);
       } else {
-        var rate = c.zizanie === 'debit' ? max * Z : max;
+        var base = c.montee === 'progressive' ? exces : max;
+        var rate = c.zizanie === 'debit' ? base * Z : base;
         o.charge += rate * dt / c.Remplissage;
       }
     } else if (regime === 'SILENCE') {
@@ -151,7 +161,8 @@
     }
     if (event) { o.events++; o.lastEvent = now; }
 
-    o.regime = regime; o.Z = Z; o.culprit = regime === 'ALARME' ? who : -1;
+    o.regime = regime; o.Z = Z; o.exces = exces;
+    o.culprit = regime === 'ALARME' ? (c.montee === 'progressive' ? quiExces : who) : -1;
     o.lourdeur = lourdeur(o.charge, c);
     o.event = event;
     return o;
