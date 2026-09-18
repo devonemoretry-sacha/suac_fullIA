@@ -280,8 +280,15 @@
       msgs.push('<span class="warn-text">Ta montée n\'a pas dépassé le plus fort moment de ta parole posée (' +
         fmt(p.scream - C.info.parole.max_etape2, 1) + ' dB d\'écart). Refais juste la montée, en montant franchement, jusqu\'à ne plus pouvoir monter sans forcer.</span>');
     }
-    if (dyn.ecrasee && (dyn.raisons.indexOf('chuchotement') >= 0 || !monteeFaible)) {
+    if (dyn.raisons.indexOf('souffle') >= 0) {
+      msgs.push('<span class="warn-text">Ton chuchotement est arrivé plus fort que ta voix posée (' +
+        fmt(-dyn.voixMoinsChuchotement, 1) + ' dB au-dessus). Ce n’est pas ton micro : le souffle l’a frappé directement. ' +
+        'Refais le chuchotement en soufflant moins fort, ou en parlant légèrement à côté du micro.</span>');
+    }
+    if (dyn.ecrasee && dyn.raisons.indexOf('souffle') < 0 && (dyn.raisons.indexOf('chuchotement') >= 0 || !monteeFaible)) {
       var perte = [];
+      if (dyn.raisons.indexOf('souffle') >= 0) perte.push('ton chuchotement est arrivé <strong>plus fort que ta voix posée</strong> (' +
+        fmt(-dyn.voixMoinsChuchotement, 1) + ' dB au-dessus) : le souffle est parti droit dans le micro');
       if (dyn.raisons.indexOf('chuchotement') >= 0) perte.push('ton chuchotement arrive presque aussi fort que ta voix normale (' + fmt(dyn.voixMoinsChuchotement, 0) + ' dB d\'écart) : le jeu aura du mal à les distinguer, et <strong>chuchoter pourra alourdir les meubles comme si tu parlais</strong>');
       if (dyn.raisons.indexOf('cri') >= 0) perte.push('ton cri n\'arrive que ' + fmt(dyn.criMoinsVoix, 0) + ' dB au-dessus de ta voix normale : <strong>le jeu fera moins de différence entre parler et crier</strong>');
       msgs.push('<span class="warn-text">Ce que ton micro te fait perdre : ' + perte.join(' ; ') + '.</span>');

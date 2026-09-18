@@ -236,7 +236,13 @@
   function dynamique(p, s6) {
     var raisons = [];
     if (p.scream - p.rest < s6.EcartCriVoixMin) raisons.push('cri');
-    if (p.whisper !== undefined && p.whisper !== null && p.rest - p.whisper < s6.EcartVoixChuchoteMin) raisons.push('chuchotement');
+    if (p.whisper !== undefined && p.whisper !== null) {
+      var ecart = p.rest - p.whisper;
+      // Un compresseur rapproche le chuchotement de la voix ; il ne peut pas le rendre PLUS fort.
+      // Chuchotement au-dessus de la voix = souffle envoyé droit dans le micro (essai 5, 2026-09-18).
+      if (ecart < 0) raisons.push('souffle');
+      else if (ecart < s6.EcartVoixChuchoteMin) raisons.push('chuchotement');
+    }
     return { ecrasee: raisons.length > 0, raisons: raisons, criMoinsVoix: p.scream - p.rest,
       voixMoinsChuchotement: (p.whisper !== undefined && p.whisper !== null) ? p.rest - p.whisper : null };
   }

@@ -1,6 +1,6 @@
 # Prototype — Charge vocale étendue
 
-**Statut : essai 1 fait le 2026-09-17, prototype corrigé, essai 2 attendu.** Suite du banc
+**Statut : phase solo close le 2026-09-18 après cinq essais. La direction tient ; le test à plusieurs suit.** Suite du banc
 `prototypes/charge-vocale/`, étape 4 du plan de la passe groupée.
 
 Le banc testait des constantes de temps sur une seule voix, sans calibration. Celui-ci fait
@@ -532,4 +532,52 @@ par la durée » s'affaiblit — parler longtemps ne remplit plus l'objet, seul 
 murmure devient un cas particulier d'une règle générale. La décision E4 tient si la douceur reste à 1 : la
 conversation déclenche encore l'avertissement, mais ne pèse presque rien.
 
-*Suite des résultats après l'essai 5.*
+### 2026-09-18 — essai 5 · journal `sessions/2026-09-18-essai-5.json`
+
+**Le plafond tient en jeu.** Trois descentes journalisées partent de charges de **0,32 à 0,40** seulement,
+en parlant et en chuchotant : l'objet ne monte plus au plafond de l'échelle, il s'installe au niveau de la
+voix. Retour au calme en 0,6 à 0,9 s.
+
+**Deux calibrations, et un cas que le diagnostic lisait à l'envers**
+
+| Calibration | Chuchotement | Voix posée | Écart | Ce que le jeu a dit |
+|---|---|---|---|---|
+| 11 h 48 | −41,4 | −34,5 | **6,9 dB** | rien — juste au-dessus du seuil de 6 dB |
+| 12 h 03 | **−29,0**, crête −1,8 dBFS | −37,5 | **−8,5 dB** | « dynamique écrasée » — **faux** |
+
+À 12 h 03, le chuchotement est arrivé **plus fort que la voix posée**, presque à saturation. **Aucun
+compresseur ne peut faire ça** : il rapproche les niveaux, il ne les inverse pas. La cause est le souffle
+envoyé droit dans le micro.
+
+**Corrigé** : un écart négatif est désormais une raison distincte, `souffle`, avec son propre message —
+« ce n'est pas ton micro : le souffle l'a frappé directement ; refais le chuchotement en soufflant moins
+fort, ou en parlant légèrement à côté du micro ». Le message du micro ne s'affiche plus dans ce cas.
+
+**Les quatre calibrations se classent maintenant ainsi** : souffle à −8,5 dB ; micro écrasé à 5,5 dB ;
+propres à 6,9 et 13,2 dB. **La marge entre 5,5 et 6,9 est très mince** : ce critère reste une heuristique de
+prototype, pas une règle de conception. C'est une des raisons pour lesquelles le message n'accuse jamais
+franchement et laisse toujours jouer.
+
+### 2026-09-18 — verdict de la phase solo
+
+**Le propriétaire, après avoir essayé le plafond** : « c'est un peu mieux… je crois qu'on tient la bonne
+piste, mais il faudra l'éprouver à plusieurs. » Le « un peu » ne dit pas une réserve sur le modèle : il dit
+que **seul, on ne peut pas juger** ce qui se joue à plusieurs.
+
+| Acquis de la phase solo | Comment |
+|---|---|
+| La chaîne de capture peut écraser une voix, et le jeu doit s'en apercevoir | Blue VO!CE : une vingtaine de dB de dynamique perdus, mesurés deux fois |
+| Le chuchotement n'a pas de marge avec la formule du GDD | Position 0,293 en médiane, 0,425 en pointes, seuil ordinaire 0,376 |
+| Le seuil ancré sur le chuchotement la lui rend | Seuil 0,464, environ 5 dB gagnés |
+| Le régime alarme du GDD est brutal en bas d'échelle | Deux phrases chuchotées remplissent l'objet |
+| Un plafond de charge par niveau de voix le corrige | Chuchotement 0,03 · voix posée 0,24 · cri plein |
+| `k` = 0,6 corrige la pré-charge | « Déjà nerveux » au lieu de « l'avertissement a disparu » |
+| Le tremblement doit être ample pour se remarquer sans le son | Doublé, puis remarqué |
+| La calibration doit attendre le joueur | Porte « Je suis prêt », fin de parole manuelle, garde de plateau |
+| Un diagnostic qui accuse le matériel se trompe facilement | Trois fausses attributions trouvées et corrigées en trois jours |
+
+**Ce qui attend le test à plusieurs** : l'attribution entre vrais joueurs, la comédie, la zizanie vécue,
+l'objet tolérant en conversation réelle, le filtre du chat vocal — et la session en même pièce, condition
+bloquante de `mvp-scope.md`.
+
+**Statut** : phase solo close. Le prototype reste utilisable pour toute mesure ponctuelle.

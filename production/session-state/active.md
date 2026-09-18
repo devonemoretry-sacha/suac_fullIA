@@ -5,7 +5,7 @@
 <!-- STATUS -->
 Epic: Onboarding & cadrage
 Feature: Migration vers la structure template
-Task: Prototype etendu — montee progressive et filtre du chat ajoutes ; piste : deplacer la contrainte vers le chat vocal (a trancher)
+Task: Prototype solo clos (5 essais) ; a decider : reporter les acquis dans les GDD, puis outiller le test a plusieurs
 <!-- /STATUS -->
 
 ---
