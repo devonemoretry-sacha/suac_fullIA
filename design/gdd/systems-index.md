@@ -327,7 +327,7 @@ là où le développeur travaille.
 |--------|-------|
 | Total systems identified | 19 |
 | Design docs started | **3** *(Analyse vocale, Calibration vocale, Effet voix → objets — complets, 11 sections chacun)* |
-| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 3, re-revue à faire)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED** ; **révisé le 2026-09-16**, passe groupée étape 4, re-revue à faire)* |
+| Design docs reviewed | **3** — Analyse vocale *(2026-09-07, NEEDS REVISION, révisions appliquées ; **re-revue 2026-09-14 : NEEDS REVISION**, premier de la passe groupée ; mesures du prototype reportées le 2026-09-18)* ; Calibration *(2026-09-11, **MAJOR REVISION NEEDED** ; révisé le 2026-09-16 ; **étape de chuchotement et diagnostic de chaîne de capture ajoutés le 2026-09-18** ; re-revue à faire)* ; Effet voix → objets *(2026-09-14, **MAJOR REVISION NEEDED** ; révisé le 2026-09-16 ; **plafond de charge par niveau de voix adopté le 2026-09-18** ; re-revue à faire)* |
 | Design docs approved | 0 *(re-revue à lancer)* |
 | MVP systems designed | 3 / 19 |
 | ADR ouverts par la revue | **2** — ADR-0007 et ADR-0008, tous deux `Accepted` |
@@ -346,6 +346,7 @@ là où le développeur travaille.
 | 2026-09-07 | **Système 1 `Designed`** — `voice-analysis.md`, 11 sections. Rétro-documentation du code déjà implémenté. |
 | 2026-09-09 | **Système 6 `Designed`** — `voice-calibration.md`, 11 sections. Le système 11 gagne une dépendance de conception vers 6 : ses seuils sont personnels. |
 | 2026-09-11 | **Système 11 `Designed`** — `voice-object-effect.md`, 11 sections. Modèle à deux régimes (murmure / alarme), charge et lourdeur, zizanie **par pièce** — d'où une dépendance nouvelle vers le système 10 pour la partition de l'appartement. Délai d'avertissement **mesuré** à 350 ms au prototype. |
+| 2026-09-18 | **Phase solo du prototype étendu close** — `prototypes/charge-vocale-etendue/`, cinq essais. Trois reports : le système 6 gagne une **étape de chuchotement** et un diagnostic de chaîne de capture qui ne refuse jamais ; le système 11 remplace la montée sans fin par un **plafond de charge par niveau de voix**, et `k` passe à 0,6 ; le système 1 voit B1 répondre pour moitié et sa mesure de `p` invalidée. Trois questions ouvertes nouvelles chez 11 — seuil ancré sur le chuchotement, décision E4 devenue dépendante du profil, filtre du chat vocal. **Rien n'est éprouvé à plusieurs joueurs.** |
 
 ---
 

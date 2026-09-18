@@ -460,6 +460,30 @@ Arbitrage (a) de la revue, accepté par le propriétaire.
 - si le chuchotement tombe sous la respiration, aucune marge ne les sépare : **le prix est
   accepté**.
 
+#### Ce que B1 a mesuré, et sur quelle moitié il reste muet
+
+**Mesuré le 2026-09-18**, prototype `charge-vocale-etendue`, chaîne de capture saine — traitement du
+casque désactivé, une personne, un micro-perche, une pièce calme :
+
+| | Niveau médian | Par rapport à `Gate_dB` |
+|---|---|---|
+| Bruit de la pièce, P95 | −70,5 dB | **10,0 dB sous la porte** |
+| Chuchotement | −44,7 dB | **15,8 dB au-dessus**, 80 % des trames au-dessus |
+| Voix posée | −31,5 dB | 29,0 dB au-dessus |
+| Cri | −6,5 dB | 54,0 dB au-dessus |
+
+**Le premier déclencheur de scission n'est pas atteint.** La branche « respiration < chuchotement <
+`Gate_dB` » supposait que la porte enterre le chuchotement ; la mesure dit l'inverse — avec
+`FloorMargin_dB = 3` et `Margin_dB = 7`, un chuchotement réel passe la porte avec **quinze décibels
+de marge**, et le bruit de la pièce reste dix décibels dessous. **Aucune scission n'est justifiée par
+cette mesure** ; `Margin_dB` n'a pas besoin de descendre pour rendre le chuchotement audible.
+
+**Ce que B1 n'a pas mesuré sur une chaîne saine** : la respiration, le clavier et les bruits de
+bouche. Ils l'ont été le 2026-09-17, mais derrière une porte de bruit et un compresseur de casque,
+qui les ramenaient au niveau de la voix — mesure inutilisable pour régler une marge. **La seconde
+moitié de B1 reste à faire**, et c'est elle qui dit si la porte tient le clavier dehors.
+
+
 **Conformité au principe des seuils personnels.** `Gate_dB` est personnel : il part du
 bruit de *ta* pièce, mesuré par le système 6. `Margin_dB` est une constante, et le principe
 l'autorise parce qu'elle **détecte du bruit, elle ne juge pas une voix**. La respiration
@@ -764,7 +788,7 @@ nommée, jamais chiffrée.
 |---|---|---|---|---|---|
 | `γ` — exposant perceptif | 0,65 | 0,5 – 1,0 ; **hors plage, refusé au chargement** (§1) | Système 1 | PROVISOIRE | Protocole B |
 | `MinDb` — plancher de conversion | −120 dBFS | toute valeur finie sous le bruit de pièce le plus bas mesuré | Système 1 | PROVISOIRE | Enregistrements bruts (B7) |
-| `Margin_dB` — zéro de sonie et porte de voisement | 7 dB | 6 – 8 | Système 1 | PROVISOIRE | B1 — où tombent chuchotement, respiration, clavier ; tranche la scission de §1 |
+| `Margin_dB` — zéro de sonie et porte de voisement | 7 dB | 6 – 8 | Système 1 | PROVISOIRE — **B1 à moitié fait** | B1 : le chuchotement passe la porte avec 15,8 dB de marge (2026-09-18) ; respiration, clavier et bruits de bouche restent à mesurer sur une chaîne saine |
 | `CrestMinDb` | 8 dB | 6 – 12 | Système 1 | PROVISOIRE | Protocole A |
 | `CrestMaxDb` | 20 dB | 15 – 26 | Système 1 | PROVISOIRE | Protocole A |
 | `JitterMin` | 0,5 % | 0,3 – 1,0 | Système 1 | PROVISOIRE | Session hors ligne (C9) |
@@ -776,7 +800,7 @@ nommée, jamais chiffrée.
 | TTL de l'anneau médian | — | — | Système 1 | **EN ATTENTE** | OQ-6 |
 | Taille de l'anneau médian | 5 | 3 – 9, **impaire** | Système 1 | PROVISOIRE | C9 — erreurs d'octave réellement observées. Origine : « ~5 trames », ADR-0004:132, qui n'en fixe ni la valeur ni la parité ; la parité est une décision de ce document (*Tuning Knobs*, « Ce qui n'est pas un curseur ») |
 | Seuil d'écrêtage | — | — | Système 1 | **EN ATTENTE** | C6 — enregistrements de cris saturés, hors prototype ; valeur et nombre d'échantillons consécutifs (*Edge Cases*, « Saturation du signal ») |
-| `p` — part des trames à `Loudness = 0` sur bruit ambiant (AC-40) | — | — | Mesure : système 1 ; part suffisante : système 11, cible `p ≥ 0,84` (`voice-object-effect.md`, *Formulas* §3) | **EN ATTENTE** | B2 — étape de silence du prototype navigateur |
+| `p` — part des trames à `Loudness = 0` sur bruit ambiant (AC-40) | — | — | Mesure : système 1 ; part suffisante : système 11, cible `p ≥ 0,84` (`voice-object-effect.md`, *Formulas* §3) | **EN ATTENTE** — la mesure du 2026-09-17 (0,915) est invalide, faite derrière une porte de bruit de casque | B2 — étape de silence du prototype, **traitement du périphérique désactivé** |
 | `HardFloor_dB`, `QualityBand_dB`, `FloorMargin_dB`, `VoicedMin` | — | — | **Système 6** | voir `voice-calibration.md` | voir `voice-calibration.md` |
 
 **Décisions d'ADR-0004 — hors de la liste, parce qu'elles n'attendent pas de mesure :**
@@ -1675,6 +1699,13 @@ automatisable et un versant humain ; les deux sont listés.
 | AC-40 | **« Quand je me tais, rien ne bouge. »** GIVEN 30 s de bruit ambiant réel enregistré — clavier, ventilateur, respiration, conversation à côté — et un profil calibré **dans la même pièce** THEN `Loudness = 0` sur au moins **p %** des trames. `p` est **EN ATTENTE** : le prototype navigateur mesure la part réellement atteinte sur une étape de silence (B2), et le système 11 en dérive la cible, `p ≥ 0,84` sous hypothèse d'indépendance (`voice-object-effect.md`, *Formulas* §3) — la part réelle ne se fixe pas sur le papier | `[HUMAIN]` puis rejouable en `[UNIT]` |
 | AC-40b | GIVEN `Rms_dB ∈ [Floor_dB ; Gate_dB)` THEN `Loudness = 0` **exactement** — c'est le test qui prouve qu'il n'y a qu'un seul zéro, et qu'il est à la porte, pas au plancher de la pièce | `[UNIT]` |
 
+> **Une première mesure de `p`, et pourquoi elle ne compte pas.** Le 2026-09-17, l'étape de silence
+> du prototype a donné `p = 1,000` sur 8 s et **0,915** sur 30 s, avec 0,33 bascule par seconde à la
+> porte — au-dessus de la cible de 0,84. **Mesuré derrière une porte de bruit de casque**, qui force
+> le silence à zéro et gonfle mécaniquement `p` : ce chiffre mesure le casque, pas la chaîne du jeu.
+> `p` reste EN ATTENTE, et **le protocole doit nommer la condition** : traitement du périphérique
+> désactivé, sans quoi la mesure est flatteuse et fausse.
+
 > **Sur AC-40.** Une fois les trente secondes enregistrées **et `p` fixé**, ce critère cesse
 > d'être humain : le fichier devient une fixture et le test tourne en CI. C'est le modèle à
 > suivre pour tout ce qui touche au signal — **mesurer une fois, rejouer toujours.**
@@ -2067,3 +2098,4 @@ règles, où il finirait tôt ou tard par contredire le texte qu'il était cens�
 | 2026-09-15 | Vérification adverse de la révision : la sortie de `Degraded` devient l'événement « capture reprise » du système 2 (table des transitions, AC-20b, OQ-2) ; la taille de l'anneau médian rejoint la liste canonique, sa parité étant une décision de ce document et non d'ADR-0004 ; le seuil d'écrêtage et `p` y entrent EN ATTENTE ; AC-26c ajouté ; borne exacte de −12 demi-tons ; datation réseau corrigée ; deux dépendances d'exécution | Passe groupée, étape 1 — vérificateurs de complétude et de cohérence |
 | 2026-09-16 | Renvois alignés sur la révision du système 6 : la respiration entre dans `Floor_dB` ; la précondition de mesure de `F0_habituel` est écrite ; le plancher dur et la bande de qualité sont chiffrés dans la liste canonique du système 6, pas dans ses *Tuning Knobs* ; l'accès à la calibration depuis les menus porte l'identifiant CAL-55 | Passe groupée, étape 3 |
 | 2026-09-16 | Le système 11 fixe la cible de `p` (AC-40 et liste canonique) | Passe groupée, étape 4 |
+| 2026-09-18 | **Mesures du prototype étendu.** B1 répond pour moitié : sur une chaîne saine, un chuchotement réel passe `Gate_dB` avec **15,8 dB de marge** et le bruit de la pièce reste 10 dB dessous — **le déclencheur de scission de `Margin_dB` n'est pas atteint** ; respiration, clavier et bruits de bouche restent à mesurer hors traitement de casque. `p` : la mesure de 0,915 est **invalidée**, faite derrière une porte de bruit qui gonfle mécaniquement la part de trames nulles ; le protocole de B2 exige désormais le traitement du périphérique désactivé | `prototypes/charge-vocale-etendue/README.md`, essais 1 et 4 |

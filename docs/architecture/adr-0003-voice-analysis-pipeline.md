@@ -129,6 +129,15 @@ la cause. C'est une exigence de la section *UI Requirements* de `voice-calibrati
    recalibration — la place de la voix posée du joueur entre sa porte de volume et son cri
    (`design/gdd/voice-analysis.md`, *Formulas* §1). **Le `VoiceProfile` ne quitte jamais le
    client**
+   > **Une question ouverte peut faire passer ce nombre à deux.** Le système 11 étudie un seuil de
+   > murmure ancré sur le **chuchotement mesuré** plutôt que sur une fraction de la voix posée
+   > (`design/gdd/voice-object-effect.md`, OQ-11.20). Motif : sur le seul profil réel mesuré, les
+   > pointes d’un chuchotement franchissent le seuil d’un objet ordinaire. S’il est retenu, la
+   > position du chuchotement `w` part vers l’hôte **avec** `r'`, et cette étape devient « deux
+   > nombres dérivés du profil ». **Ni l’un ni l’autre n’est un niveau sonore** : ce sont des
+   > positions sans unité, et la propriété qui compte — le `VoiceProfile` ne quitte jamais le
+   > client — est intacte dans les deux cas. Tant que la question est ouverte, la décision
+   > ci-dessus tient telle quelle.
 6. Hôte : applique distance et cumul multi-joueurs, compare des positions aux seuils
    personnels, décide de la physique, diffuse (ADR-0002)
 
@@ -340,7 +349,7 @@ priorité absolue du POC audio, avant toute conception de système en dépendant
 - [ ] La capture d'analyse et le chat vocal accèdent au micro simultanément, sans conflit de périphérique
 - [ ] Le signal lu par l'analyse est bien brut — ni VAD, ni AGC, ni suppression de bruit, ni AEC en amont
 - [ ] **Avec un casque, la voix d'un coéquipier restituée au casque ne franchit pas la porte de volume du joueur** — mesure de fuite au POC audio
-- [ ] **Aucun paquet sortant ne contient un champ du `VoiceProfile`** ; seul `r'` en est dérivé
+- [ ] **Aucun paquet sortant ne contient un champ du `VoiceProfile`** ; seules des **positions sans unité** en sont dérivées — `r'` aujourd'hui, plus `w` si OQ-11.20 est retenue
 - [ ] Un paquet de features plus vieux que le délai d'expiration ne pèse plus sur aucun objet ; la décimation conserve le maximum de `Loudness` de l'intervalle
 - [ ] Un chuchotement produit des features exploitables (non écrasées par un seuil)
 - [ ] Un claquement de langue est distingué d'un son tenu par le crest factor
@@ -377,3 +386,4 @@ priorité absolue du POC audio, avant toute conception de système en dépendant
 | 2026-09-03 | Formalisation en ADR. **Amendement** : l'AEC est reclassée de « confort d'écoute » en correction de gameplay et exigée en amont de la fourche, comme seul traitement autorisé avant l'analyse | Revue directeurs du 2026-09-03 |
 | 2026-09-08 | **Amendement du 2026-09-03 rétrogradé** : l'AEC de Dissonance s'applique en aval, sur sa branche de transmission (alternative 7). Option A retenue : aucune AEC sur l'analyse, casque prérequis et mitigation unique | `docs/architecture/voice-chain-td-review-2026-09-08.md` ; décision du propriétaire |
 | 2026-09-16 | Corrigé en place selon la règle « corriger en place » : le corps ne décrit plus l'AEC en amont ; **règle unique** « aucun traitement qui modifie la dynamique ou la forme d'onde dans la bande vocale » ; **seul `r'` quitte le client**, jamais le `VoiceProfile` (décision E5 précisée) ; AEC auto-référencée écrite comme **réalisable et refusée**, avec son prix (décision D3) ; passe-haut exclu, soustraction d'offset permise sur mesure ; modèle FFT et estimation CPU marqués hérités | `design/gdd/reviews/voice-analysis-2026-09-14.md` §3 (b) et §6 ; décisions du propriétaire du 2026-09-15 |
+| 2026-09-18 | Note ajoutée à l'étape 5 de la chaîne : une question ouverte du système 11 (OQ-11.20, seuil de murmure ancré sur le chuchotement mesuré) ferait passer à **deux** les nombres dérivés du profil qui quittent le client — `r'` et `w`, deux positions sans unité. La décision E5 n'est pas amendée tant que la question n'est pas tranchée ; le critère de validation est reformulé pour porter sur la nature de ce qui sort, pas sur son compte | `prototypes/charge-vocale-etendue/`, essai 4 ; `design/gdd/voice-object-effect.md` OQ-11.20 |
